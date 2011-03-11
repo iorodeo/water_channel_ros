@@ -3,7 +3,7 @@
 # ubuntu-10.10-desktop-amd64
 
 # Install Ubuntu packages
-sudo apt-get install build-essential python-setuptools python-yaml cmake subversion wget hg
+sudo apt-get install build-essential python-yaml cmake subversion wget python-setuptools mercurial
 
 # ROS Installation
 sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu maverick main" > /etc/apt/sources.list.d/ros-latest.list'

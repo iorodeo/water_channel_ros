@@ -1,3 +1,4 @@
 - hg:
     uri: ~/hg/water_channel_ros/
     local-name: water_channel
+    version: default
