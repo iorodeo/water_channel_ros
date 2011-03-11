@@ -1,0 +1,16 @@
+# Install Ubuntu:
+# http://www.ubuntu.com/desktop/get-ubuntu/download
+# ubuntu-10.10-desktop-amd64
+
+# Install Ubuntu packages
+sudo apt-get install build-essential python-setuptools python-yaml cmake subversion wget hg
+
+# ROS Installation
+sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu maverick main" > /etc/apt/sources.list.d/ros-latest.list'
+wget http://packages.ros.org/ros.key -O - | sudo apt-key add -
+sudo apt-get update
+sudo apt-get install ros-diamondback-desktop-full
+source /opt/ros/diamondback/setup.bash
+
+# Install the standalone program rosinstall
+sudo easy_install -U rosinstall

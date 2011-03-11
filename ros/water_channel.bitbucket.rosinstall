@@ -1,0 +1,3 @@
+- hg:
+    uri: https://iorodeo@bitbucket.org/peterpolidoro/water_channel_ros
+    local-name: water_channel
