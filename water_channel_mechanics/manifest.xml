@@ -1,0 +1,14 @@
+<package>
+  <description brief="water_channel_mechanics">
+
+     water_channel_mechanics
+
+  </description>
+  <author>Peter Polidoro</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/water_channel_mechanics</url>
+
+</package>
+
+

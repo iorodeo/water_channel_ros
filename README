@@ -14,3 +14,8 @@ source /opt/ros/diamondback/setup.bash
 
 # Install the standalone program rosinstall
 sudo easy_install -U rosinstall
+
+# Clone water_channel_ros respository, instructions at https://bitbucket.org/iorodeo/water_channel_ros/
+
+# Install water_channel_ros from local repository
+rosinstall ~/ros/ ~/mercurial/water_channel_ros/
