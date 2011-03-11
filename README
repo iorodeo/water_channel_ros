@@ -10,12 +10,16 @@ sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu maverick main" > /etc/a
 wget http://packages.ros.org/ros.key -O - | sudo apt-key add -
 sudo apt-get update
 sudo apt-get install ros-diamondback-desktop-full
-source /opt/ros/diamondback/setup.bash
 
 # Install the standalone program rosinstall
 sudo easy_install -U rosinstall
 
-# Clone water_channel_ros respository, instructions at https://bitbucket.org/iorodeo/water_channel_ros/
+# Clone water_channel_ros respository into ~/mercurial/
+# Instructions at https://bitbucket.org/iorodeo/water_channel_ros/
 
 # Install water_channel_ros from local repository
+cd ~
+mkdir ros
+rosinstall ~/ros/ /opt/ros/diamondback
 rosinstall ~/ros/ ~/mercurial/water_channel_ros/
+echo "source ~/ros/setup.bash" >> ~/.bashrc
