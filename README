@@ -13,6 +13,7 @@ sudo apt-get install ros-diamondback-desktop-full
 
 # Install the standalone program rosinstall
 sudo easy_install -U rosinstall
+sudo chmod -R a+rwx /usr/local/lib/python2.6/dist-packages/rosinstall*
 
 # Clone water_channel_ros respository into ~/mercurial/
 # Instructions at https://bitbucket.org/iorodeo/water_channel_ros/
