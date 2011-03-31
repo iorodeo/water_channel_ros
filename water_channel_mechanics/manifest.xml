@@ -8,6 +8,9 @@
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/water_channel_mechanics</url>
+  <depend package="rospy"/>
+  <depend package="cad"/>
+  <depend package="cad_library"/>
 
 </package>
 
