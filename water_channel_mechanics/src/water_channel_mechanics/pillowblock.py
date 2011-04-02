@@ -54,7 +54,6 @@ class PillowBlock(csg.Difference):
     def __make_pillowblock(self):
         profile = self.parameters['profile']
         l = self.parameters['z']
-        print profile
         pillowblock = fso.Extrusion(profile=profile,l=l)
         self.add_obj(pillowblock)
 

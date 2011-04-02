@@ -24,6 +24,7 @@ import cad.csg_objects as csg
 import cad.finite_solid_objects as fso
 import cad.pattern_objects as po
 import cad_library.origin as origin
+import cad_library.t_slotted as t_slotted
 
 import water_channel
 import pillowblock
@@ -35,7 +36,7 @@ MOTORIZED_SLED_PARAMETERS = {
     'y': 53.375,
     'z': 2.5,
     'plate_thickness': 0.5,
-    'show_origin': True,
+    'show_origin': False,
     }
 
 def get_parameters():
@@ -60,8 +61,8 @@ class MotorizedSled(csg.Union):
         pmp = pillowblock_mount_plate.PillowblockMountPlate()
         self.pmp_parameters = pillowblock_mount_plate.get_parameters()
 
-        pb_tx = self.parameters['x']/2 - self.pmp_parameters['y']/2
-        pb_ax = [-pb_tx,pb_tx]
+        self.pb_tx = self.parameters['x']/2 - self.pmp_parameters['y']/2
+        pb_ax = [-self.pb_tx,self.pb_tx]
         self.wc_parameters = water_channel.get_parameters()
         pb_ty = self.wc_parameters['rail_rail_distance']/2
         pb_ay = [-pb_ty,pb_ty]
@@ -73,6 +74,19 @@ class MotorizedSled(csg.Union):
 
         pbs_and_pmps = po.LinearArray(pb_and_pmp,x=pb_ax,y=pb_ay,z=pb_az)
         self.add_obj(pbs_and_pmps)
+
+        # Add sled-sled connection brackets and beams
+        bracket = t_slotted.LBracket(x=1,y=2,z=1,extrusion_axis=[0,1,0])
+        bracket2 = po.LinearArray(bracket,x=0,y=[-1,1],z=0)
+        beam = t_slotted.Extrusion(x=1,y=5,z=1)
+        beam.translate([-0.5,0,0.5])
+        b2b = bracket2 | beam
+        b2bs_ax = [-self.pb_tx - 4]
+        b2bs_ay = [-pb_ty, pb_ty]
+        b2bs_az = [self.pmp_tz + self.pmp_parameters['z']/2]
+        b2bs = po.LinearArray(b2b,b2bs_ax,b2bs_ay,b2bs_az)
+        b2bs.set_color(self.parameters['color'],recursive=True)
+        self.add_obj(b2bs)
 
     def __make_horizontal_plate(self):
         x = self.parameters['x']

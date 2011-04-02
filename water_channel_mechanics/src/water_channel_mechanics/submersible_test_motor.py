@@ -29,7 +29,9 @@ import cad_library.origin as origin
 SUBMERSIBLE_TEST_MOTOR_PARAMETERS = {
     'shaft_diameter': 1.0,
     'body_diameter': 2.5,
+    'body_length': 6,
     'shaft_length': 24,
+    'color': [0.2,0.2,0.2],
     'show_origin': False,
     }
 
@@ -47,7 +49,21 @@ class SubmersibleTestMotor(csg.Union):
         return copy.deepcopy(self.parameters)
 
     def __make_submersible_test_motor(self):
-        cylinder1 = fso.Cylinder(
+        body_diameter = self.parameters['body_diameter']
+        cylinder1 = fso.Cylinder(r=body_diameter/2,l=body_diameter)
+        cylinder1.rotate(angle=math.pi/2,axis=[0,1,0])
+        c2_length = self.parameters['body_length'] - body_diameter
+        cylinder2 = fso.Cylinder(r=body_diameter/2,l=c2_length)
+        cylinder2.rotate(angle=math.pi/2,axis=[0,1,0])
+        cylinder2.translate([body_diameter/2 + c2_length/2,0,0])
+        sphere = fso.Sphere(r=body_diameter/2)
+        sphere.translate([body_diameter/2 + c2_length,0,0])
+        cylinder3 = fso.Cylinder(r=self.parameters['shaft_diameter']/2,l=self.parameters['shaft_length'])
+        cylinder3.translate([0,0,self.parameters['shaft_length']/2])
+        box = fso.Box(x=2,y=0.25,z=body_diameter/2 + 2)
+        box.translate([0,0,-(body_diameter/2 + 2)/2])
+        submersible_test_motor = cylinder1 | cylinder2 | sphere | cylinder3 | box
+        submersible_test_motor.set_color(self.parameters['color'],recursive=True)
         self.add_obj(submersible_test_motor)
 
     def __make_origin(self):

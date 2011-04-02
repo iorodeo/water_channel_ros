@@ -25,23 +25,36 @@ import cad.finite_solid_objects as fso
 import cad.pattern_objects as po
 import cad_library.origin as origin
 
+import water_channel
+import model_sled
+import motorized_sled
 
-MOTORIZED_SLED_PARAMETERS = {
-    'show_origin': False,
+WATER_CHANNEL_ASSEMBLY_PARAMETERS = {
+    'show_origin': True,
     }
 
-class MotorizedSled(csg.Union):
+class WaterChannelAssembly(csg.Union):
     def __init__(self):
-        super(MotorizedSled, self).__init__()
-        self.parameters = MOTORIZED_SLED_PARAMETERS
-        self.__make_motorized_sled()
+        super(WaterChannelAssembly, self).__init__()
+        self.parameters = WATER_CHANNEL_ASSEMBLY_PARAMETERS
+        self.__make_water_channel()
+        self.__make_sleds()
         self.__make_origin()
 
     def get_parameters(self):
         return copy.deepcopy(self.parameters)
 
-    def __make_motorized_sled(self):
-        self.add_obj(motorized_sled)
+    def __make_water_channel(self):
+        wc = water_channel.WaterChannel()
+        self.add_obj(wc)
+
+    def __make_sleds(self):
+        sled_model = model_sled.ModelSled()
+        sled_motorized = motorized_sled.MotorizedSled()
+        sled_motorized.translate([(sled_model.pb_tx + sled_motorized.pb_tx + 9),0,0])
+        sleds = sled_model | sled_motorized
+        # sleds.translate([100,0,0])
+        self.add_obj(sleds)
 
     def __make_origin(self):
         o = origin.Origin(mag=10)
@@ -50,8 +63,8 @@ class MotorizedSled(csg.Union):
 
 
 if __name__ == "__main__":
-    motorized_sled = MotorizedSled()
-    motorized_sled.export()
+    water_channel_assembly = WaterChannelAssembly()
+    water_channel_assembly.export()
 
 
 

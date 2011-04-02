@@ -69,7 +69,7 @@ class PillowblockMountPlate(csg.Union):
 
         # T-slotted bracket mount holes
         hole_x = [-3.5,-2.5,2.5,3.5]
-        hole_y = [-0.5,0.5]
+        hole_y = [-1.5,-0.5,0.5,1.5]
         holes = po.LinearArray(base_hole,hole_x,hole_y,[0])
         pillowblock_mount_plate -= holes
 
