@@ -26,22 +26,29 @@ import cad.pattern_objects as po
 import cad_library.origin as origin
 
 
-MOTORIZED_SLED_PARAMETERS = {
+SUBMERSIBLE_TEST_MOTOR_PARAMETERS = {
+    'shaft_diameter': 1.0,
+    'body_diameter': 2.5,
+    'shaft_length': 24,
     'show_origin': False,
     }
 
-class MotorizedSled(csg.Union):
+def get_parameters():
+    return copy.deepcopy(SUBMERSIBLE_TEST_MOTOR_PARAMETERS)
+
+class SubmersibleTestMotor(csg.Union):
     def __init__(self):
-        super(MotorizedSled, self).__init__()
-        self.parameters = MOTORIZED_SLED_PARAMETERS
-        self.__make_motorized_sled()
+        super(SubmersibleTestMotor, self).__init__()
+        self.parameters = SUBMERSIBLE_TEST_MOTOR_PARAMETERS
+        self.__make_submersible_test_motor()
         self.__make_origin()
 
     def get_parameters(self):
         return copy.deepcopy(self.parameters)
 
-    def __make_motorized_sled(self):
-        self.add_obj(motorized_sled)
+    def __make_submersible_test_motor(self):
+        cylinder1 = fso.Cylinder(
+        self.add_obj(submersible_test_motor)
 
     def __make_origin(self):
         o = origin.Origin(mag=10)
@@ -50,8 +57,8 @@ class MotorizedSled(csg.Union):
 
 
 if __name__ == "__main__":
-    motorized_sled = MotorizedSled()
-    motorized_sled.export()
+    submersible_test_motor = SubmersibleTestMotor()
+    submersible_test_motor.export()
 
 
 

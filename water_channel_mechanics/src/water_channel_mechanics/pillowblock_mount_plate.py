@@ -30,7 +30,7 @@ import pillowblock
 PILLOWBLOCK_MOUNT_PLATE_PARAMETERS = {
     'color': [0.0,1.0,1.0,1.0],
     'y': 5.0,
-    'z': 0.5,
+    'z': 0.25,
     'hole_r': 0.1,
     'hole_l': 2.0,
     'show_origin': False,
@@ -60,18 +60,32 @@ class PillowblockMountPlate(csg.Union):
         hole_r = self.parameters['hole_r']
         hole_l = self.parameters['hole_l']
 
-        # First set of holes
+        # Pillowblock mount holes
         hole_x = self.pillowblock_parameters['hole_z']
         hole_y = self.pillowblock_parameters['hole_x']
         base_hole = fso.Cylinder(r=hole_r,l=hole_l)
         holes = po.LinearArray(base_hole,hole_x,hole_y,[0])
         pillowblock_mount_plate -= holes
 
-        # Second set of holes
+        # T-slotted bracket mount holes
         hole_x = [-3.5,-2.5,2.5,3.5]
         hole_y = [-0.5,0.5]
         holes = po.LinearArray(base_hole,hole_x,hole_y,[0])
         pillowblock_mount_plate -= holes
+
+        # Motorized sled mount holes
+        hole_x = [-2.125,2.125]
+        hole_y = [-2.3125,2.3125]
+        holes = po.LinearArray(base_hole,hole_x,hole_y,[0])
+        pillowblock_mount_plate -= holes
+
+        # Slots for motorized sled mount holes
+        hole = fso.Cylinder(r=0.125,l=self.parameters['z']*2)
+        holes = po.LinearArray(hole,[0],[-0.5,0.5],[0])
+        slot = fso.Box(x=0.25,y=1,z=self.parameters['z']*2)
+        slot = holes | slot
+        slots = po.LinearArray(slot,[-2.125,2.125],[0],[0])
+        pillowblock_mount_plate -= slots
 
         pillowblock_mount_plate.set_color(self.parameters['color'],recursive=True)
         self.add_obj(pillowblock_mount_plate)
