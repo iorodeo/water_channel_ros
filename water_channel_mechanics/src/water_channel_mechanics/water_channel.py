@@ -34,13 +34,13 @@ WATER_CHANNEL_PARAMETERS = {
     'rail_color': [0.5,0.5,0.5,1.0],
     'tank_length': 1200,
     'tank_thickness': 0.5,
-    'tank_color': [0.5,0.5,0.5,0.5],
-    'show_tank': True,
+    'tank_color': [0.5,0.5,0.5,0.25],
+    'show_tank': False,
     'channel_depth': 23.5,
     'channel_width': 43.25,
     'water_depth': 17.25,
     'water_color': [0.0,0.0,1.0,0.25],
-    'show_water': True,
+    'show_water': False,
     'show_origin': False,
     }
 

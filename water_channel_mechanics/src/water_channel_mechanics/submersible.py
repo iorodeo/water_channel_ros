@@ -26,29 +26,29 @@ import cad.pattern_objects as po
 import cad_library.origin as origin
 
 
-SUBMERSIBLE_TEST_MOTOR_PARAMETERS = {
+SUBMERSIBLE_PARAMETERS = {
     'shaft_diameter': 1.0,
     'body_diameter': 2.5,
     'body_length': 6,
-    'shaft_length': 24,
+    'shaft_length': 12,
     'color': [0.2,0.2,0.2],
     'show_origin': False,
     }
 
 def get_parameters():
-    return copy.deepcopy(SUBMERSIBLE_TEST_MOTOR_PARAMETERS)
+    return copy.deepcopy(SUBMERSIBLE_PARAMETERS)
 
-class SubmersibleTestMotor(csg.Union):
+class Submersible(csg.Union):
     def __init__(self):
-        super(SubmersibleTestMotor, self).__init__()
-        self.parameters = SUBMERSIBLE_TEST_MOTOR_PARAMETERS
-        self.__make_submersible_test_motor()
+        super(Submersible, self).__init__()
+        self.parameters = SUBMERSIBLE_PARAMETERS
+        self.__make_submersible()
         self.__make_origin()
 
     def get_parameters(self):
         return copy.deepcopy(self.parameters)
 
-    def __make_submersible_test_motor(self):
+    def __make_submersible(self):
         body_diameter = self.parameters['body_diameter']
         cylinder1 = fso.Cylinder(r=body_diameter/2,l=body_diameter)
         cylinder1.rotate(angle=math.pi/2,axis=[0,1,0])
@@ -62,9 +62,9 @@ class SubmersibleTestMotor(csg.Union):
         cylinder3.translate([0,0,self.parameters['shaft_length']/2])
         box = fso.Box(x=2,y=0.25,z=body_diameter/2 + 2)
         box.translate([0,0,-(body_diameter/2 + 2)/2])
-        submersible_test_motor = cylinder1 | cylinder2 | sphere | cylinder3 | box
-        submersible_test_motor.set_color(self.parameters['color'],recursive=True)
-        self.add_obj(submersible_test_motor)
+        submersible = cylinder1 | cylinder2 | sphere | cylinder3 | box
+        submersible.set_color(self.parameters['color'],recursive=True)
+        self.add_obj(submersible)
 
     def __make_origin(self):
         o = origin.Origin(mag=10)
@@ -73,8 +73,8 @@ class SubmersibleTestMotor(csg.Union):
 
 
 if __name__ == "__main__":
-    submersible_test_motor = SubmersibleTestMotor()
-    submersible_test_motor.export()
+    submersible = Submersible()
+    submersible.export()
 
 
 

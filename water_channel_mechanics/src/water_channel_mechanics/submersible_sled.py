@@ -29,27 +29,32 @@ import cad_library.t_slotted as t_slotted
 import water_channel
 import pillowblock
 import pillowblock_mount_plate
+import airbearing_assembly
 
-MODEL_SLED_PARAMETERS = {
+SUBMERSIBLE_SLED_PARAMETERS = {
     'color': [0.7,0.7,0.7,1.0],
     'x': 40,
     'y': 50,
     'z': 2,
     'beam_width': 4,
-    'show_origin': True,
+    'force_sensor_mount_beam_length': 10,
+    'force_sensor_mount_beam_tx': -8,
+    'show_origin': False,
     }
 
 def get_parameters():
-    return copy.deepcopy(MODEL_SLED_PARAMETERS)
+    return copy.deepcopy(SUBMERSIBLE_SLED_PARAMETERS)
 
-class ModelSled(csg.Union):
+class SubmersibleSled(csg.Union):
     def __init__(self):
-        super(ModelSled, self).__init__()
-        self.parameters = MODEL_SLED_PARAMETERS
+        super(SubmersibleSled, self).__init__()
+        self.parameters = SUBMERSIBLE_SLED_PARAMETERS
         self.__make_pillowblocks_and_plates()
-        self.__make_y_beam()
-        self.__make_x_beams()
+        self.__make_x_beam()
+        self.__make_y_beams()
         self.__make_brackets()
+        self.__make_airbearing_assembly()
+        self.__make_force_sensor_mount_beams()
         self.__make_origin()
 
     def get_parameters(self):
@@ -75,15 +80,15 @@ class ModelSled(csg.Union):
         pbs_and_pmps = po.LinearArray(pb_and_pmp,x=pb_ax,y=pb_ay,z=pb_az)
         self.add_obj(pbs_and_pmps)
 
-    def __make_y_beam(self):
+    def __make_x_beam(self):
         beam_width = self.parameters['beam_width']
         x = self.parameters['x'] - beam_width*2
         y = beam_width
         z = self.parameters['z']
-        y_beam = t_slotted.Extrusion(x=x,y=y,z=z)
-        # self.y_beam_ty = -0.375/2
-        self.y_beam_ty = 0
-        self.y_beam_tz = self.pmp_tz + self.pmp_parameters['z']/2 + z/2
+        x_beam = t_slotted.Extrusion(x=x,y=y,z=z)
+        # self.x_beam_ty = -0.375/2
+        self.x_beam_ty = 0
+        self.x_beam_tz = self.pmp_tz + self.pmp_parameters['z']/2 + z/2
 
         b1 = t_slotted.LBracket(x=2,y=2,z=2,extrusion_axis=[0,0,1])
         b1.translate([-x/2,beam_width/2,0])
@@ -93,20 +98,20 @@ class ModelSled(csg.Union):
         b3.translate([-x/2,-beam_width/2,0])
         b4 = t_slotted.LBracket(x=-2,y=-2,z=2,extrusion_axis=[0,0,1])
         b4.translate([x/2,-beam_width/2,0])
-        y_beam |= [b1,b2,b3,b4]
+        x_beam |= [b1,b2,b3,b4]
 
-        y_beam.translate([0,self.y_beam_ty,self.y_beam_tz])
-        y_beam.set_color(self.parameters['color'],recursive=True)
-        self.add_obj(y_beam)
+        x_beam.translate([0,self.x_beam_ty,self.x_beam_tz])
+        x_beam.set_color(self.parameters['color'],recursive=True)
+        self.add_obj(x_beam)
 
-    def __make_x_beams(self):
+    def __make_y_beams(self):
         x = self.parameters['beam_width']
         y = self.parameters['y']
         z = self.parameters['z']
-        x_beam = t_slotted.Extrusion(x=x,y=y,z=z)
-        x_beam_tx = self.parameters['x']/2 - self.parameters['beam_width']/2
-        x_beam_ty = 0
-        x_beam_tz = self.y_beam_tz
+        y_beam = t_slotted.Extrusion(x=x,y=y,z=z)
+        y_beam_tx = self.parameters['x']/2 - self.parameters['beam_width']/2
+        y_beam_ty = 0
+        y_beam_tz = self.x_beam_tz
 
         bn = t_slotted.LBracket(x=-2,y=2,z=2,extrusion_axis=[0,1,0])
         bn_tx = -self.parameters['beam_width']/2
@@ -117,18 +122,57 @@ class ModelSled(csg.Union):
         bp = t_slotted.LBracket(x=2,y=2,z=2,extrusion_axis=[0,1,0])
         bp_tx = self.parameters['beam_width']/2
         bsp = po.LinearArray(bp,x=bp_tx,y=[-b_ty,b_ty],z=b_tz)
-        x_beam |= [bsn,bsp]
+        y_beam |= [bsn,bsp]
 
-        x_beams = po.LinearArray(x_beam,x=[-x_beam_tx,x_beam_tx],y=x_beam_ty,z=x_beam_tz)
-        x_beams.set_color(self.parameters['color'],recursive=True)
-        self.add_obj(x_beams)
+        y_beams = po.LinearArray(y_beam,x=[-y_beam_tx,y_beam_tx],y=y_beam_ty,z=y_beam_tz)
+        y_beams.set_color(self.parameters['color'],recursive=True)
+        self.add_obj(y_beams)
 
     def __make_brackets(self):
         b = t_slotted.LBracket(x=-1,y=2,z=1,extrusion_axis=[0,1,0])
         b_x = self.parameters['x']/2 + 2
         b_y = self.wc_parameters['rail_rail_distance']/2 + 1
-        b_z = self.y_beam_tz - self.parameters['z']/2
+        b_z = self.x_beam_tz - self.parameters['z']/2
         bs = po.LinearArray(b,x=b_x,y=[-b_y,b_y],z=b_z)
+        bs.set_color(self.parameters['color'],recursive=True)
+        self.add_obj(bs)
+
+    def __make_airbearing_assembly(self):
+        aba = airbearing_assembly.AirbearingAssembly()
+        aba_tz = self.x_beam_tz - self.parameters['z']/2
+        aba.translate([0,0,aba_tz])
+        self.add_obj(aba)
+
+    def __make_force_sensor_mount_beams(self):
+        x = 2
+        y = 1
+        z = self.parameters['force_sensor_mount_beam_length']
+        fsmb = t_slotted.Extrusion(x=x,y=y,z=z)
+        fsmb_tx = self.parameters['force_sensor_mount_beam_tx']
+        fsmb_ty = self.parameters['beam_width']/2 + y/2
+        fsmb_tz = self.x_beam_tz - z/2 + self.parameters['z']/2
+        fsmbs = po.LinearArray(fsmb,x=fsmb_tx,y=[-fsmb_ty,fsmb_ty],z=fsmb_tz)
+        fsmbs.set_color(self.parameters['color'],recursive=True)
+        self.add_obj(fsmbs)
+
+        # Add brackets
+        b_x = 1
+        b_y = 1
+        b_z = 2
+
+        b_tx = x/2
+        b_ty = self.parameters['beam_width']/2
+        b_tz = 0
+        b1 = t_slotted.LBracket(x=b_x,y=b_y,z=b_z,extrusion_axis=[0,0,1])
+        b1.translate([b_tx,b_ty,b_tz])
+        b2 = t_slotted.LBracket(x=b_x,y=-b_y,z=b_z,extrusion_axis=[0,0,1])
+        b2.translate([b_tx,-b_ty,b_tz])
+        b3 = t_slotted.LBracket(x=-b_x,y=-b_y,z=b_z,extrusion_axis=[0,0,1])
+        b3.translate([-b_tx,-b_ty,b_tz])
+        b4 = t_slotted.LBracket(x=-b_x,y=b_y,z=b_z,extrusion_axis=[0,0,1])
+        b4.translate([-b_tx,b_ty,b_tz])
+        bs = b1 | [b2,b3,b4]
+        bs.translate([fsmb_tx,0,self.x_beam_tz])
         bs.set_color(self.parameters['color'],recursive=True)
         self.add_obj(bs)
 
@@ -139,8 +183,8 @@ class ModelSled(csg.Union):
 
 
 if __name__ == "__main__":
-    model_sled = ModelSled()
-    model_sled.export()
+    submersible_sled = SubmersibleSled()
+    submersible_sled.export()
 
 
 

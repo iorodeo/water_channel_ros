@@ -26,7 +26,7 @@ import cad.pattern_objects as po
 import cad_library.origin as origin
 
 import water_channel
-import model_sled
+import submersible_sled
 import motorized_sled
 
 WATER_CHANNEL_ASSEMBLY_PARAMETERS = {
@@ -49,10 +49,10 @@ class WaterChannelAssembly(csg.Union):
         self.add_obj(wc)
 
     def __make_sleds(self):
-        sled_model = model_sled.ModelSled()
+        sled_submersible = submersible_sled.SubmersibleSled()
         sled_motorized = motorized_sled.MotorizedSled()
-        sled_motorized.translate([(sled_model.pb_tx + sled_motorized.pb_tx + 9),0,0])
-        sleds = sled_model | sled_motorized
+        sled_motorized.translate([(sled_submersible.pb_tx + sled_motorized.pb_tx + 9),0,0])
+        sleds = sled_submersible | sled_motorized
         # sleds.translate([100,0,0])
         self.add_obj(sleds)
 
