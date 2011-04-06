@@ -45,7 +45,7 @@ class Loadcell(csg.Difference):
         self.__make_loadcell()
         self.__make_holes()
         self.rotate(angle=math.pi/2,axis=[1,0,0])
-        self.rotate(angle=math.pi/2,axis=[0,0,1])
+        self.rotate(angle=math.pi/2,axis=[0,1,0])
         self.set_color([1,1,0],recursive=True)
 
     def get_parameters(self):

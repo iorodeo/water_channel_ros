@@ -30,6 +30,7 @@ import water_channel
 import pillowblock
 import pillowblock_mount_plate
 import airbearing_assembly
+import loadcell_mount_plate
 
 SUBMERSIBLE_SLED_PARAMETERS = {
     'color': [0.7,0.7,0.7,1.0],
@@ -37,8 +38,7 @@ SUBMERSIBLE_SLED_PARAMETERS = {
     'y': 50,
     'z': 2,
     'beam_width': 4,
-    'force_sensor_mount_beam_length': 10,
-    'force_sensor_mount_beam_tx': -8,
+    'force_sensor_mount_beam_length': 8,
     'show_origin': False,
     }
 
@@ -138,19 +138,20 @@ class SubmersibleSled(csg.Union):
         self.add_obj(bs)
 
     def __make_airbearing_assembly(self):
-        aba = airbearing_assembly.AirbearingAssembly()
-        aba_tz = self.x_beam_tz - self.parameters['z']/2
-        aba.translate([0,0,aba_tz])
-        self.add_obj(aba)
+        self.aba = airbearing_assembly.AirbearingAssembly()
+        self.aba_tz = self.x_beam_tz - self.parameters['z']/2
+        self.aba.translate([0,0,self.aba_tz])
+        self.add_obj(self.aba)
 
     def __make_force_sensor_mount_beams(self):
-        x = 2
-        y = 1
-        z = self.parameters['force_sensor_mount_beam_length']
-        fsmb = t_slotted.Extrusion(x=x,y=y,z=z)
-        fsmb_tx = self.parameters['force_sensor_mount_beam_tx']
-        fsmb_ty = self.parameters['beam_width']/2 + y/2
-        fsmb_tz = self.x_beam_tz - z/2 + self.parameters['z']/2
+        self.lcmp_parameters = loadcell_mount_plate.get_parameters()
+        fsmb_x = 2
+        fsmb_y = 1
+        fsmb_z = self.parameters['force_sensor_mount_beam_length']
+        fsmb = t_slotted.Extrusion(x=fsmb_x,y=fsmb_y,z=fsmb_z)
+        fsmb_tx = self.aba.lcmpu_tx - self.lcmp_parameters['x']/2 - fsmb_x/2 - 1
+        fsmb_ty = self.parameters['beam_width']/2 + fsmb_y/2
+        fsmb_tz = self.x_beam_tz - fsmb_z/2 + self.parameters['z']/2
         fsmbs = po.LinearArray(fsmb,x=fsmb_tx,y=[-fsmb_ty,fsmb_ty],z=fsmb_tz)
         fsmbs.set_color(self.parameters['color'],recursive=True)
         self.add_obj(fsmbs)
@@ -160,7 +161,7 @@ class SubmersibleSled(csg.Union):
         b_y = 1
         b_z = 2
 
-        b_tx = x/2
+        b_tx = fsmb_x/2
         b_ty = self.parameters['beam_width']/2
         b_tz = 0
         b1 = t_slotted.LBracket(x=b_x,y=b_y,z=b_z,extrusion_axis=[0,0,1])
@@ -175,6 +176,44 @@ class SubmersibleSled(csg.Union):
         bs.translate([fsmb_tx,0,self.x_beam_tz])
         bs.set_color(self.parameters['color'],recursive=True)
         self.add_obj(bs)
+
+        # Add cross beam
+        cb_x = 1
+        cb_y = fsmb_ty*2 + fsmb_y
+        cb_z = 1
+        cb = t_slotted.Extrusion(x=cb_x,y=cb_y,z=cb_z)
+        cb_tx = fsmb_tx + fsmb_x/2 + cb_x/2
+        cb_ty = 0
+        # cb_tz = fsmb_tz - fsmb_z/2 + cb_z/2
+        cb_tz = self.aba.lcmpu_tz - 0.125
+        cb.translate([cb_tx,cb_ty,cb_tz])
+        cb.set_color(self.parameters['color'])
+        self.add_obj(cb)
+
+        # Add first set of cross beam brackets
+        b = t_slotted.LBracket(x=1,y=1,z=1,extrusion_axis=[0,1,0])
+        b_tx = 0
+        b_ty = cb_y/2 - 0.5
+        b_tz = 0
+        bs = po.LinearArray(b,x=b_tx,y=[-b_ty,b_ty],z=b_tz)
+        bs_tx = cb_tx - 0.5
+        bs_ty = cb_ty
+        bs_tz = cb_tz + 0.5
+        bs.translate([bs_tx,bs_ty,bs_tz])
+        bs.set_color(self.parameters['color'],recursive=True)
+        self.add_obj(bs)
+
+        # Add second set of cross beam brackets
+        b_tx = bs_tx
+        b_ty = b_ty - 0.5
+        b_tz = bs_tz - 0.5
+        b1 = t_slotted.LBracket(x=-1,y=-1,z=1,extrusion_axis=[0,0,1])
+        b1.translate([b_tx,b_ty,b_tz])
+        b1.set_color(self.parameters['color'],recursive=True)
+        b2 = t_slotted.LBracket(x=-1,y=1,z=1,extrusion_axis=[0,0,1])
+        b2.translate([b_tx,-b_ty,b_tz])
+        b2.set_color(self.parameters['color'],recursive=True)
+        self.add_obj([b1,b2])
 
     def __make_origin(self):
         o = origin.Origin(mag=10)

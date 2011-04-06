@@ -28,7 +28,7 @@ import cad_library.origin as origin
 import pillowblock
 
 PILLOWBLOCK_MOUNT_PLATE_PARAMETERS = {
-    'color': [0.0,1.0,1.0,1.0],
+    'color': [0.7,0.7,0.7,1.0],
     'y': 5.0,
     'z': 0.25,
     'hole_r': 0.1,

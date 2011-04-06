@@ -29,7 +29,8 @@ import cad_library.t_slotted as t_slotted
 import airbearing
 import submersible
 import submersible_mount
-
+import loadcell
+import loadcell_mount_plate
 
 AIRBEARING_ASSEMBLY_PARAMETERS = {
     'bearing_type': 'RAB6',
@@ -59,6 +60,9 @@ class AirbearingAssembly(csg.Union):
         self.__make_submersible_mount()
         self.__make_submersible_mount_beam()
         self.__make_submersible()
+        self.__make_loadcell_mount_plate_lower()
+        self.__make_loadcell()
+        self.__make_loadcell_mount_plate_upper()
         self.__make_brackets()
         self_tz = -self.ab_parameters['carriage_height']/2 - self.parameters['airbearing_mount_plate_thickness']
         self.translate([0,0,self_tz])
@@ -202,6 +206,32 @@ class AirbearingAssembly(csg.Union):
         sub_tz = self.x_beam_tz - self.sub_parameters['shaft_length'] + self.parameters['x_beam_separation'] + 0.5
         sub.translate([0,0,sub_tz])
         self.add_obj(sub)
+
+    def __make_loadcell_mount_plate_lower(self):
+        lcmpl = loadcell_mount_plate.LoadcellMountPlate()
+        self.lcmp_parameters = lcmpl.get_parameters()
+        self.lcmpl_tx = -self.slider_holes_tx - 0.5 - self.lcmp_parameters['x']/2
+        lcmpl_ty = 0
+        self.lcmpl_tz = self.x_beam_tz
+        lcmpl.translate([self.lcmpl_tx,lcmpl_ty,self.lcmpl_tz])
+        self.add_obj(lcmpl)
+
+    def __make_loadcell(self):
+        lc = loadcell.Loadcell()
+        self.lc_parameters = lc.get_parameters()
+        self.lc_tx = self.lcmpl_tx - self.lcmp_parameters['x']/2 - self.lc_parameters['y']/2
+        lc_ty = 0
+        self.lc_tz = self.lcmpl_tz + self.lc_parameters['hole_x'][1]
+        lc.translate([self.lc_tx,lc_ty,self.lc_tz])
+        self.add_obj(lc)
+
+    def __make_loadcell_mount_plate_upper(self):
+        lcmpu = loadcell_mount_plate.LoadcellMountPlate()
+        self.lcmpu_tx = self.lc_tx - self.lc_parameters['y']/2 - self.lcmp_parameters['x']/2
+        lcmpu_ty = 0
+        self.lcmpu_tz = self.lc_tz + self.lc_parameters['hole_x'][1]
+        lcmpu.translate([self.lcmpu_tx,lcmpu_ty,self.lcmpu_tz])
+        self.add_obj(lcmpu)
 
     def __make_brackets(self):
         # Front and back sets
