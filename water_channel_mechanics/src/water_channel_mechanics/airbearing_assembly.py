@@ -64,6 +64,8 @@ class AirbearingAssembly(csg.Union):
         self.__make_loadcell()
         self.__make_loadcell_mount_plate_upper()
         self.__make_brackets()
+        self.__make_sensor_target()
+
         self_tz = -self.ab_parameters['carriage_height']/2 - self.parameters['airbearing_mount_plate_thickness']
         self.translate([0,0,self_tz])
         self.__make_origin()
@@ -314,6 +316,27 @@ class AirbearingAssembly(csg.Union):
         brackets.translate([self.smb_tx,0,0])
         brackets.set_color(self.parameters['color'],recursive=True)
         self.add_obj(brackets)
+
+    def __make_sensor_target(self):
+        x = 0.236
+        y = self.ab_parameters['slide_width']
+        z = self.parameters['y_beam_separation'] + 0.25
+        sensor_target = fso.Box(x=x,y=y,z=z)
+        hole_r = 0.125
+        hole_l = x*2
+        hole = fso.Cylinder(r=hole_r,l=hole_l)
+        hole.rotate(angle=-math.pi/2,axis=[0,1,0])
+        hole_x = 0
+        hole_y = y/2 - 0.5
+        hole_az = [-1,0,1]
+        holes = po.LinearArray(hole,x=hole_x,y=[-hole_y,hole_y],z=hole_az)
+        sensor_target -= holes
+        sensor_target_tx = self.slider_holes_tx + x/2 + 0.5
+        sensor_target_ty = 0
+        sensor_target_tz = self.z_beam_tz - 0.375
+        sensor_target.translate([sensor_target_tx,sensor_target_ty,sensor_target_tz])
+        sensor_target.set_color([0.98,0.98,0.98,1.0],recursive=True)
+        self.add_obj(sensor_target)
 
     def __make_origin(self):
         o = origin.Origin(mag=10)

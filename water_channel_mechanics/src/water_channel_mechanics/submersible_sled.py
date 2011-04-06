@@ -31,6 +31,8 @@ import pillowblock
 import pillowblock_mount_plate
 import airbearing_assembly
 import loadcell_mount_plate
+import laser_sensor_short_range
+import laser_sensor_short_range_mount_plate
 
 SUBMERSIBLE_SLED_PARAMETERS = {
     'color': [0.7,0.7,0.7,1.0],
@@ -38,7 +40,8 @@ SUBMERSIBLE_SLED_PARAMETERS = {
     'y': 50,
     'z': 2,
     'beam_width': 4,
-    'force_sensor_mount_beam_length': 8,
+    'sensor_mount_beam_length': 8,
+    'laser_sensor_tx': 10,
     'show_origin': False,
     }
 
@@ -55,6 +58,7 @@ class SubmersibleSled(csg.Union):
         self.__make_brackets()
         self.__make_airbearing_assembly()
         self.__make_force_sensor_mount_beams()
+        self.__make_laser_sensor_and_mount()
         self.__make_origin()
 
     def get_parameters(self):
@@ -147,7 +151,7 @@ class SubmersibleSled(csg.Union):
         self.lcmp_parameters = loadcell_mount_plate.get_parameters()
         fsmb_x = 2
         fsmb_y = 1
-        fsmb_z = self.parameters['force_sensor_mount_beam_length']
+        fsmb_z = self.parameters['sensor_mount_beam_length']
         fsmb = t_slotted.Extrusion(x=fsmb_x,y=fsmb_y,z=fsmb_z)
         fsmb_tx = self.aba.lcmpu_tx - self.lcmp_parameters['x']/2 - fsmb_x/2 - 1
         fsmb_ty = self.parameters['beam_width']/2 + fsmb_y/2
@@ -214,6 +218,52 @@ class SubmersibleSled(csg.Union):
         b2.translate([b_tx,-b_ty,b_tz])
         b2.set_color(self.parameters['color'],recursive=True)
         self.add_obj([b1,b2])
+
+    def __make_laser_sensor_and_mount(self):
+        # Add laser sensor mount beam
+        lsmb_x = 2
+        lsmb_y = 1
+        lsmb_z = self.parameters['sensor_mount_beam_length']
+        lsmb = t_slotted.Extrusion(x=lsmb_x,y=lsmb_y,z=lsmb_z)
+        lsmb_tx = self.parameters['laser_sensor_tx']
+        lsmb_ty = self.parameters['beam_width']/2 + lsmb_y/2
+        lsmb_tz = self.x_beam_tz - lsmb_z/2 + self.parameters['z']/2
+        lsmb.set_color(self.parameters['color'],recursive=True)
+        lsmb.translate([lsmb_tx,lsmb_ty,lsmb_tz])
+
+        ls = laser_sensor_short_range.LaserSensorShortRange()
+        self.ls_parameters = ls.get_parameters()
+        lsmp = laser_sensor_short_range_mount_plate.LaserSensorShortRangeMountPlate()
+        self.lsmp_parameters = lsmp.get_parameters()
+        ls_tx = self.lsmp_parameters['lssr_tx']
+        ls_ty = -self.ls_parameters['z']/2 - self.lsmp_parameters['y']/2
+        ls_tz = self.lsmp_parameters['lssr_tz']
+        ls.translate([ls_tx,ls_ty,ls_tz])
+        ls_and_mp = ls | lsmp
+        ls_and_mp_tx = lsmb_tx - self.lsmp_parameters['mount_hole_tx']
+        ls_and_mp_ty = lsmb_ty - lsmb_y/2 - self.lsmp_parameters['y']/2
+        ls_and_mp_tz = lsmb_tz - lsmb_z/2 + self.lsmp_parameters['z']/2 - 0.25
+        ls_and_mp.translate([ls_and_mp_tx,ls_and_mp_ty,ls_and_mp_tz])
+
+        ls_and_mount = lsmb | ls_and_mp
+        self.add_obj(ls_and_mount)
+
+        # Add brackets
+        b_x = 1
+        b_y = 1
+        b_z = 2
+
+        b_tx = lsmb_x/2
+        b_ty = self.parameters['beam_width']/2
+        b_tz = 0
+        b1 = t_slotted.LBracket(x=b_x,y=b_y,z=b_z,extrusion_axis=[0,0,1])
+        b1.translate([b_tx,b_ty,b_tz])
+        b4 = t_slotted.LBracket(x=-b_x,y=b_y,z=b_z,extrusion_axis=[0,0,1])
+        b4.translate([-b_tx,b_ty,b_tz])
+        bs = b1 | b4
+        bs.translate([lsmb_tx,0,self.x_beam_tz])
+        bs.set_color(self.parameters['color'],recursive=True)
+        self.add_obj(bs)
 
     def __make_origin(self):
         o = origin.Origin(mag=10)

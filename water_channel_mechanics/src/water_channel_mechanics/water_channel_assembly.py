@@ -30,7 +30,7 @@ import submersible_sled
 import motorized_sled
 
 WATER_CHANNEL_ASSEMBLY_PARAMETERS = {
-    'show_origin': True,
+    'show_origin': False,
     }
 
 class WaterChannelAssembly(csg.Union):
