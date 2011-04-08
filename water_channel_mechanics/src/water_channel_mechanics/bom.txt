@@ -7,5 +7,9 @@
 # generated this file is re-run.                                     #
 #====================================================================#
 
-| item number | name | description | vender | part number | quantity | cost |
+| item number | name | description | dimensions | vender | part number | quantity | cost |
 |-
+|  | RAB6 | non-motorized air bearing slide | slide travel: 4 | Nelson Air Corp. | RAB6 |  |  |
+|  | air_bearing_mount_plate | mounts air bearing carriage to t_slotted beam | x: 7.000, y: 7.500, z: 0.500 | ? | ? |  |  |
+|  | slider_mount_plate | mounts t_slotted beams to air bearing slider | x: 1.000, y: 6.000, z: 0.125 | ? | ? |  |  |
+|  | slider_mount_plate | mounts t_slotted beams to air bearing slider | x: 1.000, y: 6.000, z: 0.125 | ? | ? |  |  |

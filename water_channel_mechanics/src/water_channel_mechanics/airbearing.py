@@ -2,9 +2,11 @@ from __future__ import division
 import roslib
 roslib.load_manifest('water_channel_mechanics')
 import rospy
+import copy
+
 import cad.finite_solid_objects as fso
 import cad.csg_objects as csg
-import copy
+import cad.export.bom as bom
 
 
 # RAB air bearing parameters
@@ -23,6 +25,10 @@ RAB4_PARAMETERS = {                            # --------------------
         'slide_screw_size'     : 0.25,     # M
         'carriage_screw_size'  : 0.25,     # N
         'slide_tolerance'      : 0.005,
+        'name'                 : 'RAB4',
+        'description'          : 'non-motorized air bearing slide',
+        'vender'               : 'Nelson Air Corp.',
+        'part number'          : 'RAB4',
         }
 
 # Data sheet parameter
@@ -40,6 +46,10 @@ RAB6_PARAMETERS = {                            # --------------------
         'slide_screw_size'     : 0.25,     # M
         'carriage_screw_size'  : 0.25,     # N
         'slide_tolerance'      : 0.005,
+        'name'                 : 'RAB6',
+        'description'          : 'non-motorized air bearing slide',
+        'vender'               : 'Nelson Air Corp.',
+        'part number'          : 'RAB6',
         }
 
 # Data sheet parameter
@@ -57,6 +67,10 @@ RAB10_PARAMETERS = {                           # --------------------
         'slide_screw_size'     : 0.25,     # M
         'carriage_screw_size'  : 0.25,     # N
         'slide_tolerance'      : 0.005,
+        'name'                 : 'RAB10',
+        'description'          : 'non-motorized air bearing slide',
+        'vender'               : 'Nelson Air Corp.',
+        'part number'          : 'RAB10',
         }
 
 BEARING_PARAMETERS = {
@@ -80,10 +94,20 @@ class RAB(csg.Union):
         self.__make_slide()
         self.__make_carriage()
         self.__make_slide_travel()
+        self.__set_bom()
         self.set_obj_list([self.slide,self.carriage,self.slide_travel])
 
     def get_parameters(self):
         return copy.deepcopy(self.parameters)
+
+    def __set_bom(self):
+        BOM = bom.BOMObject()
+        BOM.set_parameter('name',self.parameters['name'])
+        BOM.set_parameter('description',self.parameters['description'])
+        BOM.set_parameter('dimensions',('slide travel: ' + str(self.parameters['bearing_slide_travel'])))
+        BOM.set_parameter('vender',self.parameters['vender'])
+        BOM.set_parameter('part number',self.parameters['part number'])
+        self.set_object_parameter('bom',BOM)
 
     def set_slide_travel(self,val):
         self.parameters['bearing_slide_travel'] = val

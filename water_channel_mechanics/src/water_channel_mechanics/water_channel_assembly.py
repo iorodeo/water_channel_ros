@@ -65,6 +65,7 @@ class WaterChannelAssembly(csg.Union):
 if __name__ == "__main__":
     water_channel_assembly = WaterChannelAssembly()
     water_channel_assembly.export("bom.txt")
+    water_channel_assembly.export("export.scad")
 
 
 

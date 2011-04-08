@@ -25,8 +25,11 @@ import cad.finite_solid_objects as fso
 import cad.pattern_objects as po
 import cad_library.origin as origin
 import cad_library.t_slotted as t_slotted
+import cad.export.bom as bom
 
 import airbearing
+import airbearing_mount_plate
+import slider_mount_plate
 import submersible
 import submersible_mount
 import loadcell
@@ -35,7 +38,6 @@ import loadcell_mount_plate
 AIRBEARING_ASSEMBLY_PARAMETERS = {
     'bearing_type': 'RAB6',
     'slide_travel': 4,
-    'airbearing_mount_plate_thickness': 0.5,
     'slider_mount_plate_thickness': 0.125,
     'y_beam_separation': 4,
     'x_beam_separation': 3,
@@ -66,7 +68,7 @@ class AirbearingAssembly(csg.Union):
         self.__make_brackets()
         self.__make_sensor_target()
 
-        self_tz = -self.ab_parameters['carriage_height']/2 - self.parameters['airbearing_mount_plate_thickness']
+        self_tz = -self.ab_parameters['carriage_height']/2 - self.abmp_parameters['z']
         self.translate([0,0,self_tz])
         self.__make_origin()
 
@@ -76,51 +78,23 @@ class AirbearingAssembly(csg.Union):
     def __make_airbearing(self):
         ab = airbearing.RAB(bearing_type=self.parameters['bearing_type'],slide_travel=self.parameters['slide_travel'])
         self.ab_parameters = ab.get_parameters()
+        self.slider_holes_tx = (self.ab_parameters['slide_base_length'] + self.parameters['slide_travel'])/2 - self.ab_parameters['slide_screw_inset']
         self.add_obj(ab)
 
     def __make_airbearing_mount_plate(self):
-        x = self.ab_parameters['carriage_length']
-        y = self.ab_parameters['carriage_width']
-        z = self.parameters['airbearing_mount_plate_thickness']
-        abmp = fso.Box(x=x,y=y,z=z)
-
-        # Add airbearing mount holes
-        hole_diameter = self.parameters['hole_diameter']
-        hole = fso.Cylinder(r=hole_diameter/2,l=z*2)
-        h_x = self.ab_parameters['carriage_screw_dL']/2
-        h_y = self.ab_parameters['carriage_screw_dW']/2
-        holes = po.LinearArray(hole,x=[-h_x,h_x],y=[-h_y,h_y],z=0)
-        abmp -= holes
-
-        # Add y_beam mount counterbore holes
-        cb_diameter = 7/16
-        cb_depth = 0.25
-        cb = fso.Cylinder(r=cb_diameter/2,l=z)
-        cb.translate([0,0,(-z + cb_depth)])
-        cbh = cb | hole
-        cbhs = po.LinearArray(cbh,x=[-2.5,0,2.5],y=[-1.5,1.5],z=0)
-        abmp -= cbhs
-
-        abmp_tz = self.ab_parameters['carriage_height']/2 + z/2
+        abmp = airbearing_mount_plate.AirbearingMountPlate()
+        self.abmp_parameters = abmp.get_parameters()
+        abmp_tz = self.ab_parameters['carriage_height']/2 + self.abmp_parameters['z']/2
         abmp.translate([0,0,abmp_tz])
         # abmp.translate([0,0,20])
-        abmp.set_color(self.parameters['color'],recursive=True)
         self.add_obj(abmp)
 
     def __make_slider_mount_plates(self):
-        x = 1
-        y = self.ab_parameters['slide_width']
-        z = self.parameters['slider_mount_plate_thickness']
-        smp = fso.Box(x=x,y=y,z=z)
-
-        hole = fso.Cylinder(r=self.parameters['hole_diameter']/2,l=z*2)
-        hole_ty = self.ab_parameters['slide_screw_dW']/2
-        holes = po.LinearArray(hole,x=0,y=[-hole_ty,hole_ty],z=0)
-        smp -= holes
-        self.slider_holes_tx = (self.ab_parameters['slide_base_length'] + self.parameters['slide_travel'])/2 - self.ab_parameters['slide_screw_inset']
+        smp = slider_mount_plate.SliderMountPlate()
+        self.smp_parameters = smp.get_parameters()
         smp_tx = self.slider_holes_tx
         smp_ty = 0
-        smp_tz = -(self.ab_parameters['slide_height'] + z)/2
+        smp_tz = -(self.ab_parameters['slide_height'] + self.smp_parameters['z'])/2
         smps = po.LinearArray(smp,x=[-smp_tx,smp_tx],y=smp_ty,z=smp_tz)
         smps.set_color(self.parameters['color'],recursive=True)
         self.add_obj(smps)
@@ -135,7 +109,7 @@ class AirbearingAssembly(csg.Union):
         y_beam_separation = -self.parameters['y_beam_separation']
 
         y_beams = po.LinearArray(y_beam,x=[-y_beam_tx,y_beam_tx],y=y_beam_ty,z=[0,y_beam_separation])
-        self.y_beams_tz = -(self.ab_parameters['slide_height'] + z)/2 - self.parameters['slider_mount_plate_thickness']
+        self.y_beams_tz = -(self.ab_parameters['slide_height'] + z)/2 - self.smp_parameters['z']
         y_beams.translate([0,0,self.y_beams_tz])
         y_beams.set_color(self.parameters['color'],recursive=True)
         self.add_obj(y_beams)
@@ -154,7 +128,7 @@ class AirbearingAssembly(csg.Union):
 
         cushion_tx = self.slider_holes_tx
         cushion_ty = 0
-        cushion_tz = -(self.ab_parameters['slide_height'] + 1)/2 - self.parameters['slider_mount_plate_thickness']
+        cushion_tz = -(self.ab_parameters['slide_height'] + 1)/2 - self.smp_parameters['z']
         cushions = po.LinearArray(cushion,x=[-cushion_tx,cushion_tx],y=cushion_ty,z=cushion_tz)
         self.add_obj(cushions)
 
