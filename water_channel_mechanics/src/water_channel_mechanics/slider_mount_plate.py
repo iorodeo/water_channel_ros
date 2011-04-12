@@ -77,7 +77,7 @@ class SliderMountPlate(csg.Difference):
         BOM.set_parameter('name','slider_mount_plate')
         BOM.set_parameter('description','mounts t_slotted beams to air bearing slider')
         BOM.set_parameter('dimensions','x: {x:0.3f}, y: {y:0.3f}, z: {z:0.3f}'.format(x=self.parameters['x']*scale[0],y=self.parameters['y']*scale[1],z=self.parameters['z']*scale[2]))
-        BOM.set_parameter('vender','?')
+        BOM.set_parameter('vendor','?')
         BOM.set_parameter('part number','?')
         self.set_object_parameter('bom',BOM)
 

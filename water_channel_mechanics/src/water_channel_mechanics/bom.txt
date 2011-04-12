@@ -7,9 +7,21 @@
 # generated this file is re-run.                                     #
 #====================================================================#
 
-| item number | name | description | dimensions | vender | part number | quantity | cost |
+| ! | item number | name | description | dimensions | vendor | part number | quantity | cost |
 |-
-|  | RAB6 | non-motorized air bearing slide | slide travel: 4 | Nelson Air Corp. | RAB6 |  |  |
-|  | air_bearing_mount_plate | mounts air bearing carriage to t_slotted beam | x: 7.000, y: 7.500, z: 0.500 | ? | ? |  |  |
-|  | slider_mount_plate | mounts t_slotted beams to air bearing slider | x: 1.000, y: 6.000, z: 0.125 | ? | ? |  |  |
-|  | slider_mount_plate | mounts t_slotted beams to air bearing slider | x: 1.000, y: 6.000, z: 0.125 | ? | ? |  |  |
+| |  | 1020-8.000 | T-Slotted Extrusion | l: 8.000 | Prime Resource | ? | 3 | 0.0 |
+| |  | 1010-3.000 | T-Slotted Extrusion | l: 3.000 | Prime Resource | ? | 4 | 0.0 |
+| |  | 2020-double | T-Slotted L Bracket | bracket_type: double | McMaster | 47065T176 | 12 | 5.96 |
+| |  | slider_mount_plate | mounts t_slotted beams to air bearing slider | x: 1.000, y: 6.000, z: 0.125 | ? | ? | 2 | 0.0 |
+| |  | RAB6 | non-motorized air bearing slide | slide travel: 4 | Nelson Air Corp. | RAB6 | 1 | 0.0 |
+| |  | 2040-32.000 | T-Slotted Extrusion | l: 32.000 | Prime Resource | ? | 1 | 0.0 |
+| |  | air_bearing_mount_plate | mounts air bearing carriage to t_slotted beam | x: 7.000, y: 7.500, z: 0.500 | ? | ? | 1 | 0.0 |
+| |  | 1010-6.000 | T-Slotted Extrusion | l: 6.000 | Prime Resource | ? | 5 | 0.0 |
+| |  | 2040-50.000 | T-Slotted Extrusion | l: 50.000 | Prime Resource | ? | 2 | 0.0 |
+| |  | 1010-single | T-Slotted L Bracket | bracket_type: single | McMaster | 47065T223 | 32 | 3.98 |
+| |  | 1020-6.000 | T-Slotted Extrusion | l: 6.000 | Prime Resource | ? | 1 | 0.0 |
+| |  | 1010-5.000 | T-Slotted Extrusion | l: 5.000 | Prime Resource | ? | 2 | 0.0 |
+| |  | 1010-double | T-Slotted L Bracket | bracket_type: double | McMaster | 47065T169 | 12 | 5.58 |
+| |  | 1010-10.624 | T-Slotted Extrusion | l: 10.624 | Prime Resource | ? | 4 | 0.0 |
+|-
+| # | | | | | | | total |:=(@I$quantity..@II$quantity)*(@I$cost..@II$cost);%.2f;N

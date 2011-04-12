@@ -27,7 +27,7 @@ RAB4_PARAMETERS = {                            # --------------------
         'slide_tolerance'      : 0.005,
         'name'                 : 'RAB4',
         'description'          : 'non-motorized air bearing slide',
-        'vender'               : 'Nelson Air Corp.',
+        'vendor'               : 'Nelson Air Corp.',
         'part number'          : 'RAB4',
         }
 
@@ -48,7 +48,7 @@ RAB6_PARAMETERS = {                            # --------------------
         'slide_tolerance'      : 0.005,
         'name'                 : 'RAB6',
         'description'          : 'non-motorized air bearing slide',
-        'vender'               : 'Nelson Air Corp.',
+        'vendor'               : 'Nelson Air Corp.',
         'part number'          : 'RAB6',
         }
 
@@ -69,7 +69,7 @@ RAB10_PARAMETERS = {                           # --------------------
         'slide_tolerance'      : 0.005,
         'name'                 : 'RAB10',
         'description'          : 'non-motorized air bearing slide',
-        'vender'               : 'Nelson Air Corp.',
+        'vendor'               : 'Nelson Air Corp.',
         'part number'          : 'RAB10',
         }
 
@@ -105,7 +105,7 @@ class RAB(csg.Union):
         BOM.set_parameter('name',self.parameters['name'])
         BOM.set_parameter('description',self.parameters['description'])
         BOM.set_parameter('dimensions',('slide travel: ' + str(self.parameters['bearing_slide_travel'])))
-        BOM.set_parameter('vender',self.parameters['vender'])
+        BOM.set_parameter('vendor',self.parameters['vendor'])
         BOM.set_parameter('part number',self.parameters['part number'])
         self.set_object_parameter('bom',BOM)
 
