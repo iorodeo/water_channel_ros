@@ -30,10 +30,12 @@ import cad.export.bom as bom
 import airbearing
 import airbearing_mount_plate
 import slider_mount_plate
+import cushion
 import submersible
 import submersible_mount
 import loadcell
 import loadcell_mount_plate
+import laser_target_plate
 
 AIRBEARING_ASSEMBLY_PARAMETERS = {
     'bearing_type': 'RAB6',
@@ -41,7 +43,6 @@ AIRBEARING_ASSEMBLY_PARAMETERS = {
     'slider_mount_plate_thickness': 0.125,
     'y_beam_separation': 4,
     'x_beam_separation': 3,
-    'cushion_thickness': 0.25,
     'submersible_mount_x_offset': 1.0625,
     'hole_diameter': 0.26,
     'color': [0.7,0.7,0.7,1.0],
@@ -66,7 +67,7 @@ class AirbearingAssembly(csg.Union):
         self.__make_loadcell()
         self.__make_loadcell_mount_plate_upper()
         self.__make_brackets()
-        self.__make_sensor_target()
+        self.__make_laser_target_plate()
 
         self_tz = -self.ab_parameters['carriage_height']/2 - self.abmp_parameters['z']
         self.translate([0,0,self_tz])
@@ -115,21 +116,21 @@ class AirbearingAssembly(csg.Union):
         self.add_obj(y_beams)
 
     def __make_cushions(self):
-        x = 1 + self.parameters['cushion_thickness']*2
-        y = self.ab_parameters['slide_width'] + self.parameters['cushion_thickness']*2
-        z = 0.25
-        cushion = fso.Box(x=x,y=y,z=z)
-        cutout_x = 3/8
-        cutout_y = self.ab_parameters['slide_width'] + 0.01
-        cutout_z = 0.5
-        cutout = fso.Box(x=cutout_x,y=cutout_y,z=cutout_z)
-        cushion -= cutout
-        cushion.set_color([0.1,0.1,0.1],recursive=True)
+        c = cushion.Cushion()
+        # x = 1 + self.parameters['cushion_thickness']*2
+        # y = self.ab_parameters['slide_width'] + self.parameters['cushion_thickness']*2
+        # z = 0.25
+        # cushion = fso.Box(x=x,y=y,z=z)
+        # cutout_x = 3/8
+        # cutout_y = self.ab_parameters['slide_width'] + 0.01
+        # cutout_z = 0.5
+        # cutout = fso.Box(x=cutout_x,y=cutout_y,z=cutout_z)
+        # cushion -= cutout
 
         cushion_tx = self.slider_holes_tx
         cushion_ty = 0
         cushion_tz = -(self.ab_parameters['slide_height'] + 1)/2 - self.smp_parameters['z']
-        cushions = po.LinearArray(cushion,x=[-cushion_tx,cushion_tx],y=cushion_ty,z=cushion_tz)
+        cushions = po.LinearArray(c,x=[-cushion_tx,cushion_tx],y=cushion_ty,z=cushion_tz)
         self.add_obj(cushions)
 
     def __make_z_beams(self):
@@ -185,8 +186,10 @@ class AirbearingAssembly(csg.Union):
 
     def __make_loadcell_mount_plate_lower(self):
         lcmpl = loadcell_mount_plate.LoadcellMountPlate()
+        lcmpl.rotate(angle=math.pi/2,axis=[1,0,0])
+        lcmpl.rotate(angle=-math.pi/2,axis=[0,0,1])
         self.lcmp_parameters = lcmpl.get_parameters()
-        self.lcmpl_tx = -self.slider_holes_tx - 0.5 - self.lcmp_parameters['x']/2
+        self.lcmpl_tx = -self.slider_holes_tx - 0.5 - self.lcmp_parameters['z']/2
         lcmpl_ty = 0
         self.lcmpl_tz = self.x_beam_tz
         lcmpl.translate([self.lcmpl_tx,lcmpl_ty,self.lcmpl_tz])
@@ -195,7 +198,7 @@ class AirbearingAssembly(csg.Union):
     def __make_loadcell(self):
         lc = loadcell.Loadcell()
         self.lc_parameters = lc.get_parameters()
-        self.lc_tx = self.lcmpl_tx - self.lcmp_parameters['x']/2 - self.lc_parameters['y']/2
+        self.lc_tx = self.lcmpl_tx - self.lcmp_parameters['z']/2 - self.lc_parameters['y']/2
         lc_ty = 0
         self.lc_tz = self.lcmpl_tz + self.lc_parameters['hole_x'][1]
         lc.translate([self.lc_tx,lc_ty,self.lc_tz])
@@ -203,7 +206,9 @@ class AirbearingAssembly(csg.Union):
 
     def __make_loadcell_mount_plate_upper(self):
         lcmpu = loadcell_mount_plate.LoadcellMountPlate()
-        self.lcmpu_tx = self.lc_tx - self.lc_parameters['y']/2 - self.lcmp_parameters['x']/2
+        lcmpu.rotate(angle=math.pi/2,axis=[1,0,0])
+        lcmpu.rotate(angle=-math.pi/2,axis=[0,0,1])
+        self.lcmpu_tx = self.lc_tx - self.lc_parameters['y']/2 - self.lcmp_parameters['z']/2
         lcmpu_ty = 0
         self.lcmpu_tz = self.lc_tz + self.lc_parameters['hole_x'][1]
         lcmpu.translate([self.lcmpu_tx,lcmpu_ty,self.lcmpu_tz])
@@ -291,26 +296,17 @@ class AirbearingAssembly(csg.Union):
         brackets.set_color(self.parameters['color'],recursive=True)
         self.add_obj(brackets)
 
-    def __make_sensor_target(self):
-        x = 0.236
-        y = self.ab_parameters['slide_width']
-        z = self.parameters['y_beam_separation'] + 0.25
-        sensor_target = fso.Box(x=x,y=y,z=z)
-        hole_r = 0.125
-        hole_l = x*2
-        hole = fso.Cylinder(r=hole_r,l=hole_l)
-        hole.rotate(angle=-math.pi/2,axis=[0,1,0])
-        hole_x = 0
-        hole_y = y/2 - 0.5
-        hole_az = [-1,0,1]
-        holes = po.LinearArray(hole,x=hole_x,y=[-hole_y,hole_y],z=hole_az)
-        sensor_target -= holes
-        sensor_target_tx = self.slider_holes_tx + x/2 + 0.5
-        sensor_target_ty = 0
-        sensor_target_tz = self.z_beam_tz - 0.375
-        sensor_target.translate([sensor_target_tx,sensor_target_ty,sensor_target_tz])
-        sensor_target.set_color([0.98,0.98,0.98,1.0],recursive=True)
-        self.add_obj(sensor_target)
+    def __make_laser_target_plate(self):
+        ltp = laser_target_plate.LaserTargetPlate()
+        self.ltp_parameters = ltp.get_parameters()
+        ltp.rotate(angle=math.pi/2,axis=[1,0,0])
+        ltp.rotate(angle=-math.pi/2,axis=[0,0,1])
+
+        ltp_tx = self.slider_holes_tx + self.ltp_parameters['z']/2 + 0.5
+        ltp_ty = 0
+        ltp_tz = self.z_beam_tz - 0.375
+        ltp.translate([ltp_tx,ltp_ty,ltp_tz])
+        self.add_obj(ltp)
 
     def __make_origin(self):
         o = origin.Origin(mag=10)

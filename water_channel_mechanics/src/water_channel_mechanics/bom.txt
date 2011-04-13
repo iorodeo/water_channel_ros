@@ -9,19 +9,25 @@
 
 | ! | item number | name | description | dimensions | vendor | part number | quantity | cost |
 |-
-| |  | 1020-8.000 | T-Slotted Extrusion | l: 8.000 | Prime Resource | ? | 3 | 0.0 |
-| |  | 1010-3.000 | T-Slotted Extrusion | l: 3.000 | Prime Resource | ? | 4 | 0.0 |
-| |  | 2020-double | T-Slotted L Bracket | bracket_type: double | McMaster | 47065T176 | 12 | 5.96 |
-| |  | slider_mount_plate | mounts t_slotted beams to air bearing slider | x: 1.000, y: 6.000, z: 0.125 | ? | ? | 2 | 0.0 |
-| |  | RAB6 | non-motorized air bearing slide | slide travel: 4 | Nelson Air Corp. | RAB6 | 1 | 0.0 |
-| |  | 2040-32.000 | T-Slotted Extrusion | l: 32.000 | Prime Resource | ? | 1 | 0.0 |
-| |  | air_bearing_mount_plate | mounts air bearing carriage to t_slotted beam | x: 7.000, y: 7.500, z: 0.500 | ? | ? | 1 | 0.0 |
-| |  | 1010-6.000 | T-Slotted Extrusion | l: 6.000 | Prime Resource | ? | 5 | 0.0 |
-| |  | 2040-50.000 | T-Slotted Extrusion | l: 50.000 | Prime Resource | ? | 2 | 0.0 |
-| |  | 1010-single | T-Slotted L Bracket | bracket_type: single | McMaster | 47065T223 | 32 | 3.98 |
-| |  | 1020-6.000 | T-Slotted Extrusion | l: 6.000 | Prime Resource | ? | 1 | 0.0 |
-| |  | 1010-5.000 | T-Slotted Extrusion | l: 5.000 | Prime Resource | ? | 2 | 0.0 |
-| |  | 1010-double | T-Slotted L Bracket | bracket_type: double | McMaster | 47065T169 | 12 | 5.58 |
-| |  | 1010-10.624 | T-Slotted Extrusion | l: 10.624 | Prime Resource | ? | 4 | 0.0 |
+| | 1 | air_bearing_mount_plate | Mounts air bearing carriage to t_slotted beam | x: 7.000, y: 7.500, z: 0.500 | ? | ? | 1 | 0.00 |
+| | 2 | loadcell_mount_plate | Mounts loadcell to t_slotted beams | x: 6.000, y: 1.000, z: 0.125 | ? | ? | 2 | 0.00 |
+| | 3 | slider_mount_plate | Mounts t_slotted beams to air bearing slider | x: 1.000, y: 6.000, z: 0.125 | ? | ? | 2 | 0.00 |
+| | 4 | 1010-double | T-Slotted L Bracket | bracket_type: double | McMaster | 47065T169 | 12 | 5.58 |
+| | 5 | 1010-single | T-Slotted L Bracket | bracket_type: single | McMaster | 47065T223 | 32 | 3.98 |
+| | 6 | 2020-double | T-Slotted L Bracket | bracket_type: double | McMaster | 47065T176 | 12 | 5.96 |
+| | 7 | cushion | Protects the air bearing carriage from the moving t_slotted beams | x: 1.500, y: 6.500, z: 0.250 | McMaster | 9013K153 | 2 | 15.94 |
+| | 8 | submersible_mount | Holds the submersible tube | x: 3.000, y: 2.125, z: 2.000 | McMaster | 47065T207 | 1 | 51.91 |
+| | 9 | RAB6 | Non-motorized air bearing slide | slide travel: 4 | Nelson Air Corp. | RAB6 | 1 | 4095.00 |
+| | 10 | laser_target_plate | Target for the distance sensor lasers | x: 6.000, y: 4.250, z: 0.236 | Pololu | ? | 1 | 0.00 |
+| | 11 | 1010-003.000 | T-Slotted Extrusion | l: 3.000 | Prime Resource | ? | 4 | 0.00 |
+| | 12 | 1010-005.000 | T-Slotted Extrusion | l: 5.000 | Prime Resource | ? | 2 | 0.00 |
+| | 13 | 1010-006.000 | T-Slotted Extrusion | l: 6.000 | Prime Resource | ? | 5 | 0.00 |
+| | 14 | 1010-010.624 | T-Slotted Extrusion | l: 10.624 | Prime Resource | ? | 4 | 0.00 |
+| | 15 | 1020-006.000 | T-Slotted Extrusion | l: 6.000 | Prime Resource | ? | 1 | 0.00 |
+| | 16 | 1020-008.000 | T-Slotted Extrusion | l: 8.000 | Prime Resource | ? | 3 | 0.00 |
+| | 17 | 2040-032.000 | T-Slotted Extrusion | l: 32.000 | Prime Resource | ? | 1 | 0.00 |
+| | 18 | 2040-050.000 | T-Slotted Extrusion | l: 50.000 | Prime Resource | ? | 2 | 0.00 |
+| | 19 | test_submersible | Submersible used for testing | 12V | Sevylor | U120BLK-00-000 | 1 | 39.99 |
+| | 20 | loadcell | Low Single PT Load Cell | 2Kg | TransducerTechniques | LSP-2 | 1 | 110.00 |
 |-
 | # | | | | | | | total |:=(@I$quantity..@II$quantity)*(@I$cost..@II$cost);%.2f;N

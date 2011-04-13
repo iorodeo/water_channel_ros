@@ -26,9 +26,10 @@ RAB4_PARAMETERS = {                            # --------------------
         'carriage_screw_size'  : 0.25,     # N
         'slide_tolerance'      : 0.005,
         'name'                 : 'RAB4',
-        'description'          : 'non-motorized air bearing slide',
+        'description'          : 'Non-motorized air bearing slide',
         'vendor'               : 'Nelson Air Corp.',
         'part number'          : 'RAB4',
+        'cost'                 : 0.00,
         }
 
 # Data sheet parameter
@@ -47,9 +48,10 @@ RAB6_PARAMETERS = {                            # --------------------
         'carriage_screw_size'  : 0.25,     # N
         'slide_tolerance'      : 0.005,
         'name'                 : 'RAB6',
-        'description'          : 'non-motorized air bearing slide',
+        'description'          : 'Non-motorized air bearing slide',
         'vendor'               : 'Nelson Air Corp.',
         'part number'          : 'RAB6',
+        'cost'                 : 4095.00,
         }
 
 # Data sheet parameter
@@ -68,9 +70,10 @@ RAB10_PARAMETERS = {                           # --------------------
         'carriage_screw_size'  : 0.25,     # N
         'slide_tolerance'      : 0.005,
         'name'                 : 'RAB10',
-        'description'          : 'non-motorized air bearing slide',
+        'description'          : 'Non-motorized air bearing slide',
         'vendor'               : 'Nelson Air Corp.',
         'part number'          : 'RAB10',
+        'cost'                 : 0.00,
         }
 
 BEARING_PARAMETERS = {
@@ -107,6 +110,7 @@ class RAB(csg.Union):
         BOM.set_parameter('dimensions',('slide travel: ' + str(self.parameters['bearing_slide_travel'])))
         BOM.set_parameter('vendor',self.parameters['vendor'])
         BOM.set_parameter('part number',self.parameters['part number'])
+        BOM.set_parameter('cost',self.parameters['cost'])
         self.set_object_parameter('bom',BOM)
 
     def set_slide_travel(self,val):

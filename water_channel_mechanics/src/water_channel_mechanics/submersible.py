@@ -24,6 +24,7 @@ import cad.csg_objects as csg
 import cad.finite_solid_objects as fso
 import cad.pattern_objects as po
 import cad_library.origin as origin
+import cad.export.bom as bom
 
 
 SUBMERSIBLE_PARAMETERS = {
@@ -43,6 +44,7 @@ class Submersible(csg.Union):
         super(Submersible, self).__init__()
         self.parameters = SUBMERSIBLE_PARAMETERS
         self.__make_submersible()
+        self.__set_bom()
         self.__make_origin()
 
     def get_parameters(self):
@@ -65,6 +67,17 @@ class Submersible(csg.Union):
         submersible = cylinder1 | cylinder2 | sphere | cylinder3 | box
         submersible.set_color(self.parameters['color'],recursive=True)
         self.add_obj(submersible)
+
+    def __set_bom(self):
+        scale = self.get_scale()
+        BOM = bom.BOMObject()
+        BOM.set_parameter('name','test_submersible')
+        BOM.set_parameter('description','Submersible used for testing')
+        BOM.set_parameter('dimensions','12V')
+        BOM.set_parameter('vendor','Sevylor')
+        BOM.set_parameter('part number','U120BLK-00-000')
+        BOM.set_parameter('cost',39.99)
+        self.set_object_parameter('bom',BOM)
 
     def __make_origin(self):
         o = origin.Origin(mag=10)

@@ -19,6 +19,8 @@ roslib.load_manifest('water_channel_mechanics')
 import rospy
 import cad.csg_objects as csg
 import cad.finite_solid_objects as fso
+import cad.export.bom as bom
+
 import math
 import copy
 
@@ -44,6 +46,7 @@ class Loadcell(csg.Difference):
         self.parameters = LOADCELL_PARAMETERS
         self.__make_loadcell()
         self.__make_holes()
+        self.__set_bom()
         self.rotate(angle=math.pi/2,axis=[1,0,0])
         self.rotate(angle=math.pi/2,axis=[0,1,0])
         self.set_color([1,1,0],recursive=True)
@@ -72,6 +75,17 @@ class Loadcell(csg.Difference):
                 hole.translate([x,0,z])
                 hole_list.append(hole)
         self.add_obj(hole_list)
+
+    def __set_bom(self):
+        scale = self.get_scale()
+        BOM = bom.BOMObject()
+        BOM.set_parameter('name','loadcell')
+        BOM.set_parameter('description','Low Single PT Load Cell')
+        BOM.set_parameter('dimensions','2Kg')
+        BOM.set_parameter('vendor','TransducerTechniques')
+        BOM.set_parameter('part number','LSP-2')
+        BOM.set_parameter('cost',110)
+        self.set_object_parameter('bom',BOM)
 
 
 if __name__ == "__main__":

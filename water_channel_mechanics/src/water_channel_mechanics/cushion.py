@@ -28,27 +28,28 @@ import cad.export.bom as bom
 
 import airbearing
 
-SLIDER_MOUNT_PLATE_PARAMETERS = {
+
+CUSHION_PARAMETERS = {
     'bearing_type': 'RAB6',
     'slide_travel': 4,
-    'color': [0.7,0.7,0.7,1.0],
-    'x': 1,
-    'z': 0.125,
-    'hole_diameter': 0.26,
+    'color': [0.1,0.1,0.1,1.0],
+    'z': 0.25,
+    'cutout_x': 3/8,
+    'cutout_z': 0.5,
     'show_origin': False,
     }
 
 def get_parameters():
-    return copy.deepcopy(SLIDER_MOUNT_PLATE_PARAMETERS)
+    return copy.deepcopy(CUSHION_PARAMETERS)
 
-class SliderMountPlate(csg.Difference):
+class Cushion(csg.Difference):
     def __init__(self):
-        super(SliderMountPlate, self).__init__()
-        self.parameters = SLIDER_MOUNT_PLATE_PARAMETERS
+        super(Cushion, self).__init__()
+        self.parameters = CUSHION_PARAMETERS
         ab = airbearing.RAB(bearing_type=self.parameters['bearing_type'],slide_travel=self.parameters['slide_travel'])
         self.ab_parameters = ab.get_parameters()
-        self.__make_slider_mount_plate()
-        self.__make_holes()
+        self.__make_cushion()
+        self.__make_cutout()
         self.__set_bom()
         self.__make_origin()
         self.set_color(self.parameters['color'],recursive=True)
@@ -56,29 +57,34 @@ class SliderMountPlate(csg.Difference):
     def get_parameters(self):
         return copy.deepcopy(self.parameters)
 
-    def __make_slider_mount_plate(self):
-        x = self.parameters['x']
-        y = self.ab_parameters['slide_width']
+    def __make_cushion(self):
+        x = 1 + self.parameters['z']*2
+        self.parameters['x'] = x
+        y = self.ab_parameters['slide_width'] + self.parameters['z']*2
         self.parameters['y'] = y
         z = self.parameters['z']
-        smp = fso.Box(x=x,y=y,z=z)
+        cushion = fso.Box(x=x,y=y,z=z)
 
-        self.add_obj(smp)
+        self.add_obj(cushion)
 
-    def __make_holes(self):
-        hole = fso.Cylinder(r=self.parameters['hole_diameter']/2,l=self.parameters['z']*2)
-        hole_ty = self.ab_parameters['slide_screw_dW']/2
-        holes = po.LinearArray(hole,x=0,y=[-hole_ty,hole_ty],z=0)
-        self.add_obj(holes)
+    def __make_cutout(self):
+        x = self.parameters['cutout_x']
+        y = self.ab_parameters['slide_width'] + 0.1
+        self.parameters['cutout_y'] = y
+        z = self.parameters['cutout_z']
+        cutout = fso.Box(x=x,y=y,z=z)
+
+        self.add_obj(cutout)
 
     def __set_bom(self):
         scale = self.get_scale()
         BOM = bom.BOMObject()
-        BOM.set_parameter('name','slider_mount_plate')
-        BOM.set_parameter('description','Mounts t_slotted beams to air bearing slider')
+        BOM.set_parameter('name','cushion')
+        BOM.set_parameter('description','Protects the air bearing carriage from the moving t_slotted beams')
         BOM.set_parameter('dimensions','x: {x:0.3f}, y: {y:0.3f}, z: {z:0.3f}'.format(x=self.parameters['x']*scale[0],y=self.parameters['y']*scale[1],z=self.parameters['z']*scale[2]))
-        BOM.set_parameter('vendor','?')
-        BOM.set_parameter('part number','?')
+        BOM.set_parameter('vendor','McMaster')
+        BOM.set_parameter('part number','9013K153')
+        BOM.set_parameter('cost',15.94)
         self.set_object_parameter('bom',BOM)
 
     def __make_origin(self):
@@ -88,8 +94,8 @@ class SliderMountPlate(csg.Difference):
 
 
 if __name__ == "__main__":
-    slider_mount_plate = SliderMountPlate()
-    slider_mount_plate.export()
+    cushion = Cushion()
+    cushion.export()
 
 
 

@@ -153,7 +153,7 @@ class SubmersibleSled(csg.Union):
         fsmb_y = 1
         fsmb_z = self.parameters['sensor_mount_beam_length']
         fsmb = t_slotted.Extrusion(x=fsmb_x,y=fsmb_y,z=fsmb_z)
-        fsmb_tx = self.aba.lcmpu_tx - self.lcmp_parameters['x']/2 - fsmb_x/2 - 1
+        fsmb_tx = self.aba.lcmpu_tx - self.lcmp_parameters['z']/2 - fsmb_x/2 - 1
         fsmb_ty = self.parameters['beam_width']/2 + fsmb_y/2
         fsmb_tz = self.x_beam_tz - fsmb_z/2 + self.parameters['z']/2
         fsmbs = po.LinearArray(fsmb,x=fsmb_tx,y=[-fsmb_ty,fsmb_ty],z=fsmb_tz)

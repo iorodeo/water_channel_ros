@@ -87,7 +87,7 @@ class AirbearingMountPlate(csg.Difference):
         scale = self.get_scale()
         BOM = bom.BOMObject()
         BOM.set_parameter('name','air_bearing_mount_plate')
-        BOM.set_parameter('description','mounts air bearing carriage to t_slotted beam')
+        BOM.set_parameter('description','Mounts air bearing carriage to t_slotted beam')
         BOM.set_parameter('dimensions','x: {x:0.3f}, y: {y:0.3f}, z: {z:0.3f}'.format(x=self.parameters['x']*scale[0],y=self.parameters['y']*scale[1],z=self.parameters['z']*scale[2]))
         BOM.set_parameter('vendor','?')
         BOM.set_parameter('part number','?')

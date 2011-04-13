@@ -26,29 +26,29 @@ import cad.pattern_objects as po
 import cad_library.origin as origin
 import cad.export.bom as bom
 
-import loadcell
+import airbearing
 
-LOADCELL_MOUNT_PLATE_PARAMETERS = {
-    'color': [0.7,0.7,0.7,1.0],
-    'x': 6.0,
-    'y': 1.0,
-    'z': 0.125,
-    'hole_r_big': 0.13,
-    'hole_x_big': 2.5,
-    'hole_r_loadcell': 0.0625,
-    'hole_l': 1.0,
+LASER_TARGET_PLATE_PARAMETERS = {
+    'bearing_type': 'RAB6',
+    'slide_travel': 4,
+    'color': [0.98,0.98,0.98,1.0],
+    'y': 4.25,
+    'z': 0.236,
+    'hole_r': 0.125,
+    'hole_l': 0.5,
     'show_origin': False,
     }
 
 def get_parameters():
-    return copy.deepcopy(LOADCELL_MOUNT_PLATE_PARAMETERS)
+    return copy.deepcopy(LASER_TARGET_PLATE_PARAMETERS)
 
-class LoadcellMountPlate(csg.Difference):
+class LaserTargetPlate(csg.Difference):
     def __init__(self):
-        super(LoadcellMountPlate, self).__init__()
-        self.parameters = LOADCELL_MOUNT_PLATE_PARAMETERS
-        self.loadcell_parameters = loadcell.get_parameters()
-        self.__make_loadcell_mount_plate()
+        super(LaserTargetPlate, self).__init__()
+        self.parameters = LASER_TARGET_PLATE_PARAMETERS
+        ab = airbearing.RAB(bearing_type=self.parameters['bearing_type'],slide_travel=self.parameters['slide_travel'])
+        self.ab_parameters = ab.get_parameters()
+        self.__make_laser_target_plate()
         self.__make_holes()
         self.__set_bom()
         self.__make_origin()
@@ -57,41 +57,33 @@ class LoadcellMountPlate(csg.Difference):
     def get_parameters(self):
         return copy.deepcopy(self.parameters)
 
-    def __make_loadcell_mount_plate(self):
-        length = self.parameters['x']
-        width = self.parameters['y']
-        height = self.parameters['z']
-        loadcell_mount_plate = fso.Box(x=length,y=width,z=height)
-        self.add_obj(loadcell_mount_plate)
+    def __make_laser_target_plate(self):
+        x = self.ab_parameters['slide_width']
+        self.parameters['x'] = x
+        y = self.parameters['y']
+        z = self.parameters['z']
+        ltp = fso.Box(x=x,y=y,z=z)
+
+        self.add_obj(ltp)
 
     def __make_holes(self):
+        hole_r = self.parameters['hole_r']
         hole_l = self.parameters['hole_l']
-
-        # Loadcell mount holes
-        hole_r_loadcell = self.parameters['hole_r_loadcell']
-        base_hole = fso.Cylinder(r=hole_r_loadcell,l=hole_l)
-
-        hole_x = self.loadcell_parameters['hole_z']
-        holes = po.LinearArray(base_hole,hole_x,0,0)
-        self.add_obj(holes)
-
-        # T-slotted bracket mount holes
-        hole_r_big = self.parameters['hole_r_big']
-        base_hole = fso.Cylinder(r=hole_r_big,l=hole_l)
-
-        hole_x = self.parameters['hole_x_big']
-        holes = po.LinearArray(base_hole,[-hole_x,hole_x],0,0)
+        hole = fso.Cylinder(r=hole_r,l=hole_l)
+        hole_x = self.parameters['x']/2 - 0.5
+        hole_ay = [-1,0,1]
+        hole_z = 0
+        holes = po.LinearArray(hole,x=[-hole_x,hole_x],y=hole_ay,z=hole_z)
         self.add_obj(holes)
 
     def __set_bom(self):
         scale = self.get_scale()
         BOM = bom.BOMObject()
-        BOM.set_parameter('name','loadcell_mount_plate')
-        BOM.set_parameter('description','Mounts loadcell to t_slotted beams')
+        BOM.set_parameter('name','laser_target_plate')
+        BOM.set_parameter('description','Target for the distance sensor lasers')
         BOM.set_parameter('dimensions','x: {x:0.3f}, y: {y:0.3f}, z: {z:0.3f}'.format(x=self.parameters['x']*scale[0],y=self.parameters['y']*scale[1],z=self.parameters['z']*scale[2]))
-        BOM.set_parameter('vendor','?')
+        BOM.set_parameter('vendor','Pololu')
         BOM.set_parameter('part number','?')
-        BOM.set_parameter('cost',0)
         self.set_object_parameter('bom',BOM)
 
     def __make_origin(self):
@@ -101,8 +93,8 @@ class LoadcellMountPlate(csg.Difference):
 
 
 if __name__ == "__main__":
-    loadcell_mount_plate = LoadcellMountPlate()
-    loadcell_mount_plate.export()
+    laser_target_plate = LaserTargetPlate()
+    laser_target_plate.export()
 
 
 
