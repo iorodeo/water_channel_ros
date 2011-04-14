@@ -232,17 +232,19 @@ class SubmersibleSled(csg.Union):
         lsmb.translate([lsmb_tx,lsmb_ty,lsmb_tz])
 
         ls = laser_sensor_short_range.LaserSensorShortRange()
+        ls.rotate(angle=math.pi,axis=[1,0,0])
         self.ls_parameters = ls.get_parameters()
         lsmp = laser_sensor_short_range_mount_plate.LaserSensorShortRangeMountPlate()
+        lsmp.rotate(angle=math.pi/2,axis=[1,0,0])
         self.lsmp_parameters = lsmp.get_parameters()
         ls_tx = self.lsmp_parameters['lssr_tx']
-        ls_ty = -self.ls_parameters['z']/2 - self.lsmp_parameters['y']/2
-        ls_tz = self.lsmp_parameters['lssr_tz']
+        ls_ty = -self.ls_parameters['z']/2 - self.lsmp_parameters['z']/2
+        ls_tz = self.lsmp_parameters['lssr_ty']
         ls.translate([ls_tx,ls_ty,ls_tz])
         ls_and_mp = ls | lsmp
         ls_and_mp_tx = lsmb_tx - self.lsmp_parameters['mount_hole_tx']
-        ls_and_mp_ty = lsmb_ty - lsmb_y/2 - self.lsmp_parameters['y']/2
-        ls_and_mp_tz = lsmb_tz - lsmb_z/2 + self.lsmp_parameters['z']/2 - 0.25
+        ls_and_mp_ty = lsmb_ty - lsmb_y/2 - self.lsmp_parameters['z']/2
+        ls_and_mp_tz = lsmb_tz - lsmb_z/2 + self.lsmp_parameters['y']/2 - 0.25
         ls_and_mp.translate([ls_and_mp_tx,ls_and_mp_ty,ls_and_mp_tz])
 
         ls_and_mount = lsmb | ls_and_mp

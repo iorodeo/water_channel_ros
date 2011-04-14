@@ -19,6 +19,8 @@ roslib.load_manifest('water_channel_mechanics')
 import rospy
 import cad.csg_objects as csg
 import cad.finite_solid_objects as fso
+import cad.export.bom as bom
+
 import math
 import copy
 
@@ -33,6 +35,11 @@ LASER_SENSOR_SHORT_RANGE_PARAMETERS = {
     'hole_ty': 0.787,
     'hole_r': 0.085,
     'hole_l': 4,
+    'laser_beam_tx': 0.65,
+    'laser_beam_r': 0.1,
+    'laser_beam_l': 2,
+    'laser_beam_color': [1,0,0,1],
+    'show_laser_beam': True,
     }
 
 def get_parameters():
@@ -44,9 +51,9 @@ class LaserSensorShortRange(csg.Difference):
         self.parameters = LASER_SENSOR_SHORT_RANGE_PARAMETERS
         self.__make_laser_sensor_short_range()
         self.__make_holes()
+        self.__set_bom()
         self.rotate(angle=-math.pi/2,axis=[1,0,0])
         self.rotate(angle=-math.pi/2,axis=[0,1,0])
-        self.set_color([1,1,0],recursive=True)
 
     def get_parameters(self):
         return copy.deepcopy(self.parameters)
@@ -54,8 +61,20 @@ class LaserSensorShortRange(csg.Difference):
     def __make_laser_sensor_short_range(self):
         profile = self.parameters['profile']
         l = self.parameters['z']
-        laser_sensor_short_range = fso.Extrusion(profile=profile,l=l)
-        self.add_obj(laser_sensor_short_range)
+        lssr = fso.Extrusion(profile=profile,l=l)
+        lssr.set_color(self.parameters['color'],recursive=True)
+
+        if self.parameters['show_laser_beam']:
+            laser_beam = fso.Cylinder(r=self.parameters['laser_beam_r'],l=self.parameters['laser_beam_l'])
+            laser_beam.rotate(angle=math.pi/2,axis=[1,0,0])
+            laser_beam.set_color(self.parameters['laser_beam_color'])
+            laser_beam_tx = self.parameters['laser_beam_tx']
+            laser_beam_ty = -self.parameters['laser_beam_l']/2
+            laser_beam_tz = 0
+            laser_beam.translate([laser_beam_tx,laser_beam_ty,laser_beam_tz])
+            lssr |= laser_beam
+
+        self.add_obj(lssr)
 
     def __make_holes(self):
         hole_r = self.parameters['hole_r']
@@ -67,7 +86,19 @@ class LaserSensorShortRange(csg.Difference):
         hole1.translate([-hole_tx,hole_ty,0])
         hole2 = base_hole.copy()
         hole2.translate([hole_tx,-hole_ty,0])
+        hole1.set_color(self.parameters['color'])
+        hole2.set_color(self.parameters['color'])
         self.add_obj([hole1,hole2])
+
+    def __set_bom(self):
+        scale = self.get_scale()
+        BOM = bom.BOMObject()
+        BOM.set_parameter('name','laser_sensor_short_range')
+        BOM.set_parameter('description','Micro-Epsilon short range distance sensor')
+        BOM.set_parameter('dimensions','100mm')
+        BOM.set_parameter('vendor','Micro-Epsilon')
+        BOM.set_parameter('part number','optoNCDT1302')
+        self.set_object_parameter('bom',BOM)
 
 
 if __name__ == "__main__":

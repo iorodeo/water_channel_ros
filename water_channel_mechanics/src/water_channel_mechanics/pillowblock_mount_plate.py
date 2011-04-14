@@ -24,6 +24,7 @@ import cad.csg_objects as csg
 import cad.finite_solid_objects as fso
 import cad.pattern_objects as po
 import cad_library.origin as origin
+import cad.export.bom as bom
 
 import pillowblock
 
@@ -39,24 +40,29 @@ PILLOWBLOCK_MOUNT_PLATE_PARAMETERS = {
 def get_parameters():
     return copy.deepcopy(PILLOWBLOCK_MOUNT_PLATE_PARAMETERS)
 
-class PillowblockMountPlate(csg.Union):
+class PillowblockMountPlate(csg.Difference):
     def __init__(self):
         super(PillowblockMountPlate, self).__init__()
         self.parameters = PILLOWBLOCK_MOUNT_PLATE_PARAMETERS
         self.pillowblock_parameters = pillowblock.get_parameters()
         self.__make_pillowblock_mount_plate()
+        self.__make_holes()
+        self.__set_bom()
         self.__make_origin()
+        self.set_color(self.parameters['color'],recursive=True)
 
     def get_parameters(self):
         return copy.deepcopy(self.parameters)
 
     def __make_pillowblock_mount_plate(self):
-        length = self.pillowblock_parameters['z'] + 4
-        self.parameters['x'] = length
-        width = self.parameters['y']
-        height = self.parameters['z']
-        pillowblock_mount_plate = fso.Box(x=length,y=width,z=height)
+        x = self.pillowblock_parameters['z'] + 4
+        self.parameters['x'] = x
+        y = self.parameters['y']
+        z = self.parameters['z']
+        pillowblock_mount_plate = fso.Box(x=x,y=y,z=z)
+        self.add_obj(pillowblock_mount_plate)
 
+    def __make_holes(self):
         hole_r = self.parameters['hole_r']
         hole_l = self.parameters['hole_l']
 
@@ -65,19 +71,19 @@ class PillowblockMountPlate(csg.Union):
         hole_y = self.pillowblock_parameters['hole_x']
         base_hole = fso.Cylinder(r=hole_r,l=hole_l)
         holes = po.LinearArray(base_hole,hole_x,hole_y,[0])
-        pillowblock_mount_plate -= holes
+        self.add_obj(holes)
 
         # T-slotted bracket mount holes
         hole_x = [-3.5,-2.5,2.5,3.5]
         hole_y = [-1.5,-0.5,0.5,1.5]
         holes = po.LinearArray(base_hole,hole_x,hole_y,[0])
-        pillowblock_mount_plate -= holes
+        self.add_obj(holes)
 
         # Motorized sled mount holes
         hole_x = [-2.125,2.125]
         hole_y = [-2.3125,2.3125]
         holes = po.LinearArray(base_hole,hole_x,hole_y,[0])
-        pillowblock_mount_plate -= holes
+        self.add_obj(holes)
 
         # Slots for motorized sled mount holes
         hole = fso.Cylinder(r=0.125,l=self.parameters['z']*2)
@@ -85,15 +91,22 @@ class PillowblockMountPlate(csg.Union):
         slot = fso.Box(x=0.25,y=1,z=self.parameters['z']*2)
         slot = holes | slot
         slots = po.LinearArray(slot,[-2.125,2.125],[0],[0])
-        pillowblock_mount_plate -= slots
-
-        pillowblock_mount_plate.set_color(self.parameters['color'],recursive=True)
-        self.add_obj(pillowblock_mount_plate)
+        self.add_obj(slots)
 
     def __make_origin(self):
         o = origin.Origin(mag=10)
         if self.parameters['show_origin']:
             self.add_obj(o)
+
+    def __set_bom(self):
+        scale = self.get_scale()
+        BOM = bom.BOMObject()
+        BOM.set_parameter('name','pillowblock_mount_plate')
+        BOM.set_parameter('description','Mounts pillowblocks to sleds')
+        BOM.set_parameter('dimensions','x: {x:0.3f}, y: {y:0.3f}, z: {z:0.3f}'.format(x=self.parameters['x']*scale[0],y=self.parameters['y']*scale[1],z=self.parameters['z']*scale[2]))
+        BOM.set_parameter('vendor','?')
+        BOM.set_parameter('part number','?')
+        self.set_object_parameter('bom',BOM)
 
 
 if __name__ == "__main__":

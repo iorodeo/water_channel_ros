@@ -19,6 +19,8 @@ roslib.load_manifest('water_channel_mechanics')
 import rospy
 import cad.csg_objects as csg
 import cad.finite_solid_objects as fso
+import cad.export.bom as bom
+
 import math
 import copy
 
@@ -44,6 +46,7 @@ class PillowBlock(csg.Difference):
         self.parameters = PILLOWBLOCK_PARAMETERS
         self.__make_pillowblock()
         self.__make_holes()
+        self.__set_bom()
         self.rotate(angle=math.pi/2,axis=[1,0,0])
         self.rotate(angle=math.pi/2,axis=[0,0,1])
         self.set_color([1,1,0],recursive=True)
@@ -72,6 +75,16 @@ class PillowBlock(csg.Difference):
                 hole.translate([x,0,z])
                 hole_list.append(hole)
         self.add_obj(hole_list)
+
+    def __set_bom(self):
+        scale = self.get_scale()
+        BOM = bom.BOMObject()
+        BOM.set_parameter('name','pillowblock')
+        BOM.set_parameter('description','Rail bearings and mounts')
+        BOM.set_parameter('dimensions','x: {x:0.3f}, y: {y:0.3f}, z: {z:0.3f}'.format(x=self.parameters['x']*scale[0],y=self.parameters['y']*scale[1],z=self.parameters['z']*scale[2]))
+        BOM.set_parameter('vendor','LeeLinear')
+        BOM.set_parameter('part number','SPB-24-OPN')
+        self.set_object_parameter('bom',BOM)
 
 
 if __name__ == "__main__":

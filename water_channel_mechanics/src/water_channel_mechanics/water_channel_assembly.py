@@ -28,8 +28,10 @@ import cad_library.origin as origin
 import water_channel
 import submersible_sled
 import motorized_sled
+import laser_sensor_sled
 
 WATER_CHANNEL_ASSEMBLY_PARAMETERS = {
+    'laser_sensor_sled_tx': 100,
     'show_origin': False,
     }
 
@@ -52,7 +54,9 @@ class WaterChannelAssembly(csg.Union):
         sled_submersible = submersible_sled.SubmersibleSled()
         sled_motorized = motorized_sled.MotorizedSled()
         sled_motorized.translate([(sled_submersible.pb_tx + sled_motorized.pb_tx + 9),0,0])
-        sleds = sled_submersible | sled_motorized
+        sled_laser_sensor = laser_sensor_sled.LaserSensorSled()
+        sled_laser_sensor.translate([self.parameters['laser_sensor_sled_tx'],0,0])
+        sleds = sled_submersible | [sled_motorized, sled_laser_sensor]
         # sleds.translate([100,0,0])
         self.add_obj(sleds)
 
