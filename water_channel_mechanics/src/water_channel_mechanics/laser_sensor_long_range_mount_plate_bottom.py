@@ -103,6 +103,7 @@ class LaserSensorLongRangeMountPlateBottom(csg.Difference):
 
 if __name__ == "__main__":
     laser_sensor_long_range_mount_plate_bottom = LaserSensorLongRangeMountPlateBottom()
+    # laser_sensor_long_range_mount_plate_bottom.set_object_parameter('slice',True)
     laser_sensor_long_range_mount_plate_bottom.export()
 
 

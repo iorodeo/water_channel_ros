@@ -30,8 +30,8 @@ import laser_sensor_short_range
 
 LASER_SENSOR_SHORT_RANGE_MOUNT_PLATE_PARAMETERS = {
     'color': [0.98,0.98,0.98,1.0],
-    'x': 3.0,
-    'y': 4.0,
+    'x': 3.25,
+    'y': 4.25,
     'z': 0.236,
     'lssr_tx': -0.5,
     'lssr_ty': -0.75,
@@ -109,6 +109,7 @@ class LaserSensorShortRangeMountPlate(csg.Difference):
 
 if __name__ == "__main__":
     laser_sensor_short_range_mount_plate = LaserSensorShortRangeMountPlate()
+    laser_sensor_short_range_mount_plate.set_object_parameter('slice',True)
     laser_sensor_short_range_mount_plate.export()
 
 
