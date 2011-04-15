@@ -26,29 +26,26 @@ import cad.pattern_objects as po
 import cad_library.origin as origin
 import cad.export.bom as bom
 
-import airbearing
-
-LASER_TARGET_PLATE_PARAMETERS = {
-    'bearing_type': 'RAB6',
-    'slide_travel': 4,
+LASER_SENSOR_LONG_RANGE_TARGET_PLATE_PARAMETERS = {
     'color': [0.98,0.98,0.98,1.0],
-    'y': 4.25,
+    'x': 10,
+    'y': 10,
     'z': 0.236,
     'hole_r': 0.125,
     'hole_l': 0.5,
+    'hole_x': 4,
+    'hole_y': 0.5,
     'show_origin': False,
     }
 
 def get_parameters():
-    return copy.deepcopy(LASER_TARGET_PLATE_PARAMETERS)
+    return copy.deepcopy(LASER_SENSOR_LONG_RANGE_TARGET_PLATE_PARAMETERS)
 
-class LaserTargetPlate(csg.Difference):
+class LaserSensorLongRangeTargetPlate(csg.Difference):
     def __init__(self):
-        super(LaserTargetPlate, self).__init__()
-        self.parameters = LASER_TARGET_PLATE_PARAMETERS
-        ab = airbearing.RAB(bearing_type=self.parameters['bearing_type'],slide_travel=self.parameters['slide_travel'])
-        self.ab_parameters = ab.get_parameters()
-        self.__make_laser_target_plate()
+        super(LaserSensorLongRangeTargetPlate, self).__init__()
+        self.parameters = LASER_SENSOR_LONG_RANGE_TARGET_PLATE_PARAMETERS
+        self.__make_laser_sensor_long_range_target_plate()
         self.__make_holes()
         self.__set_bom()
         self.__make_origin()
@@ -57,9 +54,8 @@ class LaserTargetPlate(csg.Difference):
     def get_parameters(self):
         return copy.deepcopy(self.parameters)
 
-    def __make_laser_target_plate(self):
-        x = self.ab_parameters['slide_width']
-        self.parameters['x'] = x
+    def __make_laser_sensor_long_range_target_plate(self):
+        x = self.parameters['x']
         y = self.parameters['y']
         z = self.parameters['z']
         ltp = fso.Box(x=x,y=y,z=z)
@@ -70,17 +66,17 @@ class LaserTargetPlate(csg.Difference):
         hole_r = self.parameters['hole_r']
         hole_l = self.parameters['hole_l']
         hole = fso.Cylinder(r=hole_r,l=hole_l)
-        hole_x = self.parameters['x']/2 - 0.5
-        hole_ay = [-1,0,1]
+        hole_x = self.parameters['hole_x']
+        hole_y = self.parameters['hole_y']
         hole_z = 0
-        holes = po.LinearArray(hole,x=[-hole_x,hole_x],y=hole_ay,z=hole_z)
+        holes = po.LinearArray(hole,x=[-hole_x,hole_x],y=[-hole_y,hole_y],z=hole_z)
         self.add_obj(holes)
 
     def __set_bom(self):
         scale = self.get_scale()
         BOM = bom.BOMObject()
-        BOM.set_parameter('name','laser_target_plate')
-        BOM.set_parameter('description','Target for the distance sensor lasers')
+        BOM.set_parameter('name','laser_sensor_long_range_target_plate')
+        BOM.set_parameter('description','Target for the long range distance sensor')
         BOM.set_parameter('dimensions','x: {x:0.3f}, y: {y:0.3f}, z: {z:0.3f}'.format(x=self.parameters['x']*scale[0],y=self.parameters['y']*scale[1],z=self.parameters['z']*scale[2]))
         BOM.set_parameter('vendor','Pololu')
         BOM.set_parameter('part number','?')
@@ -93,8 +89,8 @@ class LaserTargetPlate(csg.Difference):
 
 
 if __name__ == "__main__":
-    laser_target_plate = LaserTargetPlate()
-    laser_target_plate.export()
+    laser_sensor_long_range_target_plate = LaserSensorLongRangeTargetPlate()
+    laser_sensor_long_range_target_plate.export()
 
 
 

@@ -35,7 +35,7 @@ import submersible
 import submersible_mount
 import loadcell
 import loadcell_mount_plate
-import laser_target_plate
+import laser_sensor_short_range_target_plate
 
 AIRBEARING_ASSEMBLY_PARAMETERS = {
     'bearing_type': 'RAB6',
@@ -67,7 +67,7 @@ class AirbearingAssembly(csg.Union):
         self.__make_loadcell()
         self.__make_loadcell_mount_plate_upper()
         self.__make_brackets()
-        self.__make_laser_target_plate()
+        self.__make_laser_sensor_short_range_target_plate()
 
         self_tz = -self.ab_parameters['carriage_height']/2 - self.abmp_parameters['z']
         self.translate([0,0,self_tz])
@@ -296,8 +296,8 @@ class AirbearingAssembly(csg.Union):
         brackets.set_color(self.parameters['color'],recursive=True)
         self.add_obj(brackets)
 
-    def __make_laser_target_plate(self):
-        ltp = laser_target_plate.LaserTargetPlate()
+    def __make_laser_sensor_short_range_target_plate(self):
+        ltp = laser_sensor_short_range_target_plate.LaserSensorShortRangeTargetPlate()
         self.ltp_parameters = ltp.get_parameters()
         ltp.rotate(angle=math.pi/2,axis=[1,0,0])
         ltp.rotate(angle=-math.pi/2,axis=[0,0,1])

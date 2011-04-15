@@ -80,7 +80,7 @@ class Cushion(csg.Difference):
         scale = self.get_scale()
         BOM = bom.BOMObject()
         BOM.set_parameter('name','cushion')
-        BOM.set_parameter('description','Protects the air bearing carriage from the moving t_slotted beams')
+        BOM.set_parameter('description','Protects the air bearing carriage')
         BOM.set_parameter('dimensions','x: {x:0.3f}, y: {y:0.3f}, z: {z:0.3f}'.format(x=self.parameters['x']*scale[0],y=self.parameters['y']*scale[1],z=self.parameters['z']*scale[2]))
         BOM.set_parameter('vendor','McMaster')
         BOM.set_parameter('part number','9013K153')

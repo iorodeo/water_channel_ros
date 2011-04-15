@@ -28,25 +28,27 @@ import cad.export.bom as bom
 
 import airbearing
 
-AIRBEARING_MOUNT_PLATE_PARAMETERS = {
+LASER_SENSOR_SHORT_RANGE_TARGET_PLATE_PARAMETERS = {
     'bearing_type': 'RAB6',
     'slide_travel': 4,
-    'color': [0.7,0.7,0.7,1.0],
-    'z': 0.5,
-    'hole_diameter': 0.26,
+    'color': [0.98,0.98,0.98,1.0],
+    'y': 4.25,
+    'z': 0.236,
+    'hole_r': 0.125,
+    'hole_l': 0.5,
     'show_origin': False,
     }
 
 def get_parameters():
-    return copy.deepcopy(AIRBEARING_MOUNT_PLATE_PARAMETERS)
+    return copy.deepcopy(LASER_SENSOR_SHORT_RANGE_TARGET_PLATE_PARAMETERS)
 
-class AirbearingMountPlate(csg.Difference):
+class LaserSensorShortRangeTargetPlate(csg.Difference):
     def __init__(self):
-        super(AirbearingMountPlate, self).__init__()
-        self.parameters = AIRBEARING_MOUNT_PLATE_PARAMETERS
+        super(LaserSensorShortRangeTargetPlate, self).__init__()
+        self.parameters = LASER_SENSOR_SHORT_RANGE_TARGET_PLATE_PARAMETERS
         ab = airbearing.RAB(bearing_type=self.parameters['bearing_type'],slide_travel=self.parameters['slide_travel'])
         self.ab_parameters = ab.get_parameters()
-        self.__make_airbearing_mount_plate()
+        self.__make_laser_sensor_short_range_target_plate()
         self.__make_holes()
         self.__set_bom()
         self.__make_origin()
@@ -55,41 +57,32 @@ class AirbearingMountPlate(csg.Difference):
     def get_parameters(self):
         return copy.deepcopy(self.parameters)
 
-    def __make_airbearing_mount_plate(self):
-        x = self.ab_parameters['carriage_length']
+    def __make_laser_sensor_short_range_target_plate(self):
+        x = self.ab_parameters['slide_width']
         self.parameters['x'] = x
-        y = self.ab_parameters['carriage_width']
-        self.parameters['y'] = y
+        y = self.parameters['y']
         z = self.parameters['z']
-        abmp = fso.Box(x=x,y=y,z=z)
+        ltp = fso.Box(x=x,y=y,z=z)
 
-        self.add_obj(abmp)
+        self.add_obj(ltp)
 
     def __make_holes(self):
-        # Add airbearing mount holes
-        hole_diameter = self.parameters['hole_diameter']
-        hole = fso.Cylinder(r=hole_diameter/2,l=self.parameters['z']*2)
-        h_x = self.ab_parameters['carriage_screw_dL']/2
-        h_y = self.ab_parameters['carriage_screw_dW']/2
-        holes = po.LinearArray(hole,x=[-h_x,h_x],y=[-h_y,h_y],z=0)
+        hole_r = self.parameters['hole_r']
+        hole_l = self.parameters['hole_l']
+        hole = fso.Cylinder(r=hole_r,l=hole_l)
+        hole_x = self.parameters['x']/2 - 0.5
+        hole_ay = [-1,0,1]
+        hole_z = 0
+        holes = po.LinearArray(hole,x=[-hole_x,hole_x],y=hole_ay,z=hole_z)
         self.add_obj(holes)
-
-        # Add y_beam mount counterbore holes
-        cb_diameter = 7/16
-        cb_depth = 0.25
-        cb = fso.Cylinder(r=cb_diameter/2,l=self.parameters['z'])
-        cb.translate([0,0,(-self.parameters['z'] + cb_depth)])
-        cbh = cb | hole
-        cbhs = po.LinearArray(cbh,x=[-2.5,0,2.5],y=[-1.5,1.5],z=0)
-        self.add_obj(cbhs)
 
     def __set_bom(self):
         scale = self.get_scale()
         BOM = bom.BOMObject()
-        BOM.set_parameter('name','airbearing_mount_plate')
-        BOM.set_parameter('description','Mounts air bearing carriage to t_slotted beam')
+        BOM.set_parameter('name','laser_sensor_short_range_target_plate')
+        BOM.set_parameter('description','Target for the short range distance sensor')
         BOM.set_parameter('dimensions','x: {x:0.3f}, y: {y:0.3f}, z: {z:0.3f}'.format(x=self.parameters['x']*scale[0],y=self.parameters['y']*scale[1],z=self.parameters['z']*scale[2]))
-        BOM.set_parameter('vendor','?')
+        BOM.set_parameter('vendor','Pololu')
         BOM.set_parameter('part number','?')
         self.set_object_parameter('bom',BOM)
 
@@ -100,8 +93,8 @@ class AirbearingMountPlate(csg.Difference):
 
 
 if __name__ == "__main__":
-    airbearing_mount_plate = AirbearingMountPlate()
-    airbearing_mount_plate.export()
+    laser_sensor_short_range_target_plate = LaserSensorShortRangeTargetPlate()
+    laser_sensor_short_range_target_plate.export()
 
 
 

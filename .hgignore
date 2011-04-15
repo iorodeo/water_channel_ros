@@ -5,7 +5,6 @@ syntax: glob
 *.egg-info
 *.swp
 *.scad
-*.stl
 *.pkl
 *.komodo*
 *.egg-info

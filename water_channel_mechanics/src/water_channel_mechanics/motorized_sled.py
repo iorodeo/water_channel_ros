@@ -29,6 +29,7 @@ import cad_library.t_slotted as t_slotted
 import water_channel
 import pillowblock
 import pillowblock_mount_plate
+import laser_sensor_long_range_target_plate
 
 MOTORIZED_SLED_PARAMETERS = {
     'color': [0.7,0.7,0.7,1.0],
@@ -50,6 +51,7 @@ class MotorizedSled(csg.Union):
         self.__make_horizontal_plate()
         self.__make_vertical_x_plates()
         self.__make_vertical_y_plates()
+        self.__make_laser_sensor_long_range_target_plate()
         self.__make_origin()
 
     def get_parameters(self):
@@ -120,14 +122,25 @@ class MotorizedSled(csg.Union):
         z = self.parameters['z'] - self.parameters['plate_thickness']
 
         vyp = fso.Box(x=x,y=y,z=z)
-        vyp_tx = self.parameters['x']/2 - self.parameters['plate_thickness']/2
+        self.vyp_tx = self.parameters['x']/2 - self.parameters['plate_thickness']/2
         vyp_ty = 0
-        vyp_tz = self.ph_tz + self.parameters['plate_thickness']/2 + z/2
+        self.vyp_tz = self.ph_tz + self.parameters['plate_thickness']/2 + z/2
 
-        vyps = po.LinearArray(vyp,x=[-vyp_tx,vyp_tx],y=vyp_ty,z=vyp_tz)
+        vyps = po.LinearArray(vyp,x=[-self.vyp_tx,self.vyp_tx],y=vyp_ty,z=self.vyp_tz)
         vyps.translate([0,self.ph_ty,0])
         vyps.set_color(self.parameters['color'],recursive=True)
         self.add_obj(vyps)
+
+    def __make_laser_sensor_long_range_target_plate(self):
+        ltp = laser_sensor_long_range_target_plate.LaserSensorLongRangeTargetPlate()
+        self.ltp_parameters = ltp.get_parameters()
+        ltp.rotate(angle=math.pi/2,axis=[0,0,1])
+        ltp.rotate(angle=-math.pi/2,axis=[0,1,0])
+        ltp_tx = self.vyp_tx + self.parameters['plate_thickness']/2 + self.ltp_parameters['z']/2
+        ltp_ty = 0
+        ltp_tz = self.vyp_tz
+        ltp.translate([ltp_tx,ltp_ty,ltp_tz])
+        self.add_obj(ltp)
 
     def __make_origin(self):
         o = origin.Origin(mag=10)
