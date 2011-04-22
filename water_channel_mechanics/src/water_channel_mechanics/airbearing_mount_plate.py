@@ -101,6 +101,7 @@ class AirbearingMountPlate(csg.Difference):
 
 if __name__ == "__main__":
     airbearing_mount_plate = AirbearingMountPlate()
+    airbearing_mount_plate.set_object_parameter('slice',True)
     airbearing_mount_plate.export()
 
 

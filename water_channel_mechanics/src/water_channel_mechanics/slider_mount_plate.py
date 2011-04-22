@@ -89,6 +89,7 @@ class SliderMountPlate(csg.Difference):
 
 if __name__ == "__main__":
     slider_mount_plate = SliderMountPlate()
+    slider_mount_plate.set_object_parameter('slice',True)
     slider_mount_plate.export()
 
 

@@ -102,6 +102,7 @@ class LoadcellMountPlate(csg.Difference):
 
 if __name__ == "__main__":
     loadcell_mount_plate = LoadcellMountPlate()
+    loadcell_mount_plate.set_object_parameter('slice',True)
     loadcell_mount_plate.export()
 
 

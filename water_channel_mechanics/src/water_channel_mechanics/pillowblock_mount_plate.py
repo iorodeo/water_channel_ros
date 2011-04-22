@@ -111,6 +111,7 @@ class PillowblockMountPlate(csg.Difference):
 
 if __name__ == "__main__":
     pillowblock_mount_plate = PillowblockMountPlate()
+    pillowblock_mount_plate.set_object_parameter('slice',True)
     pillowblock_mount_plate.export()
 
 
