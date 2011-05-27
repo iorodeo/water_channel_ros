@@ -95,6 +95,9 @@ class Cushion(csg.Difference):
 
 if __name__ == "__main__":
     cushion = Cushion()
+    cushion.set_object_parameter('slice',True)
+    # convert to mm
+    cushion.set_scale(25.4)
     cushion.export()
 
 
