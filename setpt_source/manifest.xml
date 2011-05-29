@@ -1,0 +1,19 @@
+<package>
+  <description brief="setpt_source">
+
+     setpt_source
+
+  </description>
+  <author>Peter Polidoro</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/setpt_source</url>
+  <depend package="rospy"/>
+  <depend package="roslib"/>
+  <depend package="joy"/>
+  <!-- <depend package="actionlib"/> -->
+  <!-- <depend package="actionlib_msgs"/> -->
+
+</package>
+
+

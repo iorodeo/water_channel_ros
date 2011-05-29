@@ -1,0 +1,9 @@
+# All variables in Plate coordinates
+# Define the goal
+float32 position
+---
+# Define the result
+float32 position
+---
+# Define a feedback message
+float32 position
