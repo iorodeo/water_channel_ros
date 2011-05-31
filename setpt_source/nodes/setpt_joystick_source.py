@@ -8,7 +8,6 @@ import math
 from joy.msg import Joy
 from std_msgs.msg import Header
 from setpt_source.msg import SetptMsg
-# from distance_118x.msg import DistMsg
 
 class SetptSource(object):
 
@@ -26,23 +25,14 @@ class SetptSource(object):
         self.vel_setpt = 0
         self.vel_setpt_goal = 0
         self.pos_setpt = 0
-        # self.have_pos = False
-        # self.pos = None
-        # self.pos_initial = None
-        # self.pos_initial = 0
 
         # Setup subscriber to joystick topic
-        self.dist_sub = rospy.Subscriber('joy', Joy, self.joystick_callback)
-
-        # # Setup subscriber to distance topic
-        # self.dist_sub = rospy.Subscriber('distance', DistMsg, self.dist_callback)
+        self.joystick_sub = rospy.Subscriber('joy', Joy, self.joystick_callback)
 
         # Setup setpt topic
         self.setptMsg = SetptMsg()
-        self.setpt_pub = rospy.Publisher('setpt', SetptMsg)
+        self.setpt_rel_pub = rospy.Publisher('setpt_rel', SetptMsg)
 
-        stamp = rospy.get_rostime()
-        self.start_t  = self.get_time()
         self.initialized = True
 
     def update(self):
@@ -57,30 +47,12 @@ class SetptSource(object):
             self.pos_setpt += pos_inc
             self.setptMsg.velocity = self.vel_setpt
             self.setptMsg.position = self.pos_setpt
-            self.setpt_pub.publish(self.setptMsg)
-        # with self.lock:
-        #     if self.have_pos == True:
-        #         self.pos_setpt = self.pos_initial + cos_pos
-        #         self.vel_setpt = cos_vel
-        #         self.setptMsg.position = self.pos_setpt
-        #         self.setptMsg.velocity = self.vel_setpt
-        #         self.setptMsg.error = self.pos_setpt - self.pos
-        #         self.setpt_pub.publish(self.setptMsg)
+            self.setpt_rel_pub.publish(self.setptMsg)
 
     def joystick_callback(self,data):
-        with self.lock:
-            self.vel_setpt_goal = data.axes[0]*self.vel_max
-
-    # def dist_callback(self,data):
-    #     with self.lock:
-    #         if self.have_pos == False:
-    #             self.pos_initial = data.distance
-    #             self.have_pos = True
-    #         self.pos = data.distance
-
-    def get_time(self):
-        stamp = rospy.get_rostime()
-        return stamp.secs + stamp.nsecs*1.0e-9
+        if self.initialized:
+            with self.lock:
+                self.vel_setpt_goal = data.axes[0]*self.vel_max
 
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':
