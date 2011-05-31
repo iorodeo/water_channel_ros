@@ -1,0 +1,10 @@
+(cl:defpackage distance_118x-srv
+  (:use )
+  (:export
+   "DISTSENSORCTL"
+   "<DISTSENSORCTL-REQUEST>"
+   "DISTSENSORCTL-REQUEST"
+   "<DISTSENSORCTL-RESPONSE>"
+   "DISTSENSORCTL-RESPONSE"
+  ))
+
