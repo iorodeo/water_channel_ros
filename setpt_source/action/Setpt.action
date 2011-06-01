@@ -1,8 +1,8 @@
 # Define the goal
-float32 position
+float32[] position_array
 ---
 # Define the result
-float32 position
+float32 secs_to_completion
 ---
 # Define a feedback message
 float32 position

@@ -13,3 +13,5 @@ build
 dist
 .komodo*
 deb_dist
+msg_gen
+src
