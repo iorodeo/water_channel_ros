@@ -1,8 +1,9 @@
 # Define the goal
+string coord_frame
 float32[] position_array
 ---
 # Define the result
-float32 secs_to_completion
+float32 position
 ---
 # Define a feedback message
-float32 position
+float32 secs_to_completion
