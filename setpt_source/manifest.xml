@@ -11,8 +11,9 @@
   <depend package="rospy"/>
   <depend package="roslib"/>
   <depend package="joy"/>
-  <!-- <depend package="actionlib"/> -->
-  <!-- <depend package="actionlib_msgs"/> -->
+  <depend package="actionlib"/>
+  <depend package="actionlib_msgs"/>
+  <depend package="distance_118x"/>
 
 </package>
 

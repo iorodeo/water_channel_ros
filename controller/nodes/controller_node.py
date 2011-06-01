@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 import roslib 
-roslib.load_manifest('setpt_source')
+roslib.load_manifest('controller')
 import rospy
 import threading
 import time
 from setpt_source.msg import SetptMsg 
 from distance_118x.msg import DistMsg 
-from ControllerComm import ControllerComm
+from controller_comm import ControllerComm
+from controller.srv import * 
 
 class Controller(object):
 
@@ -15,7 +16,6 @@ class Controller(object):
 
         self.dev = ControllerComm()
         self.dev.setModeOff()
-        #self.dev.setModeTracking()
 
         self.pos = None
         self.pos_setpt = None
@@ -26,9 +26,12 @@ class Controller(object):
         self.start_tracking = False
         self.have_pos = False
 
-        # Setup subscriber to distance topic
+        # Setup subscriber to distance and set point topics
         self.distance_sub = rospy.Subscriber('distance', DistMsg, self.distance_callback)
         self.setpoint_sub = rospy.Subscriber('setpt', SetptMsg, self.setpt_callback)
+        
+        # Setup controller service
+        self.srv = rospy.Service('controller_cmd', ControllerCmd, self.handle_controller_cmd)
 
         # Add shutdown code
         rospy.on_shutdown(self.errorStop)
@@ -43,17 +46,14 @@ class Controller(object):
             with self.lock:
                 # Send position data to controller
                 if self.have_new_pos == True:
-                    #print 'P', self.pos
                     self.dev.sendPosition(self.pos)
                     self.have_new_pos = False
                     if self.have_pos == False:
                         self.dev.sendSetPoint(self.pos, 0.0)
-                        self.dev.setModeTracking()
                         self.have_pos = True
 
                 # Send new setpt data to controller
                 if self.have_new_setpt == True:
-                    #print 'S', self.pos_setpt
                     self.dev.sendSetPoint(self.pos_setpt, self.vel_setpt)
                     self.have_new_setpt = False
 
@@ -62,11 +62,26 @@ class Controller(object):
                 try:
                     for x in data[-1]:
                         print '%1.2f, '%(float(x),) , 
+                        pass
                     print
                 except:
                     print 'data error'
 
         rospy.sleep(self.sleep_dt)
+
+    def handle_controller_cmd(self,req):
+        if req.cmd == 'set mode':
+            mode = req.valueString
+            if mode.lower() == 'off':
+                with self.lock:
+                    self.dev.setModeOff()
+            elif mode.lower() == 'tracking':
+                with self.lock:
+                    if self.have_pos:
+                        self.dev.setModeTracking()
+            else:
+                pass
+        return ControllerCmdResponse()
 
     def distance_callback(self,data):
         with self.lock:

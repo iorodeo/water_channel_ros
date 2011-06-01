@@ -32,7 +32,6 @@ class DistSensorNode(object):
         rospy.init_node('distance_sensor')
 
     def handle_distance_ctl(self,req):
-        rval = True
         if req.cmd == 'laser':
             if req.valueString == 'on':
                 with self.lock:
