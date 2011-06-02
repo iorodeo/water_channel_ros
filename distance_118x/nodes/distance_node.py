@@ -17,13 +17,13 @@ class DistSensorNode(object):
         """
         self.lock =  threading.Lock()
         self.fakeit = fakeit
+        self.distMsg = DistMsg()
 
         # Setup distance sensor
         if self.fakeit == False:
             self.dev = DistanceSensor(port) 
             self.dev.open()
             self.dev.setScaleFactor(scale_factor)
-            self.distMsg = DistMsg()
             self.dev.laserOn()
         self.laserOn = True
 
