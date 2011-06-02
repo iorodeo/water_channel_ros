@@ -75,8 +75,20 @@ class DistSensorNode(object):
 
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':
+    import sys
+    if len(sys.argv) > 1:
+        mode = sys.argv[1]
+        if mode.lower() == 'true':
+            print 'faking distance sensor!'
+            fakeit = True
+        elif mode.lower() == 'false':
+            fakeit = False
+        else:
+            raise ValueError, 'unknown mode = %s'%(mode,)
+    else:
+        fakeit = False
 
-    dist_node = DistSensorNode(fakeit=True)
+    dist_node = DistSensorNode(fakeit=fakeit)
     try:
         dist_node.stream()
     except rospy.ROSInterruptException:
