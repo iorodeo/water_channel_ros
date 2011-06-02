@@ -1,0 +1,6 @@
+string filename
+---
+bool status
+string message
+string coord_frame 
+float32[] position_array 
