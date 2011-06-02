@@ -14,4 +14,5 @@ dist
 .komodo*
 deb_dist
 msg_gen
+srv_gen
 src
