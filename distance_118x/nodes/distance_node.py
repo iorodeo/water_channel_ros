@@ -3,6 +3,7 @@ import roslib
 roslib.load_manifest('distance_118x')
 import rospy
 import threading
+import random
 from std_msgs.msg import Header
 from distance_118x.msg import DistMsg 
 from distance_118x.srv import *
@@ -10,18 +11,20 @@ from distance_sensor_118x import DistanceSensor
 
 class DistSensorNode(object):
 
-    def __init__(self, scale_factor=1000.0,port='/dev/USB_Distance'):
+    def __init__(self, scale_factor=1000.0,port='/dev/USB_Distance',fakeit=False):
         """
         Initilize distance sensor node.
         """
         self.lock =  threading.Lock()
+        self.fakeit = fakeit
+        self.distMsg = DistMsg()
 
         # Setup distance sensor
-        self.dev = DistanceSensor(port) 
-        self.dev.open()
-        self.dev.setScaleFactor(scale_factor)
-        self.distMsg = DistMsg()
-        self.dev.laserOn()
+        if self.fakeit == False:
+            self.dev = DistanceSensor(port) 
+            self.dev.open()
+            self.dev.setScaleFactor(scale_factor)
+            self.dev.laserOn()
         self.laserOn = True
 
         # Setup publisher and control service
@@ -32,16 +35,18 @@ class DistSensorNode(object):
         rospy.init_node('distance_sensor')
 
     def handle_distance_ctl(self,req):
-        if req.cmd == 'laser':
-            if req.valueString == 'on':
-                with self.lock:
-                    self.dev.laserOn()
-                    self.dev.startDistTracking('50hz')
+        if req.cmd == 'laser': 
+            if req.valueString == 'on': 
+                with self.lock: 
+                    if self.fakeit == False:
+                        self.dev.laserOn()
+                        self.dev.startDistTracking('50hz')
                     self.laserOn = True 
-                    
+                        
             else:
                 with self.lock:
-                    self.dev.laserOff()
+                    if self.fakeit == False:
+                        self.dev.laserOff()
                     self.laserOn = False
         return DistSensorCtlResponse() 
 
@@ -49,12 +54,16 @@ class DistSensorNode(object):
         """
         Streams data from the sensor. 
         """
-        self.dev.startDistTracking('50hz')
+        if self.fakeit == False:
+            self.dev.startDistTracking('50hz')
         while not rospy.is_shutdown():
             with self.lock:
                 if self.laserOn == True:
                     try:
-                        value = self.dev.readSample(convert='float')
+                        if self.fakeit == False:
+                            value = self.dev.readSample(convert='float')
+                        else:
+                            value = random.normalvariate(1000,2.0) 
                     except:
                         value = None
                 else:
@@ -66,8 +75,20 @@ class DistSensorNode(object):
 
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':
+    import sys
+    if len(sys.argv) > 1:
+        mode = sys.argv[1]
+        if mode.lower() == 'true':
+            print 'faking distance sensor!'
+            fakeit = True
+        elif mode.lower() == 'false':
+            fakeit = False
+        else:
+            raise ValueError, 'unknown mode = %s'%(mode,)
+    else:
+        fakeit = False
 
-    dist_node = DistSensorNode()
+    dist_node = DistSensorNode(fakeit=fakeit)
     try:
         dist_node.stream()
     except rospy.ROSInterruptException:
