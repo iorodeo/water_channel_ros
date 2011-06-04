@@ -1,8 +1,8 @@
 #ifndef PIDController_h
 #define PIDController_h
 
-#define PID_DFLT_OUTPUT_MAX  1000.0
-#define PID_DFLT_OUTPUT_MIN -1000.0
+#define PID_DFLT_OUTPUT_MAX  2000.0
+#define PID_DFLT_OUTPUT_MIN -2000.0
 
 class PIDController {
     public:

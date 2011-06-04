@@ -5,8 +5,8 @@
 #include "mcp4822.h"
 
 #define SM_MOTOR_CMD_CLAMP 4095
-#define SM_DRIVE_DEADBAND 190 
-#define SM_CONTROLLER_DEADBAND 50 
+#define SM_DRIVE_DEADBAND 0 
+#define SM_CONTROLLER_DEADBAND 0 
 
 class SledMotor {
     public:

@@ -3,8 +3,8 @@
 #include <util/atomic.h>
 #include "io_pins.h"
 #include "mcp4822.h"
-#include "SledMotor.h"
 #include "SystemState.h"
+#include "SledMotor.h"
 #include "MessageHandler.h"
 
 #define BAUDRATE 115200 
@@ -14,8 +14,8 @@
 #define RT_LOOP_TOP 5 
 #define RT_LOOP_FREQ 50 
 
-SledMotor sledMotor = SledMotor();
 SystemState sysState = SystemState();
+SledMotor sledMotor = SledMotor();
 MessageHandler messageHandler = MessageHandler();
 
 void setup() {

@@ -33,15 +33,25 @@ void MessageHandler::switchYard(SystemState &sysState) {
                     setModeInertial(sysState);
                     break;
 
+                case CMD_SET_MODE_MOTOR_CMD:
+                    setModeMotorCmd(sysState);
+                    break;
+
                 case CMD_UPDATE_SETPT:
                     updateSetPoint(sysState);
                     break;
 
                 case CMD_UPDATE_POSITION:
                     updatePosition(sysState);
+                    break;
 
                 case CMD_UPDATE_ACTUATOR_VALUE:
                     updateActuatorValue(sysState);
+                    break;
+
+                case CMD_UPDATE_MOTOR_CMD:
+                    updateMotorCmd(sysState);
+                    break;
 
                 default:
                     break;
@@ -53,7 +63,6 @@ void MessageHandler::switchYard(SystemState &sysState) {
 
     } // if ((messageReady() ...
 }
-
 
 void MessageHandler::setModeOff(SystemState &sysState) {
     sysState.setModeOff();
@@ -69,6 +78,10 @@ void MessageHandler:: setModeCaptive(SystemState &sysState) {
 
 void MessageHandler::setModeInertial(SystemState &sysState) {
     sysState.setModeInertial();
+}
+
+void MessageHandler::setModeMotorCmd(SystemState &sysState) {
+    sysState.setModeMotorCmd();
 }
 
 void MessageHandler::updateSetPoint(SystemState &sysState) {
@@ -105,3 +118,11 @@ void MessageHandler::updateActuatorValue(SystemState &sysState) {
 
 }
 
+void MessageHandler::updateMotorCmd(SystemState &sysState) {
+    int newValue;
+    if (numberOfItems() < 2) {
+        return;
+    }
+    newValue = readInt(1);
+    sysState.updateMotorCmd(newValue);
+}

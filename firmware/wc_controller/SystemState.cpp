@@ -1,6 +1,9 @@
 #include <util/atomic.h>
 #include "WProgram.h"
 #include "SystemState.h"
+#include "SledMotor.h"
+
+extern SledMotor sledMotor;
 
 SystemState::SystemState() {
     operatingMode = SYS_MODE_OFF;
@@ -55,6 +58,13 @@ void SystemState::setModeInertial() {
     }
 }
 
+void SystemState::setModeMotorCmd() {
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+        controller.reset();
+        operatingMode = SYS_MODE_MOTOR_CMD;
+    }
+}
+
 void SystemState::updateSetPoint(float pos, float vel) {
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
         setPosition = pos;
@@ -81,3 +91,9 @@ void SystemState::updateActuatorValue(int value) {
     actuatorValue = value;
     
 }
+
+// DEBUG ///////////////////////////////////////////////////
+void SystemState::updateMotorCmd(int value) {
+    sledMotor.setVelocity(value);
+}
+////////////////////////////////////////////////////////////
