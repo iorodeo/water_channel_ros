@@ -1,19 +1,16 @@
 <package>
-  <description brief="controller">
+  <description brief="motor_cmd_source">
 
-     controller
+     motor_cmd_source
 
   </description>
   <author></author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
-  <url>http://ros.org/wiki/controller</url>
+  <url>http://ros.org/wiki/motor_cmd_source</url>
   <depend package="std_msgs"/>
   <depend package="rospy"/>
   <depend package="roscpp"/>
-  <depend package="distance_118x"/>
-  <depend package="setpt_source"/>
-  <depend package="motor_cmd_source"/>
 
 </package>
 

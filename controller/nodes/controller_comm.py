@@ -43,7 +43,7 @@ class ControllerComm(serial.Serial):
         cmdStr = '[%d]'%(CMD_SET_MODE_MOTOR_CMD,)
         self.sendCmd(cmdStr)
 
-    def setMotorCmd(self,val):
+    def sendMotorCmd(self,val):
         try:
             val = int(val)
         except:
@@ -87,11 +87,11 @@ if __name__ == "__main__":
 
     comm = ControllerComm()
     comm.setModeMotorCmd()
-    comm.setMotorCmd(0)
+    comm.sendMotorCmd(0)
     while 1:
         val = raw_input('value = ')
         val = int(val)
-        comm.setMotorCmd(val)
+        comm.sendMotorCmd(val)
 
     #comm.sendSetPoint(0,0)
     #comm.sendPosition(0)

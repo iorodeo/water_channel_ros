@@ -31,8 +31,15 @@ class DistSensorNode(object):
         self.pub = rospy.Publisher('distance', DistMsg)
         self.srv = rospy.Service('distance_ctl', DistSensorCtl, self.handle_distance_ctl)
 
+        # Shutdown code
+        rospy.on_shutdown(self.on_shutdown)
+
         # Initialize node
         rospy.init_node('distance_sensor')
+
+    def on_shutdown(self):
+        if self.fakeit == False:
+            self.dev.laserOff()
 
     def handle_distance_ctl(self,req):
         if req.cmd == 'laser': 

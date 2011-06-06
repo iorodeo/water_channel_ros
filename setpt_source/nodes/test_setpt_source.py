@@ -30,7 +30,7 @@ class SetptSource(object):
         self.setptMsg = SetptMsg()
         self.setpt_pub = rospy.Publisher('setpt', SetptMsg)
 
-        # Initialize nodes
+        # Initialize node
         rospy.init_node('setpt_source')
 
         stamp = rospy.get_rostime()

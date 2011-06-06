@@ -62,6 +62,7 @@ void SystemState::setModeMotorCmd() {
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
         controller.reset();
         operatingMode = SYS_MODE_MOTOR_CMD;
+        motorCommand = 0.0;
     }
 }
 
@@ -94,6 +95,7 @@ void SystemState::updateActuatorValue(int value) {
 
 // DEBUG ///////////////////////////////////////////////////
 void SystemState::updateMotorCmd(int value) {
+    motorCommand = (float) value;
     sledMotor.setVelocity(value);
 }
 ////////////////////////////////////////////////////////////
