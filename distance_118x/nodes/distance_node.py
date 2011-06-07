@@ -83,6 +83,7 @@ class DistSensorNode(object):
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':
     import sys
+    print sys.argv
     if len(sys.argv) > 1:
         mode = sys.argv[1]
         if mode.lower() == 'true':

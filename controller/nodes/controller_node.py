@@ -71,7 +71,7 @@ class Controller(object):
                     self.have_new_motor_cmd = False
 
             # Get data from controller
-            if 0:
+            if 1:
                 data = self.dev.readInWaiting()
                 if data:
                     try:
@@ -121,7 +121,6 @@ class Controller(object):
         with self.lock:
             self.have_new_motor_cmd = True
             self.motor_cmd = data.motor_cmd
-            print self.motor_cmd, self.pos
 
     def error_stop(self):
         for i in range(0,10):

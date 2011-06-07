@@ -1,0 +1,7 @@
+<launch> 
+    <node name="distance_sensor" pkg="distance_118x" type="distance_node.py" args="false"/>
+    <node name="controller" pkg="controller" type="controller_node.py" />
+    <node name="motor_cmd_logger" pkg="data_loggers" type="motor_cmd_logger.py" />
+    <node name="set_mode_client" pkg="controller" type="set_mode_client.py" args="motor_cmd" />
+    <node name="step_source"  pkg="motor_cmd_source" type="motor_cmd_step_source.py" />
+</launch>

@@ -12,7 +12,7 @@ PIDController::PIDController() {
     outputMin = PID_DFLT_OUTPUT_MIN;
 }
 
-float PIDController::update(float error, float feedForward) {
+float PIDController::update(float error, float ffValue) {
     float output;
     float proportionalTerm;
     float derivativeTerm;
@@ -25,7 +25,8 @@ float PIDController::update(float error, float feedForward) {
     integralTerm += iGain*error;
     integralTerm = clamp(integralTerm);
     derivativeTerm = dGain*(error - lastError);
-    feedForwardTerm = ffGain*feedForward;
+    //feedForwardTerm = ffGain*ffValue;
+    feedForwardTerm = feedForwardFunc(ffValue);
     output = proportionalTerm + integralTerm + derivativeTerm + feedForwardTerm;
     output = clamp(output);
     lastError = error;
@@ -79,6 +80,24 @@ float PIDController::clamp(float value) {
         clampedValue = value;
     }
     return clampedValue;
+}
+
+float PIDController::feedForwardFunc(float ffValue) {
+    const float pos_ff_coeff = 5.375;
+    const float pos_ff_offset = 93.0;
+    const float neg_ff_coeff = 5.40;
+    const float neg_ff_offset = -69.35;
+    float retValue;
+    if (ffValue > 0) {
+        retValue = pos_ff_coeff*ffValue + pos_ff_offset;
+    }
+    else if (ffValue < 0) {
+        retValue = neg_ff_coeff*ffValue + neg_ff_offset; 
+    }
+    else {
+        retValue = 0.0;
+    }
+    return retValue;
 }
 
         

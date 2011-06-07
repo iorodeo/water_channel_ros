@@ -12,9 +12,10 @@ class PIDController {
         void setIGain(float iGain);
         void setDGain(float dGain);
         void setFFGain(float FFGain);
-        float update(float error, float feedForward);
+        float update(float error, float ffValue);
         void setOutputLimits(float minValue, float maxValue);
         void reset();
+        float feedForwardFunc(float ffValue);
     private:
         float pGain;   // Proportional gain
         float iGain;   // Integral gain
