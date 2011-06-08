@@ -1,5 +1,0 @@
-<launch>
-  <node name="distance_sensor" pkg="distance_118x" type="distance_node.py" />
-  <node name="controller" pkg="controller" type="controller_node.py" />
-  <include file="$(find setpt_source)/launch/joystick.launch" />
-</launch>

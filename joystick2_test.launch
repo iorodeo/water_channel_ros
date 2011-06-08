@@ -1,0 +1,6 @@
+<launch> 
+    <node name="distance_sensor" pkg="distance_118x" type="distance_node.py" args="false"/>
+    <include file="$(find setpt_source)/launch/joystick2.launch" />
+    <node name="controller" pkg="controller" type="controller_node.py" />
+    <node name="set_mode_client" pkg="controller" type="set_mode_client.py" args="tracking 2.0" />
+</launch>

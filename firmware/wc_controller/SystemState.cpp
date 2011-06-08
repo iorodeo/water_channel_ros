@@ -93,9 +93,7 @@ void SystemState::updateActuatorValue(int value) {
     
 }
 
-// DEBUG ///////////////////////////////////////////////////
 void SystemState::updateMotorCmd(int value) {
     motorCommand = (float) value;
     sledMotor.setVelocity(value);
 }
-////////////////////////////////////////////////////////////
