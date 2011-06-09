@@ -1,7 +1,7 @@
 <launch>
   <param name="setpt_update_rate" type="double" value="50"/>
-  <param name="velocity_max" type="double" value="400"/>
-  <param name="acceleration_max" type="double" value="400"/>
+  <param name="velocity_max" type="double" value="1000"/>
+  <param name="acceleration_max" type="double" value="500"/>
   <node name="joy_node" pkg="joy" type="joy_node"/>
   <node name="setpt_source" pkg="setpt_source" type="setpt_joystick_source2.py"/>
 </launch>

@@ -1,5 +1,6 @@
 #include <util/atomic.h>
 #include "WProgram.h"
+#include "wc_controller.h"
 #include "SystemState.h"
 #include "SledMotor.h"
 
@@ -13,12 +14,19 @@ SystemState::SystemState() {
     positionError = 0.0;
     motorCommand = 0.0;
     sendDataFlag = false;
+    force = 0.0;
+    // Initialize controller
     controller.setGains(
             SYS_DFLT_PGAIN_TRACKING,
             SYS_DFLT_IGAIN_TRACKING,
             SYS_DFLT_DGAIN_TRACKING,
             SYS_DFLT_FFGAIN_TRACKING
             );
+    // Initialize captive trajectory dynamics
+    dynamics.setMass(SYS_DFLT_DYNAMICS_MASS);
+    dynamics.setDamping(SYS_DFLT_DYNAMICS_DAMPING);
+    dynamics.setDt(1.0/((float) RT_LOOP_FREQ));
+    dynamics.setVelocity(0.0);
 }
 
 void SystemState::setModeOff() {
@@ -46,8 +54,18 @@ void SystemState::setModeTracking() {
 
 void SystemState::setModeCaptive() {
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-        controller.reset();
-        operatingMode = SYS_MODE_CAPTIVE;
+        force = 0.0;
+        dynamics.setVelocity(0.0);
+        updatePositionError();
+        if (fabs(positionError) > SYS_POSERROR_STARTUP_LIMIT) {
+            operatingMode = SYS_MODE_OFF;
+            positionError = 0.0;
+            motorCommand = 0.0;
+        }
+        else {
+            controller.reset();
+            operatingMode = SYS_MODE_CAPTIVE;
+        }
     }
 }
 
@@ -88,9 +106,14 @@ void SystemState::updatePositionError() {
     }
 }
 
+void SystemState::updateTestForce(float value) {
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+        force = value;
+    }
+}
+
 void SystemState::updateActuatorValue(int value) {
     actuatorValue = value;
-    
 }
 
 void SystemState::updateMotorCmd(int value) {

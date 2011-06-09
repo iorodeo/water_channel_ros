@@ -1,0 +1,19 @@
+<package>
+  <description brief="force_source">
+
+     force_source
+
+  </description>
+  <author></author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/force_source</url>
+  <depend package="std_msgs"/>
+  <depend package="rospy"/>
+  <depend package="roslib"/>
+  <depend package="joy"/>
+  <depend package="roscpp"/>
+
+</package>
+
+

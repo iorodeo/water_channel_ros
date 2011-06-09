@@ -1,0 +1,6 @@
+<launch>
+  <param name="force_update_rate" type="double" value="50"/>
+  <param name="force_calibration" type="double" value="1000"/>
+  <node name="joy_node" pkg="joy" type="joy_node"/>
+  <node name="force_source" pkg="force_source" type="force_joystick_source.py"/>
+</launch>

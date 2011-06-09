@@ -1,18 +1,12 @@
 #include <SPI.h>
 #include <Streaming.h>
 #include <util/atomic.h>
+#include "wc_controller.h"
 #include "io_pins.h"
 #include "mcp4822.h"
 #include "SystemState.h"
 #include "SledMotor.h"
 #include "MessageHandler.h"
-
-#define BAUDRATE 115200 
-#define TIMER_TCCR2A 0b00000011 // Fast PWM 
-#define TIMER_TCCR2B 0b00001110 // Prescaler 256
-#define TIMER_TOP 249 
-#define RT_LOOP_TOP 5 
-#define RT_LOOP_FREQ 50 
 
 SystemState sysState = SystemState();
 SledMotor sledMotor = SledMotor();
@@ -68,7 +62,8 @@ void sendData() {
         Serial << sysStateCopy.position << " ";
         Serial << sysStateCopy.setPosition << " ";
         Serial << sysStateCopy.positionError << " ";
-        Serial << sysStateCopy.motorCommand << endl;
+        Serial << sysStateCopy.motorCommand << " ";
+        Serial << sysStateCopy.force << endl;
     }
 }
 
@@ -84,15 +79,25 @@ ISR(TIMER2_OVF_vect) {
     loopCnt = 0;
 
     switch (sysState.operatingMode) {
+
         case SYS_MODE_OFF:
             sledMotor.off();
             break;
+
         case SYS_MODE_TRACKING:
             sysState.motorCommand = sysState.controller.update(sysState.positionError, sysState.setVelocity);
             sledMotor.setVelocity(sysState.motorCommand);
             break;
+
         case SYS_MODE_CAPTIVE:
+            sysState.dynamics.update(sysState.force);
+            sysState.setVelocity = sysState.dynamics.getVelocity();
+            sysState.setPosition += (1.0/((float) RT_LOOP_FREQ))*sysState.setVelocity;
+            sysState.updatePositionError();
+            sysState.motorCommand = sysState.controller.update(sysState.positionError, sysState.setVelocity);
+            sledMotor.setVelocity(sysState.motorCommand);
             break;
+
         case SYS_MODE_INERTIAL:
             break;
         default:

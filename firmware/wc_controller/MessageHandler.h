@@ -14,6 +14,7 @@
 #define CMD_UPDATE_POSITION          55
 #define CMD_UPDATE_ACTUATOR_VALUE    56 
 #define CMD_UPDATE_MOTOR_CMD         57 
+#define CMD_UPDATE_TEST_FORCE        58
 
 class MessageHandler: public SerialReceiver {
     public:
@@ -28,6 +29,7 @@ class MessageHandler: public SerialReceiver {
         void updatePosition(SystemState &sysState);
         void updateActuatorValue(SystemState &sysState);
         void updateMotorCmd(SystemState &sysState);
+        void updateTestForce(SystemState &sysState);
 };
 
 #endif

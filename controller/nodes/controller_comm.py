@@ -11,6 +11,7 @@ CMD_UPDATE_SETPT = 54
 CMD_UPDATE_POSITION = 55
 CMD_UPDATE_ACTUATOR_VALUE = 56 
 CMD_UPDATE_MOTOR_CMD = 57 
+CMD_UPDATE_TEST_FORCE = 58
 
 class ControllerComm(serial.Serial):
 
@@ -31,6 +32,29 @@ class ControllerComm(serial.Serial):
         cmdStr = '[%d, %f]'%(CMD_UPDATE_POSITION,pos,)
         self.sendCmd(cmdStr)
 
+    def sendMotorCmd(self,val):
+        try:
+            val = int(val)
+        except:
+            raise ValueError,'value must be convertable to integer'
+
+        if val > 4096 or val < -4096:
+            raise ValueError, 'abs(value) must be <= 4095'
+        cmdStr = '[%d, %d]'%(CMD_UPDATE_MOTOR_CMD,val)
+        self.sendCmd(cmdStr)
+
+    def sendTestForce(self,val):
+        cmdStr = '[%d, %f]'%(CMD_UPDATE_TEST_FORCE,val,)
+        self.sendCmd(cmdStr)
+
+    def setModeCaptive(self):
+        cmdStr = '[%d]'%(CMD_SET_MODE_CAPTIVE,)
+        self.sendCmd(cmdStr)
+
+    def setModeInertial(self):
+        cmdStr = '[%d]'%(CMD_SET_MODE_INERTIAL,)
+        self.sendCmd(cmdStr)
+
     def setModeTracking(self):
         cmdStr = '[%d]'%(CMD_SET_MODE_TRACKING,)
         self.sendCmd(cmdStr)
@@ -41,17 +65,6 @@ class ControllerComm(serial.Serial):
 
     def setModeMotorCmd(self):
         cmdStr = '[%d]'%(CMD_SET_MODE_MOTOR_CMD,)
-        self.sendCmd(cmdStr)
-
-    def sendMotorCmd(self,val):
-        try:
-            val = int(val)
-        except:
-            raise ValueError,'value must be convertable to integer'
-
-        if val > 4096 or val < -4096:
-            raise ValueError, 'abs(value) must be <= 4095'
-        cmdStr = '[%d, %d]'%(CMD_UPDATE_MOTOR_CMD,val)
         self.sendCmd(cmdStr)
 
 
@@ -113,12 +126,6 @@ if __name__ == "__main__":
 
     #comm.setModeOff()
     #comm.close()
-
-
-
-
-
-        
 
 
 

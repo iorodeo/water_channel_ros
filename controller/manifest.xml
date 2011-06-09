@@ -14,6 +14,7 @@
   <depend package="distance_118x"/>
   <depend package="setpt_source"/>
   <depend package="motor_cmd_source"/>
+  <depend package="force_source"/>
 
 </package>
 

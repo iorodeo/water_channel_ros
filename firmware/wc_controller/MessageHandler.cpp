@@ -53,10 +53,13 @@ void MessageHandler::switchYard(SystemState &sysState) {
                     updateMotorCmd(sysState);
                     break;
 
+                case CMD_UPDATE_TEST_FORCE:
+                    updateTestForce(sysState);
+
                 default:
                     break;
 
-            } //switch
+            } // switch (cmdId)
         }
 
         reset(); // Clear out message
@@ -125,4 +128,13 @@ void MessageHandler::updateMotorCmd(SystemState &sysState) {
     }
     newValue = readInt(1);
     sysState.updateMotorCmd(newValue);
+}
+
+void MessageHandler::updateTestForce(SystemState &sysState) {
+    float newValue;
+    if (numberOfItems() < 2) {
+        return;
+    }
+    newValue = readFloat(1);
+    sysState.updateTestForce(newValue);
 }
