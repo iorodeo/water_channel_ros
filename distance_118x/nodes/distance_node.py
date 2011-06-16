@@ -8,6 +8,7 @@ from std_msgs.msg import Header
 from distance_118x.msg import DistMsg 
 from distance_118x.srv import *
 from distance_sensor_118x import DistanceSensor
+import filters
 
 class DistSensorNode(object):
 
@@ -18,6 +19,8 @@ class DistSensorNode(object):
         self.lock =  threading.Lock()
         self.fakeit = fakeit
         self.distMsg = DistMsg()
+
+        self.kalman = filters.KalmanFilter()
 
         # Setup distance sensor
         if self.fakeit == False:
@@ -76,9 +79,21 @@ class DistSensorNode(object):
                 else:
                     value = None
             if not value is None:
-                self.distMsg.header.stamp = rospy.get_rostime()
+                t = rospy.get_rostime()
+                self.distMsg.header.stamp = t
                 self.distMsg.distance = value
+                distKalman, veloKalman  = self.kalman.update(value,t.to_sec())
+                if distKalman:
+                    self.distMsg.distance_kalman = distKalman
+                else:
+                    self.distMsg.distance_kalman = value 
+                if veloKalman:
+                    self.distMsg.velocity_kalman = veloKalman
+                else:
+                    self.distMsg.velocity_kalman = 0.0
+                
                 self.pub.publish(self.distMsg)
+
 
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':
