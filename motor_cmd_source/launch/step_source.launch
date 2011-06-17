@@ -1,0 +1,3 @@
+<launch>
+  <node name="step_source" pkg="motor_cmd_source" type="motor_cmd_step_source.py"/>
+</launch>

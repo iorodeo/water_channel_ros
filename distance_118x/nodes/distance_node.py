@@ -12,17 +12,17 @@ import filters
 
 class DistSensorNode(object):
 
-    def __init__(self, scale_factor=1000.0,port='/dev/USB_Distance',fakeit=False):
+    def __init__(self, scale_factor=1000.0,port='/dev/USB_Distance'):
         """
         Initilize distance sensor node.
         """
         self.lock =  threading.Lock()
-        self.fakeit = fakeit
         self.distMsg = DistMsg()
 
         self.kalman = filters.KalmanFilter()
 
         # Setup distance sensor
+        self.fakeit = rospy.get_param('fake_distance_sensor',False)
         if self.fakeit == False:
             self.dev = DistanceSensor(port) 
             self.dev.open()
@@ -97,21 +97,7 @@ class DistSensorNode(object):
 
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':
-    import sys
-    print sys.argv
-    if len(sys.argv) > 1:
-        mode = sys.argv[1]
-        if mode.lower() == 'true':
-            print 'faking distance sensor!'
-            fakeit = True
-        elif mode.lower() == 'false':
-            fakeit = False
-        else:
-            raise ValueError, 'unknown mode = %s'%(mode,)
-    else:
-        fakeit = False
-
-    dist_node = DistSensorNode(fakeit=fakeit)
+    dist_node = DistSensorNode()
     try:
         dist_node.stream()
     except rospy.ROSInterruptException:

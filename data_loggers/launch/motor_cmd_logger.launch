@@ -1,0 +1,3 @@
+<launch>
+  <node name="motor_cmd_logger" pkg="data_loggers" type="motor_cmd_logger.py"/>
+</launch>

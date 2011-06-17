@@ -5,8 +5,9 @@ import rospy
 import sys
 from controller.srv import ControllerCmd 
 
-
-def set_mode(mode,delay=0.0):
+def set_mode():
+    mode = rospy.get_param('controller_mode', 'off')
+    delay = rospy.get_param('set_mode_delay', 2.5)
     rospy.wait_for_service('controller_cmd')
     rospy.sleep(delay)
     try:
@@ -16,8 +17,5 @@ def set_mode(mode,delay=0.0):
         print 'Service call failed: %s'%(e,)
 
 if __name__ == '__main__':
-    mode = sys.argv[1]
-    if len(sys.argv) > 2:
-        delay = float(sys.argv[2])
-    set_mode(mode,delay=delay)
+    set_mode()
 

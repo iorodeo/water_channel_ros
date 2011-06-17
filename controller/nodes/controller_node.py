@@ -141,11 +141,9 @@ class Controller(object):
 
     def error_stop(self):
         for i in range(0,10):
-            #print 'setModeOff', i
             self.dev.setModeOff();
             time.sleep(0.1)
             
-
 
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':
