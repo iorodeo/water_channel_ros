@@ -25,7 +25,9 @@ class SystemState {
         float setPosition;
         float setVelocity; 
         float position; 
+        float velocity;
         float positionError; 
+        float velocityError;
         float motorCommand;
         float force;
         PIDController controller;
@@ -33,9 +35,9 @@ class SystemState {
         float actuatorValue;
         bool sendDataFlag; 
         void updateSetPoint(float pos, float vel);
-        void updatePosition(float pos);
+        void updatePosAndVel(float pos, float vel);
         void updateActuatorValue(int value);
-        void updatePositionError();
+        void updateError();
         void updateTestForce(float value);
         void setModeOff();
         void setModeTracking();

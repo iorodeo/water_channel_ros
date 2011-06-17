@@ -11,7 +11,9 @@ SystemState::SystemState() {
     setPosition = 0.0;
     setVelocity = 0.0;
     position = 0.0;
+    velocity = 0.0;
     positionError = 0.0;
+    velocityError = 0.0;
     motorCommand = 0.0;
     sendDataFlag = false;
     force = 0.0;
@@ -39,7 +41,7 @@ void SystemState::setModeOff() {
 
 void SystemState::setModeTracking() {
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-        updatePositionError();
+        updateError();
         if (fabs(positionError) > SYS_POSERROR_STARTUP_LIMIT) {
             operatingMode = SYS_MODE_OFF;
             positionError = 0.0;
@@ -56,7 +58,7 @@ void SystemState::setModeCaptive() {
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
         force = 0.0;
         dynamics.setVelocity(0.0);
-        updatePositionError();
+        updateError();
         if (fabs(positionError) > SYS_POSERROR_STARTUP_LIMIT) {
             operatingMode = SYS_MODE_OFF;
             positionError = 0.0;
@@ -88,21 +90,23 @@ void SystemState::updateSetPoint(float pos, float vel) {
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
         setPosition = pos;
         setVelocity = vel;
-        updatePositionError();
+        updateError();
     }
 }
 
-void SystemState::updatePosition(float pos) {
+void SystemState::updatePosAndVel(float pos, float vel) {
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
         position = pos;
-        updatePositionError();
+        velocity = vel;
+        updateError();
     }
 }
 
-void SystemState::updatePositionError() {
+void SystemState::updateError() {
     // Should always be called from within an atomic block
     if (operatingMode == SYS_MODE_TRACKING) {
         positionError = setPosition - position;
+        velocityError = setVelocity - velocity;
     }
 }
 

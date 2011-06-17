@@ -28,8 +28,8 @@ class ControllerComm(serial.Serial):
         cmdStr = '[%d, %f, %f]'%(CMD_UPDATE_SETPT,pos,vel)
         self.sendCmd(cmdStr)
 
-    def sendPosition(self,pos):
-        cmdStr = '[%d, %f]'%(CMD_UPDATE_POSITION,pos,)
+    def sendPosAndVel(self,pos,vel):
+        cmdStr = '[%d, %f, %f]'%(CMD_UPDATE_POSITION,pos,vel)
         self.sendCmd(cmdStr)
 
     def sendMotorCmd(self,val):

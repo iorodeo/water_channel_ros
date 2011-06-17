@@ -93,7 +93,7 @@ ISR(TIMER2_OVF_vect) {
             sysState.dynamics.update(sysState.force);
             sysState.setVelocity = sysState.dynamics.getVelocity();
             sysState.setPosition += (1.0/((float) RT_LOOP_FREQ))*sysState.setVelocity;
-            sysState.updatePositionError();
+            sysState.updateError();
             sysState.motorCommand = sysState.controller.update(sysState.positionError, sysState.setVelocity);
             sledMotor.setVelocity(sysState.motorCommand);
             break;

@@ -24,6 +24,7 @@ class Controller(object):
         self.sleep_dt = 0.001
 
         self.pos = None
+        self.vel = None
         self.pos_setpt = None
         self.vel_setpt = None
         self.motor_cmd = None
@@ -33,7 +34,7 @@ class Controller(object):
         self.have_new_setpt = False
         self.have_new_motor_cmd = False
         self.have_new_test_force = False
-        self.have_pos = False
+        self.have_pos_and_vel = False
 
         # Setup subscriber to distance and set point topics
         self.distance_sub = rospy.Subscriber('distance', DistMsg, self.distance_callback)
@@ -58,11 +59,11 @@ class Controller(object):
 
                 # Send position data to controller
                 if self.have_new_pos == True:
-                    self.dev.sendPosition(self.pos)
+                    self.dev.sendPosAndVel(self.pos,self.vel)
                     self.have_new_pos = False
-                    if self.have_pos == False:
+                    if self.have_pos_and_vel == False:
                         self.dev.sendSetPoint(self.pos, 0.0)
-                        self.have_pos = True
+                        self.have_pos_and_vel = True
 
                 # Send new setpt data to controller
                 if self.have_new_setpt == True:
@@ -103,7 +104,7 @@ class Controller(object):
 
             elif mode.lower() == 'tracking':
                 with self.lock:
-                    if self.have_pos:
+                    if self.have_pos_and_vel:
                         self.dev.setModeTracking()
 
             elif mode.lower() == 'motor_cmd':
@@ -121,7 +122,8 @@ class Controller(object):
     def distance_callback(self,data):
         with self.lock:
             self.have_new_pos = True
-            self.pos = data.distance
+            self.pos = data.distance_kalman
+            self.vel = data.velocity_kalman
 
     def setpt_callback(self,data):
         with self.lock:

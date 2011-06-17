@@ -39,6 +39,8 @@ class DistSensorNode(object):
 
         # Initialize node
         rospy.init_node('distance_sensor')
+        self.kalman_startup_delay = rospy.get_param('kalman_startup_delay', 1.0)
+        self.start_t = rospy.get_rostime()
 
     def on_shutdown(self):
         if self.fakeit == False:
@@ -79,9 +81,12 @@ class DistSensorNode(object):
                 else:
                     value = None
             if not value is None:
+
                 t = rospy.get_rostime()
                 self.distMsg.header.stamp = t
                 self.distMsg.distance = value
+
+                # Get Kalman filtered distance and velocity
                 distKalman, veloKalman  = self.kalman.update(value,t.to_sec())
                 if distKalman:
                     self.distMsg.distance_kalman = distKalman
@@ -91,8 +96,10 @@ class DistSensorNode(object):
                     self.distMsg.velocity_kalman = veloKalman
                 else:
                     self.distMsg.velocity_kalman = 0.0
-                
-                self.pub.publish(self.distMsg)
+
+                # Publish messages after a suitable delay to allow kalman filter to converge
+                if t.to_sec() - self.start_t.to_sec() > self.kalman_startup_delay:
+                    self.pub.publish(self.distMsg)
 
 
 # -----------------------------------------------------------------------------

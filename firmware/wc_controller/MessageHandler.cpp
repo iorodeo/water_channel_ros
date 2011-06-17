@@ -42,7 +42,7 @@ void MessageHandler::switchYard(SystemState &sysState) {
                     break;
 
                 case CMD_UPDATE_POSITION:
-                    updatePosition(sysState);
+                    updatePosAndVel(sysState);
                     break;
 
                 case CMD_UPDATE_ACTUATOR_VALUE:
@@ -100,15 +100,17 @@ void MessageHandler::updateSetPoint(SystemState &sysState) {
     sysState.updateSetPoint(newPos,newVel);
 }
 
-void MessageHandler::updatePosition(SystemState &sysState) {
+void MessageHandler::updatePosAndVel(SystemState &sysState) {
     float newPos;
+    float newVel;
     //Serial << "updatePosition, numberOfItems = " << _DEC(numberOfItems()) << endl;
     if (numberOfItems() < 2) {
         return;
     }
     newPos = readFloat(1);
+    newVel = readFloat(2);
     //Serial << "newPos = " << newPos << endl;
-    sysState.updatePosition(newPos);
+    sysState.updatePosAndVel(newPos,newVel);
 }
 
 void MessageHandler::updateActuatorValue(SystemState &sysState) {

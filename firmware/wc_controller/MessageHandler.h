@@ -26,7 +26,7 @@ class MessageHandler: public SerialReceiver {
         void setModeCaptive(SystemState &sysState);
         void setModeInertial(SystemState &sysState);
         void setModeMotorCmd(SystemState &sysState);
-        void updatePosition(SystemState &sysState);
+        void updatePosAndVel(SystemState &sysState);
         void updateActuatorValue(SystemState &sysState);
         void updateMotorCmd(SystemState &sysState);
         void updateTestForce(SystemState &sysState);
