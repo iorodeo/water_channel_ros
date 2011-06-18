@@ -6,6 +6,7 @@ CMD_SET_MODE_TRACKING = 1
 CMD_SET_MODE_CAPTIVE = 2
 CMD_SET_MODE_INERTIAL= 3
 CMD_SET_MODE_MOTOR_CMD = 4
+CMD_SET_MODE_VEL_CTL = 5
 
 CMD_UPDATE_SETPT = 54
 CMD_UPDATE_POSITION = 55
@@ -67,6 +68,9 @@ class ControllerComm(serial.Serial):
         cmdStr = '[%d]'%(CMD_SET_MODE_MOTOR_CMD,)
         self.sendCmd(cmdStr)
 
+    def setModeVelControl(self):
+        cmdStr = '[%d]'%(CMD_SET_MODE_VEL_CTL,)
+        self.sendCmd(cmdStr)
 
     def readInWaiting(self):
         lineList = []

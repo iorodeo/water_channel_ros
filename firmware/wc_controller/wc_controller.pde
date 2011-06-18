@@ -59,11 +59,12 @@ void sendData() {
     }
     if (sysStateCopy.sendDataFlag==true) {
         Serial << sysStateCopy.operatingMode << " ";
-        Serial << sysStateCopy.position << " ";
-        Serial << sysStateCopy.setPosition << " ";
-        Serial << sysStateCopy.positionError << " ";
-        Serial << sysStateCopy.motorCommand << " ";
-        Serial << sysStateCopy.force << endl;
+        Serial << sysStateCopy.velocity << " ";
+        Serial << sysStateCopy.setVelocity << " ";
+        Serial << sysStateCopy.dynamics.getVelocity() << " ";
+        Serial << sysStateCopy.velocityError << " ";
+        Serial << sysStateCopy.force << " ";
+        Serial << endl;
     }
 }
 
@@ -92,14 +93,26 @@ ISR(TIMER2_OVF_vect) {
         case SYS_MODE_CAPTIVE:
             sysState.dynamics.update(sysState.force);
             sysState.setVelocity = sysState.dynamics.getVelocity();
-            sysState.setPosition += (1.0/((float) RT_LOOP_FREQ))*sysState.setVelocity;
+            sysState.setPosition = sysState.position;
             sysState.updateError();
-            sysState.motorCommand = sysState.controller.update(sysState.positionError, sysState.setVelocity);
+            sysState.motorCommand = sysState.controller.update(sysState.velocityError, sysState.setVelocity);
+            sledMotor.setVelocity(sysState.motorCommand);
+            
+            //sysState.setPosition += (1.0/((float) RT_LOOP_FREQ))*sysState.setVelocity;
+            //sysState.updateError();
+            //sysState.motorCommand = sysState.controller.update(sysState.positionError, sysState.setVelocity);
+            //sledMotor.setVelocity(sysState.motorCommand);
+
+            break;
+
+        case SYS_MODE_VEL_CTL:
+            sysState.motorCommand = sysState.controller.update(sysState.velocityError,sysState.setVelocity);
             sledMotor.setVelocity(sysState.motorCommand);
             break;
 
         case SYS_MODE_INERTIAL:
             break;
+
         default:
             break;
     }

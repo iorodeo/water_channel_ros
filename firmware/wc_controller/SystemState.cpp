@@ -17,14 +17,9 @@ SystemState::SystemState() {
     motorCommand = 0.0;
     sendDataFlag = false;
     force = 0.0;
-    // Initialize controller
-    controller.setGains(
-            SYS_DFLT_PGAIN_TRACKING,
-            SYS_DFLT_IGAIN_TRACKING,
-            SYS_DFLT_DGAIN_TRACKING,
-            SYS_DFLT_FFGAIN_TRACKING
-            );
-    // Initialize captive trajectory dynamics
+
+    // Initialize controller and dynamics
+    setGainsZero();
     dynamics.setMass(SYS_DFLT_DYNAMICS_MASS);
     dynamics.setDamping(SYS_DFLT_DYNAMICS_DAMPING);
     dynamics.setDt(1.0/((float) RT_LOOP_FREQ));
@@ -35,19 +30,27 @@ void SystemState::setModeOff() {
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
         operatingMode = SYS_MODE_OFF; 
         positionError = 0.0;
+        velocityError = 0.0;
         motorCommand = 0.0;
     }
 }
 
 void SystemState::setModeTracking() {
+
+    if (operatingMode != SYS_MODE_OFF) {
+        return;
+    }
+
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
         updateError();
-        if (fabs(positionError) > SYS_POSERROR_STARTUP_LIMIT) {
+        if (fabs(positionError) > SYS_POS_ERROR_STARTUP_LIMIT) {
             operatingMode = SYS_MODE_OFF;
             positionError = 0.0;
+            velocityError = 0.0;
             motorCommand = 0.0;
         }
         else {
+            setGainsTracking();
             controller.reset();
             operatingMode = SYS_MODE_TRACKING;
         }
@@ -55,16 +58,24 @@ void SystemState::setModeTracking() {
 }
 
 void SystemState::setModeCaptive() {
+
+    if (operatingMode != SYS_MODE_OFF) {
+        return;
+    }
+
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
         force = 0.0;
         dynamics.setVelocity(0.0);
         updateError();
-        if (fabs(positionError) > SYS_POSERROR_STARTUP_LIMIT) {
+        if (fabs(positionError) > SYS_POS_ERROR_STARTUP_LIMIT) {
             operatingMode = SYS_MODE_OFF;
             positionError = 0.0;
+            velocityError = 0.0;
             motorCommand = 0.0;
         }
         else {
+            //setGainsTracking();
+            setGainsVelControl();
             controller.reset();
             operatingMode = SYS_MODE_CAPTIVE;
         }
@@ -72,6 +83,11 @@ void SystemState::setModeCaptive() {
 }
 
 void SystemState::setModeInertial() {
+
+    if (operatingMode != SYS_MODE_OFF) {
+        return;
+    }
+
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
         controller.reset();
         operatingMode = SYS_MODE_INERTIAL;
@@ -79,10 +95,33 @@ void SystemState::setModeInertial() {
 }
 
 void SystemState::setModeMotorCmd() {
+    if (operatingMode != SYS_MODE_OFF) {
+        return;
+    }
+
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
         controller.reset();
         operatingMode = SYS_MODE_MOTOR_CMD;
         motorCommand = 0.0;
+    }
+}
+
+void SystemState::setModeVelControl() {
+    if (operatingMode != SYS_MODE_OFF) {
+        return;
+    }
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+        updateError();
+        if (fabs(velocityError) > SYS_VEL_ERROR_STARTUP_LIMIT) {
+            operatingMode = SYS_MODE_OFF;
+            positionError = 0.0;
+            velocityError = 0.0;
+        }
+        else {
+            setGainsVelControl();
+            controller.reset();
+            operatingMode = SYS_MODE_VEL_CTL;
+        }
     }
 }
 
@@ -104,10 +143,8 @@ void SystemState::updatePosAndVel(float pos, float vel) {
 
 void SystemState::updateError() {
     // Should always be called from within an atomic block
-    if (operatingMode == SYS_MODE_TRACKING) {
-        positionError = setPosition - position;
-        velocityError = setVelocity - velocity;
-    }
+    positionError = setPosition - position;
+    velocityError = setVelocity - velocity;
 }
 
 void SystemState::updateTestForce(float value) {
@@ -124,3 +161,26 @@ void SystemState::updateMotorCmd(int value) {
     motorCommand = (float) value;
     sledMotor.setVelocity(value);
 }
+
+void SystemState::setGainsZero() {
+    controller.setGains(0.0, 0.0, 0.0, 0.0);
+}
+
+void SystemState::setGainsTracking() {
+    controller.setGains(
+            SYS_DFLT_PGAIN_TRACKING,
+            SYS_DFLT_IGAIN_TRACKING,
+            SYS_DFLT_DGAIN_TRACKING,
+            SYS_DFLT_FFGAIN_TRACKING
+            );
+}
+
+void SystemState::setGainsVelControl() {
+    controller.setGains(
+            SYS_DFLT_PGAIN_VEL_CTL,
+            SYS_DFLT_IGAIN_VEL_CTL,
+            SYS_DFLT_DGAIN_VEL_CTL,
+            SYS_DFLT_FFGAIN_VEL_CTL
+            );
+}
+

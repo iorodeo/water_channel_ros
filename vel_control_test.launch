@@ -1,0 +1,5 @@
+<launch> 
+    <param name="controller_mode" type="string" value="velocity control"/>
+    <include file="$(find distance_118x)/launch/distance_sensor.launch" />
+    <include file="$(find setpt_source)/launch/joystick2.launch" />
+</launch>

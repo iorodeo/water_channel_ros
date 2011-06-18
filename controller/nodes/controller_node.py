@@ -114,6 +114,11 @@ class Controller(object):
             elif mode.lower() == 'captive':
                 with self.lock:
                     self.dev.setModeCaptive()
+
+            elif mode.lower() == 'velocity control':
+                with self.lock:
+                    self.dev.setModeVelControl()
+
             else:
                 pass
 

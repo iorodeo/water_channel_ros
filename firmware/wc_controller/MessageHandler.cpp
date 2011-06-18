@@ -37,6 +37,10 @@ void MessageHandler::switchYard(SystemState &sysState) {
                     setModeMotorCmd(sysState);
                     break;
 
+                case CMD_SET_MODE_VEL_CTL:
+                    setModeVelControl(sysState);
+                    break;
+
                 case CMD_UPDATE_SETPT:
                     updateSetPoint(sysState);
                     break;
@@ -85,6 +89,10 @@ void MessageHandler::setModeInertial(SystemState &sysState) {
 
 void MessageHandler::setModeMotorCmd(SystemState &sysState) {
     sysState.setModeMotorCmd();
+}
+
+void MessageHandler::setModeVelControl(SystemState &sysState) {
+    sysState.setModeVelControl();
 }
 
 void MessageHandler::updateSetPoint(SystemState &sysState) {
