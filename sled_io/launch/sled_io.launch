@@ -1,0 +1,3 @@
+<launch>
+  <node name="sled_io" pkg="sled_io" type="sled_io_node.py"/>
+</launch>

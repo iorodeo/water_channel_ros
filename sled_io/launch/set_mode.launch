@@ -1,4 +1,4 @@
 <launch>
   <param name="set_mode_delay" type="double" value="2.5"/>
-  <node name="set_mode_client" pkg="controller" type="set_mode_client.py"/>
+  <node name="set_mode_client" pkg="sled_io" type="set_mode_client.py"/>
 </launch>

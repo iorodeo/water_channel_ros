@@ -1,0 +1,5 @@
+<launch>
+  <param name="mass" type="double" value="10.0"/>
+  <param name="damping" type="double" value="0.0"/>
+  <node name="dynamics" pkg="setpt_source" type="setpt_dynamics_source.py"/>
+</launch>

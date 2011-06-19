@@ -1,0 +1,12 @@
+<launch>
+  <param name="controller_pgain" type="double" value="2.0"/>
+  <param name="controller_igain" type="double" value="0.10"/>
+  <param name="controller_dgain" type="double" value="0.0"/>
+  <param name="controller_max_output" type="double" value="4000.0"/>
+  <param name="controller_min_output" type="double" value="-4000.0"/>
+  <param name="feedforward_pos_coef" type="double" value="5.375"/>
+  <param name="feedforward_neg_coef" type="double" value="5.4"/>
+  <param name="feedforward_pos_offset" type="double" value="93"/>
+  <param name="feedforward_neg_offset" type="double" value="-69.35"/>
+  <node name="velocity_controller" pkg="motor_cmd_source" type="velocity_controller.py"/>
+</launch>

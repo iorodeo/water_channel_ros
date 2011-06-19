@@ -157,6 +157,7 @@ void SerialReceiver::handleStopChar(int serialByte) {
         itemLenBuffer[itemCnt] = itemPos;
         itemCnt++;
     }
+    // Check message checksum here .... if not OK reset.
     state = SR_STATE_MESSAGE;
 }
 
@@ -225,10 +226,22 @@ void SerialReceiver::printInfo() {
     Serial << endl;
 }
 
-void SerialReceiver::printMessage() {
+void SerialReceiver::printMessageInfo() {
     Serial << "Message = " << endl;
     for (int i=0; i<itemCnt; i++) {
         Serial << "buf[" << _DEC(i) << "] = " << itemBuffer[i] << ", len = " << _DEC(itemLenBuffer[i]) << endl;
+    }
+    Serial << endl;
+}
+
+void SerialReceiver::printMessage() {
+    for (int i=0; i<itemCnt; i++) {
+        if (i < itemCnt-1) {
+            Serial << itemBuffer[i] << " ";
+        }
+        else {
+            Serial << itemBuffer[i];
+        }
     }
     Serial << endl;
 }

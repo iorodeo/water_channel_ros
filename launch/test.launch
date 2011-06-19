@@ -1,0 +1,6 @@
+<launch> 
+    <param name="controller_mode" type="string" value="off"/>
+    <include file="$(find distance_118x)/launch/distance_sensor.launch" />
+    <include file="$(find force_source)/launch/joystick_force.launch" />
+    <include file="$(find setpt_source)/launch/dynamics.launch"/>
+</launch>

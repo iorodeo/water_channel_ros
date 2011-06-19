@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 import roslib 
-roslib.load_manifest('controller')
+roslib.load_manifest('sled_io')
 import rospy
 import threading
 import time
-from controller_comm import ControllerComm
+from sled_comm import ControllerComm
 # Messages
 from setpt_source.msg import SetptMsg 
 from distance_118x.msg import DistMsg 
 from motor_cmd_source.msg import MotorCmdMsg
 from force_source.msg import ForceMsg
 # Services
-from controller.srv import * 
+from sled_io.srv import * 
 
-class Controller(object):
+class SledIO(object):
 
     def __init__(self):
         self.lock =  threading.Lock()
@@ -43,13 +43,13 @@ class Controller(object):
         self.test_force_sub = rospy.Subscriber('force', ForceMsg, self.test_force_callback)
         
         # Setup controller service
-        self.srv = rospy.Service('controller_cmd', ControllerCmd, self.handle_controller_cmd)
+        self.srv = rospy.Service('sled_io_cmd', ControllerCmd, self.handle_controller_cmd)
 
         # Add shutdown code
         rospy.on_shutdown(self.error_stop)
 
         # Initialize nodes
-        rospy.init_node('controller')
+        rospy.init_node('sled_control_io')
 
     def run(self):
 
@@ -57,28 +57,28 @@ class Controller(object):
 
             with self.lock:
 
-                # Send position data to controller
-                if self.have_new_pos == True:
-                    self.dev.sendPosAndVel(self.pos,self.vel)
-                    self.have_new_pos = False
-                    if self.have_pos_and_vel == False:
-                        self.dev.sendSetPoint(self.pos, 0.0)
-                        self.have_pos_and_vel = True
+                ## Send position data to controller
+                #if self.have_new_pos == True:
+                #    self.dev.sendPosAndVel(self.pos,self.vel)
+                #    self.have_new_pos = False
+                #    if self.have_pos_and_vel == False:
+                #        self.dev.sendSetPoint(self.pos, 0.0)
+                #        self.have_pos_and_vel = True
 
-                # Send new setpt data to controller
-                if self.have_new_setpt == True:
-                    self.dev.sendSetPoint(self.pos_setpt, self.vel_setpt)
-                    self.have_new_setpt = False
+                ## Send new setpt data to controller
+                #if self.have_new_setpt == True:
+                #    self.dev.sendSetPoint(self.pos_setpt, self.vel_setpt)
+                #    self.have_new_setpt = False
 
                 # Send motor command to controller
                 if self.have_new_motor_cmd == True:
                     self.dev.sendMotorCmd(self.motor_cmd)
                     self.have_new_motor_cmd = False
 
-                # Send test force to controller
-                if self.have_new_test_force == True:
-                    self.dev.sendTestForce(self.test_force)
-                    self.have_new_test_force = False
+                ## Send test force to controller
+                #if self.have_new_test_force == True:
+                #    self.dev.sendTestForce(self.test_force)
+                #    self.have_new_test_force = False
 
             # Get data from controller
             if 1:
@@ -91,6 +91,18 @@ class Controller(object):
                         print
                     except:
                         print 'data error'
+            if 0:
+                data = self.dev.readInWaiting(conv2float=False)
+                if data:
+                    for val in data:
+                        try:
+                            valsplit = val.split()
+                            cmdval = int(valsplit[0])
+                            if not cmdval in (55,58):
+                                print 'CE',  val
+                        except:
+                            print 'DE', val
+                
 
         rospy.sleep(self.sleep_dt)
 
@@ -154,7 +166,7 @@ class Controller(object):
 
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':
-    ctl = Controller()
+    ctl = SledIO()
     try:
         ctl.run()
     except rospy.ROSInterruptException:

@@ -129,7 +129,7 @@ void SystemState::updateSetPoint(float pos, float vel) {
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
         setPosition = pos;
         setVelocity = vel;
-        updateError();
+        //updateError();
     }
 }
 
@@ -137,7 +137,7 @@ void SystemState::updatePosAndVel(float pos, float vel) {
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
         position = pos;
         velocity = vel;
-        updateError();
+        //updateError();
     }
 }
 
@@ -159,7 +159,6 @@ void SystemState::updateActuatorValue(int value) {
 
 void SystemState::updateMotorCmd(int value) {
     motorCommand = (float) value;
-    sledMotor.setVelocity(value);
 }
 
 void SystemState::setGainsZero() {

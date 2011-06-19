@@ -11,6 +11,8 @@
   <depend package="std_msgs"/>
   <depend package="rospy"/>
   <depend package="roscpp"/>
+  <depend package="distance_118x"/>
+  <depend package="setpt_source"/>
 
 </package>
 

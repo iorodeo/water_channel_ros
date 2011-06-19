@@ -25,7 +25,7 @@ class ForceSource(object):
         # Setup subscriber to joystick topic
         self.joystick_sub = rospy.Subscriber('joy', Joy, self.joystick_callback)
 
-        # Setup setpt topic
+        # Setup force topic
         self.forceMsg = ForceMsg()
         self.force_pub = rospy.Publisher('force', ForceMsg)
 
@@ -34,6 +34,7 @@ class ForceSource(object):
     def update(self):
         self.forceMsg.header.stamp = rospy.get_rostime()
         with self.lock:
+            self.forceMsg.dt = self.dt
             self.forceMsg.force = self.force
             self.force_pub.publish(self.forceMsg)
 

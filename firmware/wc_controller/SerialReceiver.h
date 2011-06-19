@@ -3,8 +3,8 @@
 #ifndef SerialReceiver_h
 #define SerialReceiver_h
 
-#define SR_MAX_ITEM_SZ 20
-#define SR_MAX_ITEMS   5
+#define SR_MAX_ITEM_SZ 25
+#define SR_MAX_ITEMS   4
 
 #define SR_DFLT_START_CHAR '['
 #define SR_DFLT_STOP_CHAR ']'
@@ -35,6 +35,7 @@ class SerialReceiver {
         double readDouble(uint8_t itemNum);
         void copyString(uint8_t itemNum, char *string, uint8_t size);
         void printInfo();
+        void printMessageInfo();
         void printMessage();
         
     private:

@@ -43,8 +43,14 @@ void loop() {
     // Handle serial communications
     while (Serial.available() > 0) {
         messageHandler.process(Serial.read());
+        if (messageHandler.messageReady()== true) {
+            //messageHandler.printMessage();
+        }
         messageHandler.switchYard(sysState);
     }
+    // Update system 
+    //updateSystem();
+
     sendData();
 }
 
@@ -59,11 +65,7 @@ void sendData() {
     }
     if (sysStateCopy.sendDataFlag==true) {
         Serial << sysStateCopy.operatingMode << " ";
-        Serial << sysStateCopy.velocity << " ";
-        Serial << sysStateCopy.setVelocity << " ";
-        Serial << sysStateCopy.dynamics.getVelocity() << " ";
-        Serial << sysStateCopy.velocityError << " ";
-        Serial << sysStateCopy.force << " ";
+        Serial << sysStateCopy.motorCommand << " ";
         Serial << endl;
     }
 }
@@ -85,32 +87,37 @@ ISR(TIMER2_OVF_vect) {
             sledMotor.off();
             break;
 
-        case SYS_MODE_TRACKING:
-            sysState.motorCommand = sysState.controller.update(sysState.positionError, sysState.setVelocity);
+        case SYS_MODE_MOTOR_CMD: 
             sledMotor.setVelocity(sysState.motorCommand);
             break;
 
-        case SYS_MODE_CAPTIVE:
-            sysState.dynamics.update(sysState.force);
-            sysState.setVelocity = sysState.dynamics.getVelocity();
-            sysState.setPosition = sysState.position;
-            sysState.updateError();
-            sysState.motorCommand = sysState.controller.update(sysState.velocityError, sysState.setVelocity);
-            sledMotor.setVelocity(sysState.motorCommand);
-            
-            //sysState.setPosition += (1.0/((float) RT_LOOP_FREQ))*sysState.setVelocity;
-            //sysState.updateError();
-            //sysState.motorCommand = sysState.controller.update(sysState.positionError, sysState.setVelocity);
-            //sledMotor.setVelocity(sysState.motorCommand);
+        //case SYS_MODE_TRACKING:
+        //    sysState.motorCommand = sysState.controller.update(sysState.positionError, sysState.setVelocity);
+        //    sledMotor.setVelocity(sysState.motorCommand);
+        //    break;
 
-            break;
+        //case SYS_MODE_CAPTIVE:
 
-        case SYS_MODE_VEL_CTL:
-            sysState.motorCommand = sysState.controller.update(sysState.velocityError,sysState.setVelocity);
-            sledMotor.setVelocity(sysState.motorCommand);
-            break;
+        //    sysState.dynamics.update(sysState.force);
+        //    sysState.setVelocity = sysState.dynamics.getVelocity();
+        //    //sysState.setPosition = sysState.position;
+        //    sysState.updateError();
+        //    sysState.motorCommand = sysState.controller.update(sysState.velocityError, sysState.setVelocity);
+        //    sledMotor.setVelocity(sysState.motorCommand);
+        //    
+        //    //sysState.setPosition += (1.0/((float) RT_LOOP_FREQ))*sysState.setVelocity;
+        //    //sysState.updateError();
+        //    //sysState.motorCommand = sysState.controller.update(sysState.positionError, sysState.setVelocity);
+        //    //sledMotor.setVelocity(sysState.motorCommand);
 
-        case SYS_MODE_INERTIAL:
+        //    break;
+
+        //case SYS_MODE_VEL_CTL:
+        //    sysState.motorCommand = sysState.controller.update(sysState.velocityError,sysState.setVelocity);
+        //    sledMotor.setVelocity(sysState.motorCommand);
+        //    break;
+
+        //case SYS_MODE_INERTIAL:
             break;
 
         default:
@@ -118,5 +125,49 @@ ISR(TIMER2_OVF_vect) {
     }
     sysState.sendDataFlag = true;
 }
+
+//void updateSystem() {
+//    if (sysState.sendDataFlag == true) {
+//        switch (sysState.operatingMode) {
+//            case SYS_MODE_OFF:
+//                sledMotor.off();
+//                break;
+//
+//            case SYS_MODE_TRACKING:
+//                sysState.updateError();
+//                sysState.motorCommand = sysState.controller.update(sysState.positionError, sysState.setVelocity);
+//                sledMotor.setVelocity(sysState.motorCommand);
+//                break;
+//
+//            case SYS_MODE_CAPTIVE:
+//
+//                sysState.dynamics.update(sysState.force);
+//                sysState.setVelocity = sysState.dynamics.getVelocity();
+//                //sysState.setPosition = sysState.position;
+//                sysState.updateError();
+//                sysState.motorCommand = sysState.controller.update(sysState.velocityError, sysState.setVelocity);
+//                sledMotor.setVelocity(sysState.motorCommand);
+//
+//                //sysState.setPosition += (1.0/((float) RT_LOOP_FREQ))*sysState.setVelocity;
+//                //sysState.updateError();
+//                //sysState.motorCommand = sysState.controller.update(sysState.positionError, sysState.setVelocity);
+//                //sledMotor.setVelocity(sysState.motorCommand);
+//
+//                break;
+//
+//            case SYS_MODE_VEL_CTL:
+//                sysState.updateError();
+//                sysState.motorCommand = sysState.controller.update(sysState.velocityError,sysState.setVelocity);
+//                sledMotor.setVelocity(sysState.motorCommand);
+//                break;
+//
+//            case SYS_MODE_INERTIAL:
+//                break;
+//
+//            default:
+//                break;
+//        }
+//    }
+//}
 
 

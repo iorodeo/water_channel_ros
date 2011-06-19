@@ -72,15 +72,18 @@ class ControllerComm(serial.Serial):
         cmdStr = '[%d]'%(CMD_SET_MODE_VEL_CTL,)
         self.sendCmd(cmdStr)
 
-    def readInWaiting(self):
+    def readInWaiting(self,conv2float=True):
         lineList = []
         while self.inWaiting() > 0:
             line = self.readline()
-            try:
-                line = [float(x) for x in line.split()]
+            if conv2float == True:
+                try:
+                    line = [float(x) for x in line.split()]
+                    lineList.append(line)
+                except:
+                    pass
+            else:
                 lineList.append(line)
-            except:
-                pass
         return lineList
 
 
