@@ -28,7 +28,7 @@ class DynamicsSetptSource(object):
 
         # Setup setpt topic
         self.setptMsg = SetptMsg()
-        self.setptPub = rospy.Publisher('setpt', SetptMsg)
+        self.setptPub = rospy.Publisher('setpt_rel', SetptMsg)
 
     def force_callback(self,data):
         self.dynamics.update(data.force, data.dt)

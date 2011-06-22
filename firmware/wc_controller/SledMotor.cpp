@@ -92,17 +92,12 @@ float SledMotor::clamp(float value) {
 
 int SledMotor::deadBandComp(int value) {
     int compValue;
-    
-    if ((value < SM_CONTROLLER_DEADBAND) && (value > -SM_CONTROLLER_DEADBAND)) {
-        compValue = 0;
+    compValue = value;
+    if (compValue > 0) {
+        compValue += SM_DRIVE_DEADBAND;
     }
-    else {
-        if (value > 0) {
-            compValue = value + SM_DRIVE_DEADBAND;
-        }
-        else {
-            compValue = value - SM_DRIVE_DEADBAND;
-        }
+    if (compValue < 0) {
+        compValue -= SM_DRIVE_DEADBAND;
     }
     return compValue;
 }

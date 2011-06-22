@@ -13,6 +13,7 @@
   <depend package="roscpp"/>
   <depend package="distance_118x"/>
   <depend package="setpt_source"/>
+  <depend package="joy"/>
 
 </package>
 
