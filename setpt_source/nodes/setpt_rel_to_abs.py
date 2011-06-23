@@ -7,6 +7,7 @@ import threading
 import math
 from setpt_source.msg import SetptMsg
 from distance_118x.msg import DistMsg
+from setpt_source.srv import * 
 
 class SetptRelToAbs(object):
 
@@ -19,10 +20,12 @@ class SetptRelToAbs(object):
         self.have_pos = False
         self.pos = None
         self.pos_initial = None
-        #self.pos_initial = 10000
 
         # Setup subscriber to setpt_rel topic
         self.setpt_rel_sub = rospy.Subscriber('setpt_rel', SetptMsg, self.setpt_rel_callback)
+
+        # Setup controller service
+        self.cmd_srv = rospy.Service('setpt_rel_cmd', RelToAbsCmd, self.handle_rel_to_abs_cmd)
 
         # # Setup subscriber to distance topic
         self.dist_sub = rospy.Subscriber('distance', DistMsg, self.dist_callback)
@@ -32,6 +35,16 @@ class SetptRelToAbs(object):
         self.setpt_pub = rospy.Publisher('setpt', SetptMsg)
 
         self.initialized = True
+
+    def handle_rel_to_abs_cmd(self,req):
+        return_flag = False
+        if req.cmd == 'reset':
+            with self.lock:
+                if self.have_pos:
+                    self.pos_initial = self.pos
+                    return_flag = True
+        return RelToAbsCmdResponse(return_flag)
+
 
     def setpt_rel_callback(self,data):
         if self.initialized:

@@ -15,6 +15,7 @@
   <depend package="actionlib_msgs"/>
   <depend package="distance_118x"/>
   <depend package="force_source"/>
+  <depend package="positioning"/>
 
 </package>
 

@@ -11,7 +11,7 @@ import setpt_source.msg
 def setpt_action_client():
     # Creates the SimpleActionClient, passing the type of the action
     # (SetptAction) to the constructor.
-    client = actionlib.SimpleActionClient('setpt', setpt_source.msg.SetptAction)
+    client = actionlib.SimpleActionClient('setpt_action', setpt_source.msg.SetptAction)
 
     # Waits until the action server has started up and started
     # listening for goals.

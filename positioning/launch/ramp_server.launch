@@ -1,0 +1,3 @@
+<launch>
+  <node name="ramp_server" pkg="positioning" type="ramp_server.py"/>
+</launch>

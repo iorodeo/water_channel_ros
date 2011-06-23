@@ -7,8 +7,8 @@ from positioning.srv import *
 
 def get_ramp(pos_0, pos_1, max_velo, accel, dt):
     rospy.wait_for_service('get_ramp')
+    get_ramp = rospy.ServiceProxy('get_ramp', GetRamp)
     try:
-        get_ramp = rospy.ServiceProxy('get_ramp', GetRamp)
         response = get_ramp(pos_0,pos_1,max_velo, accel,dt)
     except rospy.ServiceException, e:
         print 'Service call failed: %s'%(e,)
