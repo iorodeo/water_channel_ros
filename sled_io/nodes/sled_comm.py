@@ -7,10 +7,10 @@ CMD_SET_MODE_MOTOR_CMD = 4
 CMD_UPDATE_ACTUATOR_VALUE = 56 
 CMD_UPDATE_MOTOR_CMD = 57 
 
-class ControllerComm(serial.Serial):
+class SledIOComm(serial.Serial):
 
     def __init__(self,dev='/dev/USB_Controller',baudrate=115200):
-        super(ControllerComm, self).__init__(dev,baudrate)
+        super(SledIOComm, self).__init__(dev,baudrate)
         self.open()
         time.sleep(2.0)
         self.readInWaiting()
@@ -66,7 +66,7 @@ if __name__ == "__main__":
 
     atexit.register(cleanup)
 
-    comm = ControllerComm()
+    comm = SledIOComm()
     comm.setModeMotorCmd()
     comm.sendMotorCmd(0)
     while 1:

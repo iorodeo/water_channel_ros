@@ -4,7 +4,7 @@ roslib.load_manifest('sled_io')
 import rospy
 import threading
 import time
-from sled_comm import ControllerComm
+from sled_comm import SledIOComm
 from motor_cmd_source.msg import MotorCmdMsg
 from sled_io.srv import * 
 
@@ -13,7 +13,7 @@ class SledIO(object):
     def __init__(self):
         self.lock =  threading.Lock()
 
-        self.dev = ControllerComm()
+        self.dev = SledIOComm()
         self.dev.setModeOff()
         self.sleep_dt = 0.001
         self.motor_cmd = None
@@ -23,7 +23,7 @@ class SledIO(object):
         self.motor_cmd_sub = rospy.Subscriber('motor_cmd', MotorCmdMsg, self.motor_cmd_callback)
         
         # Setup controller service
-        self.srv = rospy.Service('sled_io_cmd', ControllerCmd, self.handle_controller_cmd)
+        self.srv = rospy.Service('sled_io_cmd', SledIOCmd, self.handle_sled_io_cmd)
 
         # Add shutdown code
         rospy.on_shutdown(self.error_stop)
@@ -68,7 +68,7 @@ class SledIO(object):
             # -----------------------------------------------------------------
         rospy.sleep(self.sleep_dt)
 
-    def handle_controller_cmd(self,req):
+    def handle_sled_io_cmd(self,req):
         if req.cmd == 'set mode':
             mode = req.valueString
 
@@ -82,7 +82,7 @@ class SledIO(object):
             else:
                 pass
 
-        return ControllerCmdResponse()
+        return SledIOCmdResponse()
 
     def motor_cmd_callback(self,data):
         with self.lock:

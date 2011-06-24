@@ -3,7 +3,7 @@ import roslib
 roslib.load_manifest('sled_io')
 import rospy
 import sys
-from sled_io.srv import ControllerCmd 
+from sled_io.srv import SledIOCmd 
 
 def set_mode():
     mode = rospy.get_param('controller_mode', 'off')
@@ -11,8 +11,8 @@ def set_mode():
     rospy.wait_for_service('sled_io_cmd')
     rospy.sleep(delay)
     try:
-        controller_cmd = rospy.ServiceProxy('sled_io_cmd',ControllerCmd)
-        controller_cmd('set mode', mode)
+        sled_io_cmd = rospy.ServiceProxy('sled_io_cmd',SledIOCmd)
+        sled_io_cmd('set mode', mode)
     except rospy.ServiceException, e:
         print 'Service call failed: %s'%(e,)
 
