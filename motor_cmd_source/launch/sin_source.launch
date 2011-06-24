@@ -1,0 +1,6 @@
+<launch>
+  <param name="update_rate" type="double" value="50"/>
+  <param name="sin_amplitude" type="double" value="300"/>
+  <param name="sin_period" type="double" value="10"/>
+  <node name="sin_source" pkg="motor_cmd_source" type="motor_cmd_sin_source.py"/>
+</launch>

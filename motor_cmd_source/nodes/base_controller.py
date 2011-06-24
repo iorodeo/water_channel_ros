@@ -11,6 +11,7 @@ from distance_118x.msg import DistMsg
 from motor_cmd_source.msg import MotorCmdMsg 
 from motor_cmd_source.msg import PIDMsg 
 from setpt_source.msg import SetptMsg
+from gain_scheduler import GainScheduler
 
 class BaseController(object):
 
@@ -38,6 +39,8 @@ class BaseController(object):
         self.feedForward = velocity_feedforward.VelocityFeedForward()
         self.feedForward.coeff = rospy.get_param('feedforward_coeff', 5.6)
         self.controller.ffFunc = self.feedForward.func
+
+        self.pgainScheduler = GainScheduler(width_x=20.0, width_y=20.0, min_gain=0.5,max_gain=5.0) 
 
         # Setup subscriber setpt topic 
         self.setptSub = rospy.Subscriber('setpt', SetptMsg, self.setptCallback)

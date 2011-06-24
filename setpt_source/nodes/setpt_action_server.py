@@ -31,7 +31,7 @@ class SetptActionServer(object):
 
         # Setup setpt and setpt_rel topics
         self.setptMsg = setpt_source.msg.SetptMsg()
-        #self.setpt_abs_pub = rospy.Publisher('setpt', setpt_source.msg.SetptMsg)
+        self.setpt_abs_pub = rospy.Publisher('setpt', setpt_source.msg.SetptMsg)
         self.setpt_rel_pub = rospy.Publisher('setpt_rel', setpt_source.msg.SetptMsg)
 
         self.initialized = True

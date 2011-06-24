@@ -1,0 +1,8 @@
+<launch> 
+    <param name="controller_mode" type="string" value="motor_cmd"/>
+    <include file="$(find distance_118x)/launch/distance_sensor.launch" />
+    <include file="$(find setpt_source)/launch/joystick.launch"/>
+    <include file="$(find motor_cmd_source)/launch/position_controller.launch"/>
+    <include file="$(find sled_io)/launch/sled_io.launch" />
+    <include file="$(find sled_io)/launch/set_mode.launch" />
+</launch>

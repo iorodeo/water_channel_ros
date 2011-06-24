@@ -38,7 +38,8 @@ class PIDController(object):
         self.iTerm = self.clamp(self.iTerm)
 
         # Compute output and clamp
-        output = self.ffTerm + self.pTerm + self.dTerm + self.iTerm
+        #output = self.ffTerm + self.pTerm + self.dTerm + self.iTerm
+        output = self.ffTerm + self.pTerm + self.iTerm
         output = self.clamp(output)
         return output
 
