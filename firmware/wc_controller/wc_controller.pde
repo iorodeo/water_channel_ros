@@ -1,6 +1,7 @@
 #include <SPI.h>
 #include <Streaming.h>
 #include <util/atomic.h>
+#include <Servo.h>
 #include "wc_controller.h"
 #include "io_pins.h"
 #include "mcp4822.h"

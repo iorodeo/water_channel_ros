@@ -24,8 +24,8 @@ void MessageHandler::switchYard(SystemState &sysState) {
                     setModeMotorCmd(sysState);
                     break;
 
-                case CMD_UPDATE_ACTUATOR_VALUE:
-                    updateActuatorValue(sysState);
+                case CMD_UPDATE_PWM_VALUE:
+                    updatePWMValue(sysState);
                     break;
 
                 case CMD_UPDATE_MOTOR_CMD:
@@ -51,13 +51,15 @@ void MessageHandler::setModeMotorCmd(SystemState &sysState) {
     sysState.setModeMotorCmd();
 }
 
-void MessageHandler::updateActuatorValue(SystemState &sysState) {
+void MessageHandler::updatePWMValue(SystemState &sysState) {
+    int pwmNum;
     int newValue;
-    if (numberOfItems() < 2) {
+    if (numberOfItems() < 3) {
         return;
     }
-    newValue = readInt(1);
-    sysState.updateActuatorValue(newValue);
+    pwmNum = readInt(1);
+    newValue = readInt(2);
+    sysState.updatePWMValue(pwmNum, newValue);
 }
 
 void MessageHandler::updateMotorCmd(SystemState &sysState) {
