@@ -81,6 +81,7 @@ ISR(TIMER2_OVF_vect) {
         return;
     }
     loopCnt = 0;
+    sysState.sendDataFlag = true;
 
     switch (sysState.operatingMode) {
 
@@ -99,6 +100,12 @@ ISR(TIMER2_OVF_vect) {
             sledMotor.off();
             break;
     }
-    sysState.sendDataFlag = true;
+
+    // Check the watch dog counter
+    sysState.watchDogCnt++;
+    if (sysState.watchDogCnt >= SYS_WATCHDOG_MAX) {
+        sysState.motorCommand = 0;
+        sledMotor.off();
+    }
 }
 

@@ -10,6 +10,7 @@ extern SledMotor sledMotor;
 SystemState::SystemState() {
     operatingMode = SYS_MODE_OFF;
     motorCommand = 0;
+    watchDogCnt = 0;
     pwm[0].attach(SYS_PWM_0_PIN, SYS_PWM_MIN_US, SYS_PWM_MAX_US);
     pwm[0].writeMicroseconds(SYS_PWM_START_US); 
     pwm[1].attach(SYS_PWM_1_PIN, SYS_PWM_MIN_US, SYS_PWM_MAX_US);
@@ -49,5 +50,11 @@ void SystemState::updatePWMValue(int num, int value) {
 
 void SystemState::updateMotorCmd(int value) {
     motorCommand = value;
+}
+
+void SystemState::updateWatchDog() {
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+        watchDogCnt = 0;
+    }
 }
 

@@ -6,6 +6,7 @@ CMD_SET_MODE_MOTOR_CMD = 4
 
 CMD_UPDATE_PWM_VALUE = 56 
 CMD_UPDATE_MOTOR_CMD = 57 
+CMD_UPDATE_WATCHDOG = 60
 
 class SledIOComm(serial.Serial):
 
@@ -26,11 +27,11 @@ class SledIOComm(serial.Serial):
     def sendActuatorPWM(self,pwmNum,val):
         pwmNum = int(pwmNum)
         val = int(val)
-        cmdStr '[%d, %d, %d]'%(CMD_UPDATE_PWM_VALUE,pwmNum, val)
+        cmdStr = '[%d, %d, %d]'%(CMD_UPDATE_PWM_VALUE,pwmNum, val)
         self.sendCmd(cmdStr)
-        
-    def setModeInertial(self):
-        cmdStr = '[%d]'%(CMD_SET_MODE_INERTIAL,)
+
+    def sendWatchDogPulse(self):
+        cmdStr = '[%d]'%(CMD_UPDATE_WATCHDOG,)
         self.sendCmd(cmdStr)
 
     def setModeOff(self):

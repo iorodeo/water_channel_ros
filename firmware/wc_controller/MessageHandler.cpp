@@ -32,6 +32,10 @@ void MessageHandler::switchYard(SystemState &sysState) {
                     updateMotorCmd(sysState);
                     break;
 
+                case CMD_UPDATE_WATCHDOG:
+                    updateWatchDog(sysState);
+                    break;
+
                 default:
                     break;
 
@@ -69,4 +73,8 @@ void MessageHandler::updateMotorCmd(SystemState &sysState) {
     }
     newValue = readInt(1);
     sysState.updateMotorCmd(newValue);
+}
+
+void MessageHandler::updateWatchDog(SystemState &sysState) {
+    sysState.updateWatchDog();
 }

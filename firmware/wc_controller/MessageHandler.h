@@ -8,6 +8,7 @@
 
 #define CMD_UPDATE_PWM_VALUE    56 
 #define CMD_UPDATE_MOTOR_CMD    57 
+#define CMD_UPDATE_WATCHDOG     60
 
 class MessageHandler: public SerialReceiver {
     public:
@@ -21,6 +22,7 @@ class MessageHandler: public SerialReceiver {
         // Update value commands
         void updatePWMValue(SystemState &sysState);
         void updateMotorCmd(SystemState &sysState);
+        void updateWatchDog(SystemState &sysState);
 };
 
 #endif
