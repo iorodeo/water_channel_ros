@@ -1,4 +1,4 @@
 <launch>
   <param name="fake_distance_sensor" type="boolean" value="false"/>
-  <node name="distance" pkg="distance_118x" type="distance_node.py"/>
+  <node name="distance_sensor" pkg="distance_118x" type="distance_node.py"/>
 </launch>

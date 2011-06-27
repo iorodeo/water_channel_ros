@@ -46,7 +46,7 @@ class BaseController(object):
         self.setptSub = rospy.Subscriber('setpt', SetptMsg, self.setptCallback)
         self.distanceSub = rospy.Subscriber('distance', DistMsg, self.distanceCallback)
 
-        # Setup setpt topic
+        # Setup publisher for motor command topic
         self.motorCmdMsg = MotorCmdMsg()
         self.motorCmdPub = rospy.Publisher('motor_cmd', MotorCmdMsg)
         self.PIDMsg = PIDMsg()
@@ -64,24 +64,6 @@ class BaseController(object):
             self.haveSetptData = True
             self.setptPosition = data.position
             self.setptVelocity = data.velocity
-
-        #    if self.haveSensorData==True:
-        #        self.setptPosition = data.position
-        #        self.setptVelocity = data.velocity
-        #        self.getMotorCmd()
-
-        #stamp = rospy.get_rostime()
-        ## Write motor command message
-        #self.motorCmdMsg.header.stamp = stamp 
-        #self.motorCmdMsg.motor_cmd = self.motorCmd
-        #self.motorCmdPub.publish(self.motorCmdMsg)
-        ## Write pid controller message
-        #self.PIDMsg.header.stamp = stamp
-        #self.PIDMsg.ffTerm = self.controller.ffTerm
-        #self.PIDMsg.pTerm = self.controller.pTerm
-        #self.PIDMsg.iTerm = self.controller.iTerm
-        #self.PIDMsg.dTerm = self.controller.dTerm
-        #self.PIDPub.publish(self.PIDMsg)
 
     def distanceCallback(self,data):
         with self.lock:
