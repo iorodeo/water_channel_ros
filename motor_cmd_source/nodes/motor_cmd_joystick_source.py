@@ -43,7 +43,6 @@ class MotorCmdSource(object):
     def joystick_callback(self,data):
         if self.initialized:
             with self.lock:
-                print data.axes[0]
                 self.motor_cmd = data.axes[0]*self.maxValue
 
 # -----------------------------------------------------------------------------
