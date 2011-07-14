@@ -2,6 +2,8 @@
 Creates an enclosure for the water channel controller electronics.
 """
 import scipy
+import os
+import os.path
 from py2scad import *
 
 INCH2MM = 25.4
@@ -234,6 +236,48 @@ class Controller_Enclosure(Basic_Enclosure):
         y_pos = rel_pos[1]*0.5*z_dim
         return x_pos, y_pos
 
+    def write_projections(self):
+        x_dim, y_dim, z_dim = self.params['inner_dimensions']
+        wall_thickness = self.params['wall_thickness']
+        top_y_overhang = self.params['top_y_overhang']
+        bottom_y_overhang = self.params['bottom_y_overhang']
+        inch = INCH2MM
+
+        part_names = ['front', 'back', 'left', 'right', 'top', 'bottom']
+        ref_cube_ypos = {
+                'front'  : 0.5*z_dim + 2*wall_thickness + 0.5*inch,
+                'back'   : 0.5*z_dim + 2*wall_thickness + 0.5*inch,
+                'left'   : 0.5*z_dim + 2*wall_thickness + 0.5*inch,
+                'right'  : 0.5*z_dim + 2*wall_thickness + 0.5*inch,
+                'top'    : 0.5*y_dim + 2*wall_thickness + 0.5*inch + top_y_overhang,
+                'bottom' : 0.5*y_dim + 2*wall_thickness + 0.5*inch + bottom_y_overhang,
+                }
+
+        ref_cube_base = Cube(size=(inch,inch,inch))
+
+        filename_list = []
+        for name in part_names:
+            ref_cube = Translate(ref_cube_base, v=(0,ref_cube_ypos[name],0))
+            ref_cube = Projection(ref_cube)
+            prog = SCAD_Prog()
+            prog.fn = fn
+            part = getattr(self,name)
+            part = Projection(part)
+            prog.add(part)
+            prog.add(ref_cube)
+            filename = 'controller_enclosure_%s.scad'%(name,)
+            filename_list.append(filename)
+            print 'creating %s'%(filename,)
+            prog.write(filename)
+        return filename_list
+
+    def create_dxf(self):
+        scad_names = self.write_projections()
+        for scad_name in scad_names:
+            base_name, ext = os.path.splitext(scad_name)
+            dxf_name = '%s.dxf'%(base_name,)
+            print 'converting %s to %s'%(scad_name, dxf_name)
+            os.system('openscad -x %s %s'%(dxf_name, scad_name))
 
 def get_dist(p0,p1):
     """
@@ -308,12 +352,12 @@ if __name__ == '__main__':
 
             'bnc_diam'                 : 9.91,
             'bnc_cutoff'               : 3.89,
-            'bnc_rel_pos_list'         : [(0.0,0.0),(-0.1,0.0)],
+            'bnc_rel_pos_list'         : [(0.0,0.0),(-0.10,0.0),(-0.2,0.0)],
 
             'force_sensor_hole_diam'   : 16.5,
             'force_sensor_mount_space' : (20.0,20.0),
             'force_sensor_mount_diam'  : 0.088*INCH2MM,
-            'force_sensor_rel_pos'     : (-0.3, 0.0),
+            'force_sensor_rel_pos'     : (-0.35, 0.0),
             'force_sensor_panel'       : 'back',
             }
     
@@ -333,11 +377,10 @@ if __name__ == '__main__':
     prog_assembly.fn = fn 
     prog_assembly.add(part_assembly)
     prog_assembly.write('controller_enclosure_assembly.scad')
+
+    enclosure.create_dxf()
     
-    prog_projection = SCAD_Prog()
-    prog_projection.fn = fn 
-    prog_projection.add(part_projection)
-    prog_projection.write('controller_enclosure_projection.scad')
+
 
 
 
