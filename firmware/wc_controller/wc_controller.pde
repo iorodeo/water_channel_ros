@@ -20,6 +20,7 @@ void setup() {
     setupCommunication();
     setupTimer();
     sledMotor.initializeIO();
+    sysState.initializeIO();
 }
 
 void setupCommunication() {

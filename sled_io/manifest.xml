@@ -15,6 +15,7 @@
   <depend package="setpt_source"/>
   <depend package="motor_cmd_source"/>
   <depend package="force_source"/>
+  <depend package="actuator_source"/>
   <depend package="safety"/>
 
 </package>

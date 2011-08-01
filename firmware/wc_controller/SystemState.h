@@ -24,11 +24,14 @@ class SystemState {
         int motorCommand;
         unsigned int watchDogCnt;
         Servo pwm[SYS_NUM_PWM];
+        //Servo pwm0;
+        //Servo pwm1;
         int pwmValue[SYS_NUM_PWM];
         bool sendDataFlag; 
         PIDController controller;
         Dynamics dynamics;
 
+        void initializeIO();
         void updatePWMValue(int num, int value);
         void updateMotorCmd(int value);
         void updateWatchDog();

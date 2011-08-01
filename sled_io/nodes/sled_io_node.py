@@ -7,6 +7,7 @@ import time
 from sled_comm import SledIOComm
 from motor_cmd_source.msg import MotorCmdMsg
 from safety.msg import WatchDogMsg
+from actuator_source.msg import ActuatorMsg
 from sled_io.srv import * 
 
 class SledIO(object):
@@ -22,6 +23,7 @@ class SledIO(object):
         # Setup subscriber to motor_cmd topic and watchdog pulse 
         self.motor_cmd_sub = rospy.Subscriber('motor_cmd', MotorCmdMsg, self.motor_cmd_callback)
         self.watchdog_sub = rospy.Subscriber('watchdog_pulse', WatchDogMsg, self.watchdog_callback)
+        self.actuator_sub = rospy.Subscriber('actuator', ActuatorMsg, self.actuator_callback)
         
         # Setup controller service
         self.srv = rospy.Service('sled_io_cmd', SledIOCmd, self.handle_sled_io_cmd)
@@ -41,7 +43,7 @@ class SledIO(object):
                 # For testing
                 # -----------------------------------------------------------------
                 # Get data from controller
-                if 1:
+                if 0:
                     data = self.dev.readInWaiting()
                     if data:
                         try:
@@ -63,6 +65,7 @@ class SledIO(object):
                             except:
                                 print 'DE', val
             # -----------------------------------------------------------------
+
             rospy.sleep(self.sleep_dt)
 
     def handle_sled_io_cmd(self,req):
@@ -87,6 +90,15 @@ class SledIO(object):
     def watchdog_callback(self,data):
         with self.lock:
             self.dev.sendWatchDogPulse()
+
+    def actuator_callback(self,data):
+        actuator_type = data.type
+        actuator_value = data.value
+        if actuator_type in ('pwm0', 'pwm1'):
+            pwm_num = int(actuator_type[-1])
+            print pwm_num, actuator_value
+            with self.lock:
+                self.dev.sendActuatorPWM(pwm_num, actuator_value)
 
     def error_stop(self):
         for i in range(0,10):
