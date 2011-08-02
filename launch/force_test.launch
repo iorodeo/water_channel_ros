@@ -1,0 +1,6 @@
+<launch> 
+    <include file="$(find distance_118x)/launch/distance_sensor.launch" />
+    <include file="$(find safety)/launch/bounds_checker.launch" />
+    <include file="$(find safety)/launch/watchdog_pulse.launch" />
+    <include file="$(find actuator_source)/launch/joystick.launch" />
+</launch>

@@ -1,8 +1,7 @@
 #ifndef SystemState_h
 #define SystemState_h
 #include <Servo.h>
-#include "PIDController.h"
-#include "Dynamics.h"
+#include "io_pins.h"
 
 // system modes
 #define SYS_MODE_OFF        0
@@ -19,26 +18,24 @@
 
 class SystemState {
     public:
-        SystemState();
         int operatingMode;
         int motorCommand;
         unsigned int watchDogCnt;
-        Servo pwm[SYS_NUM_PWM];
-        //Servo pwm0;
-        //Servo pwm1;
-        int pwmValue[SYS_NUM_PWM];
         bool sendDataFlag; 
-        PIDController controller;
-        Dynamics dynamics;
+        bool dataStreamFlag;
+        int pwmValue[SYS_NUM_PWM];
+        int ainValue[AIN_NUM];
+        Servo pwm[SYS_NUM_PWM];
 
+        SystemState();
         void initializeIO();
         void updatePWMValue(int num, int value);
         void updateMotorCmd(int value);
         void updateWatchDog();
-
-        // Set mode methods 
         void setModeOff();
         void setModeMotorCmd();
+        void setDataStreamOn();
+        void setDataStreamOff();
 };
 
 

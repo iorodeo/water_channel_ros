@@ -5,22 +5,29 @@
 #include "wc_controller.h"
 #include "io_pins.h"
 #include "mcp4822.h"
+#include "max1270.h"
 #include "SystemState.h"
 #include "SledMotor.h"
 #include "MessageHandler.h"
 
-
 SystemState sysState = SystemState();
 SledMotor sledMotor = SledMotor();
 MessageHandler messageHandler = MessageHandler();
+MAX1270 analogIn = MAX1270(AIN_CS, AIN_SSTRB);
 
 void setup() {
     
     // Initialize system
     setupCommunication();
     setupTimer();
+    setupAnalogInput();
     sledMotor.initializeIO();
     sysState.initializeIO();
+}
+
+void setupAnalogInput() {
+    analogIn.setBipolar();
+    analogIn.setRange5V();
 }
 
 void setupCommunication() {
@@ -52,10 +59,12 @@ void loop() {
         messageHandler.switchYard(sysState);
     }
 
-    //sendData();
+    // Send data to host computer
+    sendData();
 }
 
 void sendData() {
+    int ainValue[AIN_NUM];
     SystemState sysStateCopy;
 
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
@@ -64,10 +73,14 @@ void sendData() {
             sysState.sendDataFlag = false;
         }
     }
-    if (sysStateCopy.sendDataFlag==true) {
-        Serial << sysStateCopy.operatingMode << " ";
-        Serial << sysStateCopy.motorCommand << " ";
-        Serial << endl;
+    if ((sysStateCopy.sendDataFlag==true) && (sysStateCopy.dataStreamFlag==true)) {
+
+        // Send analog values back to controller
+        Serial << "[";
+        for (int i=0; i<2;i++) {
+            Serial << _DEC(sysStateCopy.ainValue[i]) << ", "; 
+        }
+        Serial << "]" << endl;
     }
 }
 
@@ -81,9 +94,12 @@ ISR(TIMER2_OVF_vect) {
         loopCnt++;
         return;
     }
+
+    // Reset loop counter and set send data flag 
     loopCnt = 0;
     sysState.sendDataFlag = true;
 
+    // Take actions based on operating mode
     switch (sysState.operatingMode) {
 
         case SYS_MODE_OFF:
@@ -95,12 +111,16 @@ ISR(TIMER2_OVF_vect) {
             break;
 
         //case SYS_MODE_INERTIAL:
-            break;
+        //    break;
 
         default:
             sledMotor.off();
             break;
     }
+
+    // Read analog inputs - how many can we read. 8 seems to be too many
+    sysState.ainValue[0] = analogIn.sample(0);
+    sysState.ainValue[1] = analogIn.sample(1);
 
     // Check the watch dog counter
     sysState.watchDogCnt++;

@@ -15,9 +15,9 @@ class SledIO(object):
     def __init__(self):
         self.lock =  threading.Lock()
 
-        self.dev = SledIOComm()
+        self.dev = SledIOComm(port='/dev/USB_Controller',baudrate=115200,timeout=0.1)
         self.dev.setModeOff()
-        self.sleep_dt = 0.001
+        self.sleep_dt = 0.01
         self.motor_cmd = None
 
         # Setup subscriber to motor_cmd topic and watchdog pulse 
@@ -34,38 +34,17 @@ class SledIO(object):
         # Initialize nodes
         rospy.init_node('sled_control_io')
 
-    def run(self):
+        self.dev.setDataStreamOn()
 
+    def run(self):
+        cnt = 0
         while not rospy.is_shutdown():
             with self.lock:
-
-                #------------------------------------------------------------------
-                # For testing
-                # -----------------------------------------------------------------
-                # Get data from controller
-                if 0:
-                    data = self.dev.readInWaiting()
-                    if data:
-                        try:
-                            for x in data[-1]:
-                                print '%1.2f, '%(float(x),) , 
-                                pass
-                            print
-                        except:
-                            print 'data error'
-                if 0:
-                    data = self.dev.readInWaiting(conv2float=False)
-                    if data:
-                        for val in data:
-                            try:
-                                valsplit = val.split()
-                                cmdval = int(valsplit[0])
-                                if not cmdval in (55,58):
-                                    print 'CE',  val
-                            except:
-                                print 'DE', val
-            # -----------------------------------------------------------------
-
+                # Get data stream from controller
+                data = self.dev.readInWaiting()
+                if data:
+                    cnt += 1
+                    print cnt, data[0]
             rospy.sleep(self.sleep_dt)
 
     def handle_sled_io_cmd(self,req):
@@ -96,13 +75,13 @@ class SledIO(object):
         actuator_value = data.value
         if actuator_type in ('pwm0', 'pwm1'):
             pwm_num = int(actuator_type[-1])
-            print pwm_num, actuator_value
             with self.lock:
                 self.dev.sendActuatorPWM(pwm_num, actuator_value)
 
     def error_stop(self):
         for i in range(0,10):
             self.dev.setModeOff();
+            self.dev.setDataStreamOff()
             time.sleep(0.1)
             
 

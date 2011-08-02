@@ -24,6 +24,14 @@ void MessageHandler::switchYard(SystemState &sysState) {
                     setModeMotorCmd(sysState);
                     break;
 
+                case CMD_SET_DATA_STREAM_ON:
+                    setDataStreamOn(sysState);
+                    break;
+
+                case CMD_SET_DATA_STREAM_OFF:
+                    setDataStreamOff(sysState);
+                    break;
+
                 case CMD_UPDATE_PWM_VALUE:
                     updatePWMValue(sysState);
                     break;
@@ -53,6 +61,14 @@ void MessageHandler::setModeOff(SystemState &sysState) {
 
 void MessageHandler::setModeMotorCmd(SystemState &sysState) {
     sysState.setModeMotorCmd();
+}
+
+void MessageHandler::setDataStreamOn(SystemState &sysState) {
+    sysState.setDataStreamOn();
+}
+
+void MessageHandler::setDataStreamOff(SystemState &sysState) {
+    sysState.setDataStreamOff();
 }
 
 void MessageHandler::updatePWMValue(SystemState &sysState) {

@@ -3,6 +3,8 @@ import time
 
 CMD_SET_MODE_OFF = 0
 CMD_SET_MODE_MOTOR_CMD = 4
+CMD_SET_DATA_STREAM_ON = 5
+CMD_SET_DATA_STREAM_OFF = 6
 
 CMD_UPDATE_PWM_VALUE = 56 
 CMD_UPDATE_MOTOR_CMD = 57 
@@ -10,8 +12,8 @@ CMD_UPDATE_WATCHDOG = 60
 
 class SledIOComm(serial.Serial):
 
-    def __init__(self,dev='/dev/USB_Controller',baudrate=115200):
-        super(SledIOComm, self).__init__(dev,baudrate)
+    def __init__(self,**kwargs): 
+        super(SledIOComm, self).__init__(**kwargs)
         self.open()
         time.sleep(2.0)
         self.readInWaiting()
@@ -42,18 +44,28 @@ class SledIOComm(serial.Serial):
         cmdStr = '[%d]'%(CMD_SET_MODE_MOTOR_CMD,)
         self.sendCmd(cmdStr)
 
-    def readInWaiting(self,conv2float=True):
+    def setDataStreamOn(self):
+        cmdStr = '[%d]'%(CMD_SET_DATA_STREAM_ON,)
+        self.sendCmd(cmdStr)
+
+    def setDataStreamOff(self):
+        cmdStr = '[%d]'%(CMD_SET_DATA_STREAM_OFF,)
+        self.sendCmd(cmdStr)
+
+    def readInWaiting(self): 
         lineList = []
         while self.inWaiting() > 0:
-            line = self.readline()
-            if conv2float == True:
-                try:
-                    line = [float(x) for x in line.split()]
-                    lineList.append(line)
-                except:
-                    pass
-            else:
+            try:
+                line = self.readline()
+            except:
+                # May want to do better exception handling here
+                continue
+            line = line.strip()
+            try:
+                line = eval(line)
                 lineList.append(line)
+            except:
+                pass
         return lineList
 
 
@@ -73,7 +85,7 @@ if __name__ == "__main__":
 
     atexit.register(cleanup)
 
-    comm = SledIOComm()
+    comm = SledIOComm(port='/dev/USB_Controller', baudrate=152000, timeout=0.5)
     comm.setModeMotorCmd()
     comm.sendMotorCmd(0)
     while 1:
