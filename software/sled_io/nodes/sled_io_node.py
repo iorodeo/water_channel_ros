@@ -5,8 +5,9 @@ import rospy
 import threading
 import time
 from sled_comm import SledIOComm
+from sled_io.msg import AnalogInMsg
 from motor_cmd_source.msg import MotorCmdMsg
-from safety.msg import WatchDogMsg
+from sled_io.msg import WatchDogMsg
 from actuator_source.msg import ActuatorMsg
 from sled_io.srv import * 
 
@@ -19,6 +20,10 @@ class SledIO(object):
         self.dev.setModeOff()
         self.sleep_dt = 0.01
         self.motor_cmd = None
+
+        # Setup analog input publisher 
+        self.ain_msg = AnalogInMsg()
+        self.ain_pub = rospy.Publisher('analog_input', AnalogInMsg)
 
         # Setup subscriber to motor_cmd topic and watchdog pulse 
         self.motor_cmd_sub = rospy.Subscriber('motor_cmd', MotorCmdMsg, self.motor_cmd_callback)
@@ -37,14 +42,14 @@ class SledIO(object):
         self.dev.setDataStreamOn()
 
     def run(self):
-        cnt = 0
         while not rospy.is_shutdown():
             with self.lock:
                 # Get data stream from controller
                 data = self.dev.readInWaiting()
                 if data:
-                    cnt += 1
-                    print cnt, data[0]
+                    self.ain_msg.header.stamp = rospy.get_rostime()
+                    self.ain_msg.values = data[-1]
+                    self.ain_pub.publish(self.ain_msg)
             rospy.sleep(self.sleep_dt)
 
     def handle_sled_io_cmd(self,req):

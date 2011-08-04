@@ -3,7 +3,7 @@ import roslib
 roslib.load_manifest('safety')
 import rospy
 from std_msgs.msg import Header
-from safety.msg import WatchDogMsg
+from sled_io.msg import WatchDogMsg
 
 class WatchDogPulse(object):
 
