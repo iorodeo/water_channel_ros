@@ -4,7 +4,7 @@ roslib.load_manifest('safety')
 import rospy
 import threading
 import math
-from distance_118x.msg import DistMsg
+from msg_and_srv.msg import DistMsg
 from sled_io.srv import SledIOCmd 
 
 

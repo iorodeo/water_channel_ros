@@ -6,7 +6,7 @@ import rospy
 import threading
 import math
 from setpt_source.msg import SetptMsg
-from distance_118x.msg import DistMsg
+from msg_and_srv.msg import DistMsg
 from setpt_source.srv import * 
 
 class SetptRelToAbs(object):

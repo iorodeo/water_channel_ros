@@ -12,6 +12,7 @@
   <depend package="rospy"/>
   <depend package="roscpp"/>
   <depend package="opencv2"/>
+  <depend package="msg_and_srv"/>
 
 </package>
 

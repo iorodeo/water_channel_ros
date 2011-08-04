@@ -6,7 +6,7 @@ import threading
 import math
 from std_msgs.msg import Header
 from setpt_source.msg import SetptMsg 
-from distance_118x.msg import DistMsg 
+from msg_and_srv.msg import DistMsg 
 
 class SetptSource(object):
 

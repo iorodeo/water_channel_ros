@@ -7,7 +7,7 @@ import threading
 import math
 from joy.msg import Joy
 from std_msgs.msg import Header
-from actuator_source.msg import ActuatorMsg 
+from msg_and_srv.msg import ActuatorMsg 
 
 class ActuatorSource(object):
 

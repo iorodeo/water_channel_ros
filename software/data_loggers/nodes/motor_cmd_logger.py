@@ -5,7 +5,7 @@ import rospy
 import threading
 import os
 import os.path
-from distance_118x.msg import DistMsg 
+from msg_and_srv.msg import DistMsg 
 from motor_cmd_source.msg import MotorCmdMsg
 
 class MotorCmdLogger(object):

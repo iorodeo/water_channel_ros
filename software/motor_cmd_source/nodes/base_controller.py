@@ -7,7 +7,7 @@ import math
 import pid_controller
 import velocity_feedforward
 from std_msgs.msg import Header
-from distance_118x.msg import DistMsg 
+from msg_and_srv.msg import DistMsg 
 from motor_cmd_source.msg import MotorCmdMsg 
 from motor_cmd_source.msg import PIDMsg 
 from setpt_source.msg import SetptMsg

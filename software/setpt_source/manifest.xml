@@ -13,7 +13,7 @@
   <depend package="joy"/>
   <depend package="actionlib"/>
   <depend package="actionlib_msgs"/>
-  <depend package="distance_118x"/>
+  <depend package="msg_and_srv"/>
   <depend package="force_source"/>
   <depend package="positioning"/>
 

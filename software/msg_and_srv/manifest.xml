@@ -1,18 +1,16 @@
 <package>
-  <description brief="safety">
+  <description brief="msg_and_srv">
 
-     safety
+     msg_and_srv
 
   </description>
   <author></author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
-  <url>http://ros.org/wiki/safety</url>
-  <depend package="std_msgs"/>
+  <url>http://ros.org/wiki/msg_and_srv</url>
   <depend package="rospy"/>
   <depend package="roscpp"/>
-  <depend package="msg_and_srv"/>
-  <depend package="sled_io"/>
+  <depend package="std_msgs"/>
 
 </package>
 
