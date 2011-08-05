@@ -12,7 +12,6 @@
   <depend package="rospy"/>
   <depend package="roscpp"/>
   <depend package="msg_and_srv"/>
-  <depend package="motor_cmd_source"/>
 </package>
 
 

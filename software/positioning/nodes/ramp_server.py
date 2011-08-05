@@ -3,7 +3,8 @@ import roslib
 roslib.load_manifest('positioning')
 import rospy
 import positioning_moves 
-from positioning.srv import * 
+from msg_and_srv.srv import GetRamp
+from msg_and_srv.srv import GetRampResponse
 
 class RampServer(object):
 

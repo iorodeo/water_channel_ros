@@ -2,7 +2,8 @@
 import roslib 
 roslib.load_manifest('file_servers')
 import rospy
-from file_servers.srv import * 
+from msg_and_srv.srv import LoadPositionArray
+from msg_and_srv.srv import LoadPositionArrayResponse
 import os
 
 class PositionArrayServer(object):

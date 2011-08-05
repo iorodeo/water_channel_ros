@@ -6,7 +6,8 @@ import threading
 import random
 from std_msgs.msg import Header
 from msg_and_srv.msg import DistMsg 
-from msg_and_srv.srv import *
+from msg_and_srv.srv import DistSensorCtl
+from msg_and_srv.srv import DistSensorCtlResponse
 from distance_sensor_118x import DistanceSensor
 import filters
 

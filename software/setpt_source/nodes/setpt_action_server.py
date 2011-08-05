@@ -6,7 +6,7 @@ roslib.load_manifest('setpt_source')
 import rospy
 import actionlib
 
-import setpt_source.msg
+import msg_and_srv.msg
 
 # import threading
 # import math
@@ -24,15 +24,15 @@ class SetptActionServer(object):
         self.position_final = None
 
         # Setup action server
-        self.feedback = setpt_source.msg.SetptFeedback()
-        self.result = setpt_source.msg.SetptResult()
-        self.action_server = actionlib.SimpleActionServer("setpt_action", setpt_source.msg.SetptAction, execute_cb=self.execute_cb, auto_start=False)
+        self.feedback = msg_and_srv.msg.SetptFeedback()
+        self.result = msg_and_srv.msg.SetptResult()
+        self.action_server = actionlib.SimpleActionServer("setpt_action", msg_and_srv.msg.SetptAction, execute_cb=self.execute_cb, auto_start=False)
         self.action_server.start()
 
         # Setup setpt and setpt_rel topics
-        self.setptMsg = setpt_source.msg.SetptMsg()
-        self.setpt_abs_pub = rospy.Publisher('setpt', setpt_source.msg.SetptMsg)
-        self.setpt_rel_pub = rospy.Publisher('setpt_rel', setpt_source.msg.SetptMsg)
+        self.setptMsg = msg_and_srv.msg.SetptMsg()
+        self.setpt_abs_pub = rospy.Publisher('setpt', msg_and_srv.msg.SetptMsg)
+        self.setpt_rel_pub = rospy.Publisher('setpt_rel', msg_and_srv.msg.SetptMsg)
 
         self.initialized = True
 

@@ -11,8 +11,9 @@
   <depend package="std_msgs"/>
   <depend package="rospy"/>
   <depend package="roscpp"/>
-  <depend package="setpt_source"/>
   <depend package="joy"/>
+  <depend package="msg_and_srv"/>
+  <depend package="setpt_source"/>
 
 </package>
 

@@ -11,11 +11,7 @@
   <depend package="rospy"/>
   <depend package="roslib"/>
   <depend package="joy"/>
-  <depend package="actionlib"/>
-  <depend package="actionlib_msgs"/>
   <depend package="msg_and_srv"/>
-  <depend package="force_source"/>
-  <depend package="positioning"/>
 
 </package>
 

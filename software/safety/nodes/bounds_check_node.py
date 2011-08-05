@@ -5,7 +5,7 @@ import rospy
 import threading
 import math
 from msg_and_srv.msg import DistMsg
-from sled_io.srv import SledIOCmd 
+from msg_and_srv.srv import SledIOCmd 
 
 
 class BoundsChecker(object):

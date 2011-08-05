@@ -8,8 +8,8 @@ import pid_controller
 import velocity_feedforward
 from std_msgs.msg import Header
 from msg_and_srv.msg import DistMsg 
-from motor_cmd_source.msg import MotorCmdMsg 
-from motor_cmd_source.msg import PIDMsg 
+from msg_and_srv.msg import MotorCmdMsg
+from msg_and_srv.msg import PIDMsg
 from setpt_source.msg import SetptMsg
 from gain_scheduler import GainScheduler
 

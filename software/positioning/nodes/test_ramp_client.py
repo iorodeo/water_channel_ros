@@ -3,7 +3,7 @@ import roslib
 roslib.load_manifest('positioning')
 import rospy
 import matplotlib.pylab as pylab
-from positioning.srv import * 
+from msg_and_srv import GetRamp
 
 def get_ramp(pos_0, pos_1, max_velo, accel, dt):
     rospy.wait_for_service('get_ramp')

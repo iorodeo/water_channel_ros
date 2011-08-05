@@ -7,7 +7,8 @@ import threading
 import math
 from setpt_source.msg import SetptMsg
 from msg_and_srv.msg import DistMsg
-from setpt_source.srv import * 
+from msg_and_srv.srv import RelToAbsCmd
+from msg_and_srv.srv import RelToAbsCmdResponse
 
 class SetptRelToAbs(object):
 

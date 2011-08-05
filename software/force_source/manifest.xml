@@ -13,6 +13,7 @@
   <depend package="roslib"/>
   <depend package="joy"/>
   <depend package="roscpp"/>
+  <depend package="msg_and_srv"/>
 
 </package>
 

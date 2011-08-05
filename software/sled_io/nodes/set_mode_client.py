@@ -3,7 +3,7 @@ import roslib
 roslib.load_manifest('sled_io')
 import rospy
 import sys
-from sled_io.srv import SledIOCmd 
+from msg_and_srv.srv import SledIOCmd 
 
 def set_mode():
     mode = rospy.get_param('controller_mode', 'off')

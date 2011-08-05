@@ -7,7 +7,7 @@ import threading
 import math
 from joy.msg import Joy
 from std_msgs.msg import Header
-from force_source.msg import ForceMsg
+from msg_and_srv.msg import ForceMsg
 
 class ForceSource(object):
 

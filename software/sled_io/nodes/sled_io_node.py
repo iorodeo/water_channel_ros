@@ -5,11 +5,12 @@ import rospy
 import threading
 import time
 from sled_comm import SledIOComm
-from sled_io.msg import AnalogInMsg
-from motor_cmd_source.msg import MotorCmdMsg
-from sled_io.msg import WatchDogMsg
-from actuator_source.msg import ActuatorMsg
-from sled_io.srv import * 
+from msg_and_srv.msg import AnalogInMsg
+from msg_and_srv.msg import MotorCmdMsg
+from msg_and_srv.msg import WatchDogMsg
+from msg_and_srv.msg import ActuatorMsg
+from msg_and_srv.srv import SledIOCmd
+from msg_and_srv.srv import SledIOCmdResponse
 
 class SledIO(object):
 

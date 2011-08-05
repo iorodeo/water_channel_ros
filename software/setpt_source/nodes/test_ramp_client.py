@@ -6,8 +6,8 @@ roslib.load_manifest('setpt_source')
 import rospy
 import actionlib
 import setpt_source.msg
-from positioning.srv import * 
-from setpt_source.srv import *
+from msg_and_srv.srv import GetRamp
+from msg_and_srv.srv import RelToAbsCmd
 import sys
 
 def ramp_action_client(pos,max_velo=500.0,accel=100.0):

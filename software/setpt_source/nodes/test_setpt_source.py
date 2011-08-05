@@ -5,7 +5,7 @@ import rospy
 import threading
 import math
 from std_msgs.msg import Header
-from setpt_source.msg import SetptMsg 
+from msg_and_srv.msg import SetptMsg 
 from msg_and_srv.msg import DistMsg 
 
 class SetptSource(object):

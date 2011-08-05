@@ -3,7 +3,7 @@ import roslib
 roslib.load_manifest('file_servers')
 import rospy
 import sys
-from file_servers.srv import * 
+from msg_and_srv.srv import LoadPositionArray
 
 
 def get_position_array(filename):

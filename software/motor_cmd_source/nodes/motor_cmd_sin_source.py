@@ -5,8 +5,7 @@ import rospy
 import threading
 import math
 from std_msgs.msg import Header
-from motor_cmd_source.msg import MotorCmdMsg 
-
+from msg_and_srv.msg import MotorCmdMsg
 
 class MotorCmdSinSrc(object):
 

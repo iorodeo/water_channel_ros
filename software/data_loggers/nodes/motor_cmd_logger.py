@@ -6,7 +6,7 @@ import threading
 import os
 import os.path
 from msg_and_srv.msg import DistMsg 
-from motor_cmd_source.msg import MotorCmdMsg
+from msg_and_srv.msg import MotorCmdMsg
 
 class MotorCmdLogger(object):
 

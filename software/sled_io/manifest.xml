@@ -11,10 +11,7 @@
   <depend package="std_msgs"/>
   <depend package="rospy"/>
   <depend package="roscpp"/>
-  <depend package="setpt_source"/>
-  <depend package="motor_cmd_source"/>
-  <depend package="force_source"/>
-  <depend package="actuator_source"/>
+  <depend package="msg_and_srv"/>
 
 </package>
 

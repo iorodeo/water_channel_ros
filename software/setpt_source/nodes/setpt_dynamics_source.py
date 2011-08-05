@@ -6,8 +6,8 @@ import rospy
 import threading
 import math
 from std_msgs.msg import Header
-from setpt_source.msg import SetptMsg
-from force_source.msg import ForceMsg
+from msg_and_srv.msg import SetptMsg
+from msg_and_srv.msg import ForceMsg
 
 import dynamics
 

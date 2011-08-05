@@ -3,7 +3,7 @@ import roslib
 roslib.load_manifest('distance_118x')
 import sys
 import rospy
-from msg_and_srv.srv import *
+from msg_and_srv.srv import DistSensorCtl
 
 def set_laser(state):
 
