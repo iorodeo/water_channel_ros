@@ -14,9 +14,9 @@ class SledIOComm(serial.Serial):
 
     def __init__(self,**kwargs): 
         super(SledIOComm, self).__init__(**kwargs)
-        self.open()
-        time.sleep(2.0)
-        self.readInWaiting()
+        time.sleep(2.5)
+        self.flushOutput()
+        self.flushInput()
 
     def sendCmd(self,cmdStr):
         self.write(cmdStr)
@@ -52,13 +52,20 @@ class SledIOComm(serial.Serial):
         cmdStr = '[%d]'%(CMD_SET_DATA_STREAM_OFF,)
         self.sendCmd(cmdStr)
 
+    def flushBuffer(self):
+        while self.inWaiting > 0:
+            line = self.readline()
+
     def readInWaiting(self): 
         lineList = []
+        print 'inWaiting', self.inWaiting()
         while self.inWaiting() > 0:
             try:
                 line = self.readline()
+                print 'line', line
             except:
                 # May want to do better exception handling here
+                print 'readline error'
                 continue
             line = line.strip()
             try:

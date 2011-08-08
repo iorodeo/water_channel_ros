@@ -1,16 +1,18 @@
 <package>
-  <description brief="msg_and_srv">
+  <description brief="action_servers">
 
-     msg_and_srv
+     action_servers
 
   </description>
   <author></author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
-  <url>http://ros.org/wiki/msg_and_srv</url>
+  <url>http://ros.org/wiki/action_servers</url>
   <depend package="rospy"/>
   <depend package="roscpp"/>
   <depend package="std_msgs"/>
+  <depend package="actionlib"/>
+  <depend package="actionlib_msgs"/>
 
 </package>
 

@@ -32,6 +32,10 @@ void MessageHandler::switchYard(SystemState &sysState) {
                     setDataStreamOff(sysState);
                     break;
 
+                case CMD_GET_ANALOG_INPUT: 
+                    getAnalogInput(sysState);
+                    break;
+
                 case CMD_UPDATE_PWM_VALUE:
                     updatePWMValue(sysState);
                     break;
@@ -69,6 +73,10 @@ void MessageHandler::setDataStreamOn(SystemState &sysState) {
 
 void MessageHandler::setDataStreamOff(SystemState &sysState) {
     sysState.setDataStreamOff();
+}
+
+void MessageHandler::getAnalogInput(SystemState &sysState) {
+    //sysState.getAnalogInput();
 }
 
 void MessageHandler::updatePWMValue(SystemState &sysState) {

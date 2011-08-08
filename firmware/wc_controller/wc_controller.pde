@@ -53,9 +53,9 @@ void loop() {
     // Handle serial communications
     while (Serial.available() > 0) {
         messageHandler.process(Serial.read());
-        if (messageHandler.messageReady()== true) {
+        //if (messageHandler.messageReady()== true) {
             //messageHandler.printMessage();
-        }
+        //}
         messageHandler.switchYard(sysState);
     }
 
@@ -65,20 +65,25 @@ void loop() {
 
 void sendData() {
     int ainValue[AIN_NUM];
-    SystemState sysStateCopy;
+    bool sendDataFlag;
+    bool dataStreamFlag;
 
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-        if (sysState.sendDataFlag == true) {
-            sysStateCopy = sysState;
+        sendDataFlag = sysState.sendDataFlag;
+        dataStreamFlag = sysState.dataStreamFlag;
+        if (sendDataFlag == true) {
+            for (int i=0; i<2; i++) {
+            ainValue[i] = sysState.ainValue[i];
+            }
             sysState.sendDataFlag = false;
         }
     }
-    if ((sysStateCopy.sendDataFlag==true) && (sysStateCopy.dataStreamFlag==true)) {
+    if ((sendDataFlag==true) && (dataStreamFlag==true)) {
 
         // Send analog values back to controller
         Serial << "[";
         for (int i=0; i<2;i++) {
-            Serial << _DEC(sysStateCopy.ainValue[i]) << ", "; 
+            Serial << _DEC(ainValue[i]) << ", "; 
         }
         Serial << "]" << endl;
     }

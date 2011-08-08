@@ -5,7 +5,7 @@ import roslib
 roslib.load_manifest('setpt_source')
 import rospy
 import actionlib
-
+import action_servers.msg
 import msg_and_srv.msg
 
 # import threading
@@ -24,10 +24,10 @@ class SetptActionServer(object):
         self.position_final = None
 
         # Setup action server
-        self.feedback = msg_and_srv.msg.SetptFeedback()
-        self.result = msg_and_srv.msg.SetptResult()
-        self.action_server = actionlib.SimpleActionServer("setpt_action", msg_and_srv.msg.SetptAction, execute_cb=self.execute_cb, auto_start=False)
-        self.action_server.start()
+        self.feedback = action_servers.msg.SetptFeedback()
+        self.result = action_servers.msg.SetptResult()
+        self.server = actionlib.SimpleActionServer("setpt_action", action_servers.msg.SetptAction, execute_cb=self.execute_cb, auto_start=False)
+        self.server.start()
 
         # Setup setpt and setpt_rel topics
         self.setptMsg = msg_and_srv.msg.SetptMsg()
@@ -55,13 +55,13 @@ class SetptActionServer(object):
             self.pub.publish(self.setptMsg)
             secs_to_completion -= self.dt
             self.feedback.secs_to_completion = secs_to_completion
-            self.action_server.publish_feedback(self.feedback)
+            self.server.publish_feedback(self.feedback)
             self.position_final = position
             self.rate.sleep()
 
         if self.position_final is not None:
             self.result.position = self.position_final
-            self.action_server.set_succeeded(self.result)
+            self.server.set_succeeded(self.result)
 
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':

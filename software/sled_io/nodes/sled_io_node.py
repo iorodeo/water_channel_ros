@@ -17,8 +17,22 @@ class SledIO(object):
     def __init__(self):
         self.lock =  threading.Lock()
 
-        self.dev = SledIOComm(port='/dev/USB_Controller',baudrate=115200,timeout=0.1)
-        self.dev.setModeOff()
+        # Open serial device. Note, this is a bit of a kludge - sometimes the
+        # device is opened, but no data appears on the serial stream. I'm not sure
+        # why this is happen. In these case the device is closed and re-opened until it
+        # can read data. 
+        dev_flag = False
+        while dev_flag == False:
+            self.dev = SledIOComm(port='/dev/USB_Controller',baudrate=115200,timeout=0.3)
+            self.dev.setModeOff()
+            self.dev.setDataStreamOn()
+            line = self.dev.readline()
+            if not line:
+                self.dev.close()
+                del(self.dev)
+            else:
+                dev_flag = True
+            
         self.sleep_dt = 0.01
         self.motor_cmd = None
 
@@ -40,7 +54,7 @@ class SledIO(object):
         # Initialize nodes
         rospy.init_node('sled_control_io')
 
-        self.dev.setDataStreamOn()
+
 
     def run(self):
         while not rospy.is_shutdown():
@@ -86,8 +100,11 @@ class SledIO(object):
 
     def error_stop(self):
         for i in range(0,10):
-            self.dev.setModeOff();
-            self.dev.setDataStreamOff()
+            with self.lock:
+                self.dev.setModeOff();
+                self.dev.setDataStreamOff()
+                self.dev.flushInput()
+                self.dev.flushOutput()
             time.sleep(0.1)
             
 
