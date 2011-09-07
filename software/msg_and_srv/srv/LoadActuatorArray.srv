@@ -1,0 +1,5 @@
+string filename
+---
+bool status
+string message
+float32[] actuator_array 
