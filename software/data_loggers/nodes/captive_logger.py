@@ -25,7 +25,8 @@ class Captive_Logger(object):
 
     def __init__(self):
         self.lock = threading.Lock()
-        self.directory = rospy.get_param('default_log_dir', 'default_log_dir.txt')
+        default_log_dir = os.path.join(os.environ['HOME'],'ros_logs')
+        self.directory = rospy.get_param('default_log_dir', default_log_dir)
         self.filename = rospy.get_param('default_log_file', 'default_log_file.txt')
         self.logging_rate = rospy.get_param('logging_rate', 50.0)
         self.enabled = False
@@ -107,9 +108,31 @@ class Captive_Logger(object):
             filepath = os.path.join(self.filename,self.directory)
             try:
                 self.logger = HDF5_Logger(filepath) 
-                self.logger.open()
-                self.logger.addDataSet('force'(1,))
-                self.logger.addDataAttribute('force', 'unit', 'N')
+
+                # Create info group 
+                self.logger.add_group('/info')
+                self.logger.add_datetime('/info')
+                self.logger.add_attribute('/info', 'mode', 'captive_trajectory')
+
+                # Create force dataset
+                self.logger.add_dataset('/data/force'(1,))
+                self.logger.add_attribute('/data/force', 'unit', 'N')
+
+                # Create distance sensor dataset
+                self.logger.add_dataset('/data/distance/distance_raw', (1,))
+                self.logger.add_dataset('/data/distance/distance_kalman', (1,))
+                self.logger.add_dataset('/data/distance/velocity_kalman', (1,))
+                self.logger.add_attribute('/data/distance/distance_raw', 'unit', 'mm')
+                self.logger.add_attribute('/data/distance/distance_kalman', 'unit', 'mm')
+                self.looger.add_attribute('/data/distance/velocity_kalman', 'unit', 'mm/s')
+
+                # Create setpt dataset
+                self.logger.add_dataset('/data/setpt/position', (1,))
+                self.logger.add_dataset('/data/setpt/velocity', (1,))
+                self.logger.add_dataset('/data/setpt/error', (1,))
+                self.logger.add_attribute('/data/setpt/position', 'unit', 'mm')
+                self.logger.add_attribute('/data/setpt/velocity', 'unit', 'mm/s')
+                self.logger.add_attribute('/data/setpt/error', 'unit', 'mm')
 
                 self.enabled = True
                 status = True
@@ -122,7 +145,7 @@ class Captive_Logger(object):
 
             # Disable logging node
             self.enabled = False
-            self.logger.close()
+            del self.logger
             self.logger = None
             status = True
             message = ''
@@ -132,7 +155,8 @@ class Captive_Logger(object):
         with self.lock:
             self.enabled = False
             try:
-                self.fid.close()
+                del self.logger
+                self.logger = None
             except:
                 pass
 

@@ -10,139 +10,156 @@ class HDF5_Logger(object):
     def __init__(self,filename):
         self.filename = filename
         self.data_size = {}
-        self.resize_incr = 10000
+        self.resize_incr = 1000
         self.date_format = '%m-%d-%Y %H:%M:%S'
-
-    def open(self,add_datetime=True):
-        """
-        Opens hdf5 log file. Optionally appends date to it.
-        """
         self.f = h5py.File(self.filename,'w')
-        self.f.create_group('info')
-        self.f.create_group('data')
-        if add_datetime==True:
-            date_string = datetime.datetime.now().strftime(self.date_format)
-            self.f['info'].attrs['date_string'] = date_string 
 
-    def close(self):
+    def __del__(self):
         """
-        Closes hdf4 log file.
+        Resizes datasets in hdf5 file to reflect the final sizes.
         """
-        for pathname, data_size in self.data_size.iteritems():
-            data_set = self._getDataSet(pathname)
-            elem_shape = data_set.shape[1:]
-            new_shape = (data_size,) + elem_shape
-            data_set.resize(new_shape)
+        for name, size in self.data_size.iteritems():
+            dataset = self.f[name]
+            elem_shape = dataset.shape[1:]
+            new_shape = (size,) + elem_shape
+            dataset.resize(new_shape)
+        self.f.close()
 
-    def addInfoAttribute(self,name,value):
+    def add_attribute(self,pathname,name,value):
         """
-        Add attribute to log information group
+        Add attribute to log element - either group of dataset 
         """
-        self.f['info'].attrs[name] = value
+        pathname = self._get_full_pathname(pathname)
+        self.f[pathname].attrs[name] = value
 
-    def _getSubgroupAndName(self,pathname):
-        subgroup = self.f['data']
-        if type(pathname) == str:
-            name = pathname
-        else:
-            for item in pathname[:-1]:
-                subgroup = subgroup[item]
-            name = pathname[-1]
-        return subgroup, name
-
-    def _getDataSet(self,pathname):
-        if type(pathname) == str:
-            data_set = self.f['data'][pathname]
-        else:
-            data_set = self.f['data']
-            for item in pathname:
-                data_set = data_set[item]
-        return data_set
-
-    def _getDataSize(self, pathname):
-        if type(pathname) == str:
-            data_size = self.data_size[pathname]
-        else:
-            data_size = self.data_size[tuple(pathname)]
-        return data_size
-
-    def _setDataSize(self,pathname, value):
-        if type(pathname) == str:
-            self.data_size[pathname] = value
-        else:
-            self.data_size[tuple(pathname)] = value
-
-    def addDataGroup(self,pathname):
+    def add_datetime(self,pathname):
         """
-        Add a data group to the log
+        Add datetime attribute to log element (group or dataset) specified
+        by the pathname
         """
-        subgroup, name = self._getSubgroupAndName(pathname)
+        date_string = datetime.datetime.now().strftime(self.date_format)
+        self.add_attribute(pathname,'datetime', date_string)
+
+    def add_group(self,pathname,create=True):
+        """
+        Add a group to the hdf5 log. 
+
+        pathname = path to group in hdf5 log. Note, pathname can be of two
+        forms: a simple string without a '/' or a path string such as
+        '/level1/level2/newgroup'.   
+        """
+        subgroup, name = self._split_pathname(pathname,create=create)
         subgroup.create_group(name)
 
-    def addDataSet(self,pathname,elem_shape,dtype='f'):
+    def add_dataset(self,pathname,elem_shape,dtype='f',create=True):
         """
         Adds dataset to hdf5 log file.
         """
-        subgroup, name = self._getSubgroupAndName(pathname)
+        subgroup, name = self._split_pathname(pathname,create=create)
         inishape = (self.resize_incr,) + elem_shape
         maxshape = (None,) + elem_shape
-        subgroup.create_dataset(name, inishape, dtype, maxshape=maxshape)
-        self._setDataSize(pathname,0)
+        dataset = subgroup.create_dataset(name, inishape, dtype, maxshape=maxshape)
+        self.data_size[dataset.name] = 0
 
-    def addDataAttribute(self,pathname,attribute,value):
+    def add_dataset_value(self,pathname,value):
         """
-        Adds attribute to hdf5 dataset.
+        Adds value to log dataset.  
         """
-        dataSet = self._getDataSet(pathname)
-        dataSet.attrs[attribute] = value
-    
-    def addDataValue(self,pathname,value):
-        """
-        Adds value to log dataset.  """
-        data_set = self._getDataSet(pathname)
-        # Resize dataset if necessary
-        n = data_set.shape[0]
-        data_size = self._getDataSize(pathname)
-        if data_size >= n:
-            print 'resizing'
-            elem_shape = data_set.shape[1:]
+        pathname = self._get_full_pathname(pathname)
+        dataset = self.f[pathname]
+
+        # Resize dataset if required
+        n = self.data_size[pathname]
+        space_available = dataset.shape[0]
+        if n >= space_available:
+            elem_shape = dataset.shape[1:]
             new_shape = (n+self.resize_incr,) + elem_shape
-            data_set.resize(new_shape)
+            dataset.resize(new_shape)
+
         # Add item to dataset
-        data_set[data_size]= value
-        self._setDataSize(pathname,data_size+1)
+        dataset[n]= value
+        self.data_size[pathname] = n+1
+
+    def _split_pathname(self,pathname,create=True):
+        """
+        Gets the subgroup and name of the item specified via the
+        pathnmae
+        """
+        pathlist = pathname.split('/')
+        if len(pathlist) == 1:
+            name = pathname
+            subgroup = self.f
+        else:
+            path = pathlist[1:-1]
+            name = pathlist[-1]
+            subgroup = self._get_subgroup(path,create=create)
+        return subgroup, name
+
+    def _get_subgroup(self,pathlist,create=True):
+        """
+        Get subgroup specified by pathlist. Create intermediate subgroups
+        if they don't already exist.
+        """
+        subgroup = self.f
+        for item in pathlist:
+            try:
+                subgroup = subgroup[item]
+            except KeyError, e:
+                if create:
+                    subgroup.create_group(item)
+                    subgroup = subgroup[item]
+                else:
+                    pathstr = '/'.join(path)
+                    pathstr = '/' + pathstr
+                    msg = 'unable to get subgroup %s'%(pathstr,)
+                    raise ValueError, msg 
+        return subgroup
+
+    def _get_full_pathname(self,pathname):
+        """
+        Converts pathname to full pathname if it isn't already of that form.
+        """
+        pathlist = pathname.split('/')
+        if len(pathlist) == 1:
+            full_pathname = '/%s'%(pathname,)
+        else:
+            full_pathname = pathname
+        return full_pathname
+
 
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':
     import time
-
-
     logger = HDF5_Logger('sample.hdf5') 
-    logger.open()
-    logger.addDataSet('analog_input', (1,))
-    logger.addDataSet('samples', (2,))
-    logger.addDataSet('tests', (2,2))
 
-    logger.addDataGroup('subgroup1')
-    logger.addDataSet(['subgroup1', 'data1'], (1,))
+    logger.add_group('/info')
+    logger.add_datetime('/info')
+    logger.add_attribute('/info', 'user', 'will dickson')
+    logger.add_attribute('/info', 'notes', 'initial tests')
+    logger.add_attribute('/info', 'mode', 'captive_trajectory')
 
-    logger.addInfoAttribute('notes', 'This experiment blah, blah, etc.')
-    logger.addDataAttribute('analog_input', 'unit', 'V')
-    logger.addDataAttribute('samples', 'unit', 'N')
-    logger.addDataAttribute('tests', 'unit', 'frog/sec')
-    
-    
-    for i in range(0,5000):
-        t0 = time.time()
-        logger.addDataValue('analog_input', 1.0*i)
-        logger.addDataValue('samples', (2.0*i, 3.0*i))
-        logger.addDataValue('tests', [[i,i+1],[2*i, 3*i]])
-        logger.addDataValue(['subgroup1', 'data1'], 3.0*i)
-        t1 = time.time()
-        dt = t1 -t0
-        print dt, 1.0/dt
-    
-    logger.close()
+    logger.add_dataset('/data/analog_input',(3,))
+    logger.add_attribute('/data/analog_input', 'unit', 'V')
+
+    logger.add_dataset('/data/distance/distance_raw', (1,))
+    logger.add_attribute('/data/distance/distance_raw', 'unit', 'mm')
+
+    logger.add_dataset('/data/distance/distance_kalman', (1,))
+    logger.add_attribute('/data/distance/distance_kalman','unit', 'mm')
+
+    logger.add_dataset('/data/distance/velocity_kalman', (1,))
+    logger.add_attribute('/data/distance/velocity_kalman', 'unit', 'mm/s')
+
+    logger.add_attribute('/data/distance', 'note', 'distance sensor data')
+
+    for i in range(0,500):
+        logger.add_dataset_value('/data/analog_input', [i, 2*i, 3*i])
+        logger.add_dataset_value('/data/distance/distance_raw', i)
+        logger.add_dataset_value('/data/distance/distance_kalman', i)
+        logger.add_dataset_value('/data/distance/velocity_kalman', i)
+
+    del logger
+
 
 
 
