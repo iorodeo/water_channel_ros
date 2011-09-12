@@ -5,6 +5,7 @@ import rospy
 import threading
 import os
 import os.path
+from  hdf5_logger import HDF5_Logger
 
 # Messages
 from msg_and_srv.msg import ForceMsg
@@ -28,7 +29,7 @@ class Captive_Logger(object):
         self.filename = rospy.get_param('default_log_file', 'default_log_file.txt')
         self.logging_rate = rospy.get_param('logging_rate', 50.0)
         self.enabled = False
-        self.fid = None
+        self.logger = None
 
         self.force_data = None
         self.dist_data = None
@@ -105,7 +106,11 @@ class Captive_Logger(object):
             # Enable logging node
             filepath = os.path.join(self.filename,self.directory)
             try:
-                self.fid = open(filepath,'w')
+                self.logger = HDF5_Logger(filepath) 
+                self.logger.open()
+                self.logger.addDataSet('force'(1,))
+                self.logger.addDataAttribute('force', 'unit', 'N')
+
                 self.enabled = True
                 status = True
                 message = ''
@@ -117,7 +122,8 @@ class Captive_Logger(object):
 
             # Disable logging node
             self.enabled = False
-            self.fid.close()
+            self.logger.close()
+            self.logger = None
             status = True
             message = ''
         return NodeEnableResponse(status,message)
