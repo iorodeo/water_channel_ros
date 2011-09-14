@@ -30,10 +30,11 @@ class Captive_Logger(object):
         self.lock = threading.Lock()
         default_log_dir = os.path.join(os.environ['HOME'],'ros_logs')
         self.directory = rospy.get_param('default_log_dir', default_log_dir)
-        self.filename = rospy.get_param('default_log_file', 'default_log_file.txt')
+        self.filename = rospy.get_param('default_log_file', 'default_log_file.hdf5')
         self.logging_rate = rospy.get_param('logging_rate', 50.0)
         self.enabled = False
         self.logger = None
+        self.start_time = None
 
         # Initialize all data values to None
         self.init_data_values()
@@ -54,57 +55,10 @@ class Captive_Logger(object):
         rospy.init_node('data_logger')
         self.rate = rospy.Rate(self.logging_rate)
 
-    def force_msg_callback(self, data):
-        """
-        Callback for handling force sensor messages
-        """
-        with self.lock:
-            self.force_data = data
-
-    def dist_msg_callback(self, data):
-        """
-        Callback for handling distance messages
-        """
-        with self.lock:
-            self.dist_data = data
-
-    def setpt_msg_callback(self, data):
-        """
-        Callback for handling setpt messages
-        """
-        with self.lock:
-            self.setpt_data = data
-
-    def actuator_msg_callback(self, data):
-        """
-        Callback for handling actuator messages
-        """
-        with self.lock:
-            self.actuator_data = data
-
-    def motor_msg_callback(self, data):
-        """
-        Callback for handling motor cmd messages
-        """
-        with self.lock:
-            self.motor_data = data
-
-    def analog_msg_callback(self, data):
-        """
-        Callback for handling analog input messages. Note on first call
-        create analog input dataset in log file.
-        """
-        with self.lock:
-            if self.analog_data is None: 
-                # First call since reset - create analog input dataset
-                n = len(data.values)
-                self.logger.add_dataset('/data/analog_input', (n,))
-                self.logger.add_attribute('/data/analog_input', 'unit', 'V')
-            self.analog_data = data
-                
     def have_data(self):
         """
         Determine whether or not we have data form logging.
+        Note, should be called on with the threading lock. 
         """
         test = True 
         test &= self.force_data is not None
@@ -115,35 +69,107 @@ class Captive_Logger(object):
         test &= self.analog_data is not None
         return test
 
+    def force_msg_callback(self, data):
+        """
+        Callback for handling force sensor messages
+        """
+        with self.lock:
+            if self.enabled:
+                self.force_data = data
+
+    def dist_msg_callback(self, data):
+        """
+        Callback for handling distance messages
+        """
+        with self.lock:
+            if self.enabled:
+                self.dist_data = data
+
+    def setpt_msg_callback(self, data):
+        """
+        Callback for handling setpt messages
+        """
+        with self.lock:
+            if self.enabled:
+                self.setpt_data = data
+
+    def actuator_msg_callback(self, data):
+        """
+        Callback for handling actuator messages. On fist call after reset
+        set attribute for actuator type. 
+        """
+        with self.lock:
+            if self.enabled:
+                if self.actuator_data is None:
+                    self.logger.add_attribute('/data/actuator','type',data.type)
+                self.actuator_data = data
+
+    def motor_msg_callback(self, data):
+        """
+        Callback for handling motor cmd messages
+        """
+        with self.lock:
+            if self.enabled:
+                self.motor_data = data
+
+    def analog_msg_callback(self, data):
+        """
+        Callback for handling analog input messages. Note on first call
+        after reset create analog input dataset in log file.
+        """
+        with self.lock:
+            if self.enabled:
+                if self.analog_data is None: 
+                    # First call since reset - create analog input dataset
+                    n = len(data.values)
+                    self.logger.add_dataset('/data/analog_input', (n,))
+                    self.logger.add_attribute('/data/analog_input', 'unit', 'V')
+                self.analog_data = data
+                
+
     def run(self):
+        """
+        Main loop - writes data to log file if node is enabled and we have
+        data in all 
+        """
         while not rospy.is_shutdown():
             with self.lock:
-                print 'hello ',
-                if self.enabled:
-                    print 'enabled ',
-                if self.have_data():
-                    print 'have data ',
-
                 if self.enabled and self.have_data():
-                    # Write data to log file
-                    self.logger.add_dataset_value(
-                            '/data/force', 
-                            self.force_data.force
-                            )
-                    self.logger.add_dataset_value(
-                            '/data/distance/distance_raw', 
-                            self.dist_data.distance
-                            )
-                    self.logger.add_dataset_value(
-                            '/data/distance/distance_kalman', 
-                            self.dist_data.distance_kalman
-                            )
-                    self.logger.add_dataset_value(
-                            '/data/distance/velocity_kalman',
-                            self.dist_data.velocity_kalman
-                            )
-
+                    self.write_data()
             self.rate.sleep()
+
+    def write_data(self):
+        """
+        Write data to log file.
+        """
+        print 'writing data'
+
+        # Time data
+        rostime = rospy.get_rostime()
+        time = rostime.to_sec() - self.start_time
+        self.logger.add_dataset_value('/data/time', time)
+
+        # Force sensor data
+        self.logger.add_dataset_value( '/data/force', self.force_data.force)
+
+        # Distance sensor data
+        self.logger.add_dataset_value('/data/distance/distance_raw', self.dist_data.distance)
+        self.logger.add_dataset_value('/data/distance/distance_kalman', self.dist_data.distance_kalman)
+        self.logger.add_dataset_value('/data/distance/velocity_kalman', self.dist_data.velocity_kalman)
+
+        # Set point data 
+        self.logger.add_dataset_value('/data/setpt/position', self.setpt_data.position)
+        self.logger.add_dataset_value('/data/setpt/velocity', self.setpt_data.velocity)
+        self.logger.add_dataset_value('/data/setpt/error', self.setpt_data.error,)
+
+        # Actuator data
+        self.logger.add_dataset_value('/data/actuator', self.actuator_data.value)
+
+        # Motor command data
+        self.logger.add_dataset_value('/data/motor_cmd', self.motor_data.motor_cmd)
+
+        # Analog input data
+        self.logger.add_dataset_value('/data/analog_input', self.analog_data.values)
 
     def handle_set_log_file(self,req):
         """
@@ -175,12 +201,15 @@ class Captive_Logger(object):
         Handle node enable service. Starts and stops loggin. 
         """
         message = ''
+        print req.enable
         if req.enable:
             # Enable logging mode
             if not self.enabled:
                 try:
                     self.create_hdf5_logger()
                     self.enabled = True
+                    rostime = rospy.get_rostime()
+                    self.start_time = rostime.to_sec()
                 except IOError, e:
                      self.enabled = False
                      message = 'unable to open file: %s'%(e,)
@@ -200,7 +229,8 @@ class Captive_Logger(object):
         size is created on the first callback of the analog input message.
         """
         # Create HDF5 data logger
-        filepath = os.path.join(self.filename,self.directory)
+        filepath = os.path.join(self.directory,self.filename)
+        print filepath
         self.logger = HDF5_Logger(filepath) 
 
         # Create info group 
@@ -208,8 +238,12 @@ class Captive_Logger(object):
         self.logger.add_datetime('/info')
         self.logger.add_attribute('/info', 'mode', 'captive_trajectory')
 
+        # Create time dataset
+        self.logger.add_dataset('/data/time', (1,))
+        self.logger.add_attribute('/data/time', 'unit', 's')
+
         # Create force dataset
-        self.logger.add_dataset('/data/force'(1,))
+        self.logger.add_dataset('/data/force',(1,))
         self.logger.add_attribute('/data/force', 'unit', 'N')
 
         # Create distance sensor dataset
@@ -218,7 +252,7 @@ class Captive_Logger(object):
         self.logger.add_dataset('/data/distance/velocity_kalman', (1,))
         self.logger.add_attribute('/data/distance/distance_raw', 'unit', 'mm')
         self.logger.add_attribute('/data/distance/distance_kalman', 'unit', 'mm')
-        self.looger.add_attribute('/data/distance/velocity_kalman', 'unit', 'mm/s')
+        self.logger.add_attribute('/data/distance/velocity_kalman', 'unit', 'mm/s')
 
         # Create setpt dataset
         self.logger.add_dataset('/data/setpt/position', (1,))
