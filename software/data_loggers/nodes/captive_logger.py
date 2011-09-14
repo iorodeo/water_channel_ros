@@ -121,14 +121,33 @@ class Captive_Logger(object):
                 print 'hello ',
                 if self.enabled:
                     print 'enabled ',
-                    if self.have_data():
-                        print 'have data ',
-                print 
+                if self.have_data():
+                    print 'have data ',
+
+                if self.enabled and self.have_data():
+                    # Write data to log file
+                    self.logger.add_dataset_value(
+                            '/data/force', 
+                            self.force_data.force
+                            )
+                    self.logger.add_dataset_value(
+                            '/data/distance/distance_raw', 
+                            self.dist_data.distance
+                            )
+                    self.logger.add_dataset_value(
+                            '/data/distance/distance_kalman', 
+                            self.dist_data.distance_kalman
+                            )
+                    self.logger.add_dataset_value(
+                            '/data/distance/velocity_kalman',
+                            self.dist_data.velocity_kalman
+                            )
+
             self.rate.sleep()
 
     def handle_set_log_file(self,req):
         """
-        Handle set log file service 
+        Handle set log file service. Gets log file name and directory.
         """
         if not self.enabled:
             self.directory = req.directory
@@ -153,7 +172,7 @@ class Captive_Logger(object):
 
     def handle_node_enable(self,req):
         """
-        Handle node enable service
+        Handle node enable service. Starts and stops loggin. 
         """
         message = ''
         if req.enable:
@@ -220,7 +239,7 @@ class Captive_Logger(object):
         # Note, Create analog input dataset not created until first
         # analog input callback in order to get array size
 
-    def init_data_values_none(self):
+    def init_data_values(self):
         """
         Initializes all data values to None
         """
