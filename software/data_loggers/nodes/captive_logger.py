@@ -142,8 +142,6 @@ class Captive_Logger(object):
         """
         Write data to log file.
         """
-        print 'writing data'
-
         # Time data
         rostime = rospy.get_rostime()
         time = rostime.to_sec() - self.start_time
@@ -175,18 +173,19 @@ class Captive_Logger(object):
         """
         Handle set log file service. Gets log file name and directory.
         """
-        if not self.enabled:
-            self.directory = req.directory
-            self.filename = req.filename
-            if not self.check_log_dir():
-                status = False
-                message = 'log directory does not exist'
+        with self.lock:
+            if not self.enabled:
+                self.directory = req.directory
+                self.filename = req.filename
+                if not self.check_log_dir():
+                    status = False
+                    message = 'log directory does not exist'
+                else:
+                    status = True
+                    message = ''
             else:
-                status = True
-                message = ''
-        else:
-            status = False
-            message = 'cannot set log director while node is enabled'
+                status = False
+                message = 'cannot set log director while node is enabled'
         return SetLogFileResponse(status,message)
 
     def check_log_dir(self):
@@ -201,7 +200,6 @@ class Captive_Logger(object):
         Handle node enable service. Starts and stops loggin. 
         """
         message = ''
-        print req.enable
         if req.enable:
             # Enable logging mode
             if not self.enabled:
@@ -230,7 +228,6 @@ class Captive_Logger(object):
         """
         # Create HDF5 data logger
         filepath = os.path.join(self.directory,self.filename)
-        print filepath
         self.logger = HDF5_Logger(filepath) 
 
         # Create info group 

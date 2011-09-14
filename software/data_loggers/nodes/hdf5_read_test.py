@@ -4,7 +4,8 @@ hdf5_read_test.py
 This script tests reading the hdf5 log files created by the various logging
 nodes.  
 """ 
-import sys import h5py
+import sys 
+import h5py
 
 filename = sys.argv[1]
 
