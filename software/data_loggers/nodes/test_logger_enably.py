@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-logger_enable_test.py
+test_logger_enable.py
 
 This node tests logger_enable service provided by the various logging nodes. 
 """
@@ -18,7 +18,9 @@ def node_enable(value):
     except rospy.ServiceException, e:
         print 'Service call failed: %s'%(e,)
 
+
 if __name__ == '__main__':
+
     import sys
 
     # Get value (True/False) from command line

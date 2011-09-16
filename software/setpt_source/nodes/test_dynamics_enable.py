@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-dynamics_enable_test.py
+test_dynamics_enable.py
 
 This node tests dynamics_enable service provided by the setpt_dynamics_source
 node. 
