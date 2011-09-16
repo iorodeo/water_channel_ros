@@ -8,6 +8,7 @@ import rospy
 import threading
 import os
 import os.path
+import numpy
 from  hdf5_logger import HDF5_Logger
 
 # Messages
@@ -23,6 +24,7 @@ from msg_and_srv.srv import SetLogFile
 from msg_and_srv.srv import SetLogFileResponse
 from msg_and_srv.srv import NodeEnable
 from msg_and_srv.srv import NodeEnableResponse
+from msg_and_srv.srv import GetDynamParams
 
 class Captive_Logger(object):
 
@@ -42,15 +44,14 @@ class Captive_Logger(object):
         # Setup services
         self.set_log_file_srv = rospy.Service('set_logger_file', SetLogFile, self.handle_set_log_file)
         self.node_enable_srv = rospy.Service('logger_enable', NodeEnable, self.handle_node_enable) 
-
+        
         # Subscribe to messages
         self.force_sub = rospy.Subscriber('force', ForceMsg, self.force_msg_callback)
         self.dist_sub = rospy.Subscriber('distance', DistMsg, self.dist_msg_callback)
         self.setpt_sub = rospy.Subscriber('setpt', SetptMsg, self.setpt_msg_callback)
         self.actuator_sub = rospy.Subscriber('actuator', ActuatorMsg, self.actuator_msg_callback)
         self.motor_sub = rospy.Subscriber('motor_cmd', MotorCmdMsg, self.motor_msg_callback)
-        self.analog_sub = rospy.Subscriber('analog_input', AnalogInMsg, self.analog_msg_callback)
-
+        self.analog_sub = rospy.Subscriber('analog_input', AnalogInMsg, self.analog_msg_callback) 
         rospy.on_shutdown(self.on_shutdown)
         rospy.init_node('data_logger')
         self.rate = rospy.Rate(self.logging_rate)
@@ -200,23 +201,24 @@ class Captive_Logger(object):
         Handle node enable service. Starts and stops loggin. 
         """
         message = ''
-        if req.enable:
-            # Enable logging mode
-            if not self.enabled:
-                try:
-                    self.create_hdf5_logger()
-                    self.enabled = True
-                    rostime = rospy.get_rostime()
-                    self.start_time = rostime.to_sec()
-                except IOError, e:
-                     self.enabled = False
-                     message = 'unable to open file: %s'%(e,)
-        else:
-            # Disable logging node and reset data to None
-            self.enabled = False
-            del self.logger
-            self.logger = None
-            self.init_data_values()
+        with self.lock:
+            if req.enable:
+                # Enable logging mode
+                if not self.enabled:
+                    try:
+                        self.create_hdf5_logger()
+                        self.enabled = True
+                        rostime = rospy.get_rostime()
+                        self.start_time = rostime.to_sec()
+                    except IOError, e:
+                         self.enabled = False
+                         message = 'unable to open file: %s'%(e,)
+            else:
+                # Disable logging node and reset data to None
+                self.enabled = False
+                del self.logger
+                self.logger = None
+                self.init_data_values()
 
         return NodeEnableResponse(self.enabled,message)
 
@@ -269,6 +271,24 @@ class Captive_Logger(object):
 
         # Note, Create analog input dataset not created until first
         # analog input callback in order to get array size
+
+        # Set mass and damping parameters
+        rospy.wait_for_service('get_dynam_params')
+        try: 
+            get_cmd = rospy.ServiceProxy('get_dynam_params',GetDynamParams)
+            resp = get_cmd()
+            mass = resp.mass
+            damping = resp.damping
+        except rospy.ServiceException, e:
+            rospy.logerr('unable to get mass and damping parameters for log file')
+            mass = numpy.nan
+            damping = numpy.nan
+        self.logger.add_dataset('/data/mass', (1,))
+        self.logger.add_dataset('/data/damping', (1,))
+        self.logger.add_attribute('/data/mass','unit', 'kg')
+        self.logger.add_attribute('/data/damping', 'unit', 'kg/s')
+        self.logger.add_dataset_value('/data/mass', mass)
+        self.logger.add_dataset_value('/data/damping', damping)
 
     def init_data_values(self):
         """

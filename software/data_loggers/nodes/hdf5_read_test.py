@@ -32,7 +32,7 @@ print
 print 'log file strucuture'
 print_file_struct(f,show_attrs=True)
 
-if 1:
+if 0:
     import pylab
     t = f['/data/time']
     values = f['/data/actuator']
@@ -45,6 +45,10 @@ if 1:
     pylab.figure(2)
     pylab.plot(dt/dt.mean())
     pylab.show()
+
+if 1:
+    print 'mass:', f['/data/mass'][0]
+    print 'damping:', f['/data/damping'][0]
 
 
 f.close()
