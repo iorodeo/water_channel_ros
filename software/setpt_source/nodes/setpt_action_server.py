@@ -5,12 +5,8 @@ import roslib
 roslib.load_manifest('setpt_source')
 import rospy
 import actionlib
-import action_servers.msg
+import actions.msg
 import msg_and_srv.msg
-
-# import threading
-# import math
-# from std_msgs.msg import Header
 
 
 class SetptActionServer(object):
@@ -24,9 +20,9 @@ class SetptActionServer(object):
         self.position_final = None
 
         # Setup action server
-        self.feedback = action_servers.msg.SetptFeedback()
-        self.result = action_servers.msg.SetptResult()
-        self.server = actionlib.SimpleActionServer("setpt_action", action_servers.msg.SetptAction, execute_cb=self.execute_cb, auto_start=False)
+        self.feedback = actions.msg.SetptFeedback()
+        self.result = actions.msg.SetptResult()
+        self.server = actionlib.SimpleActionServer("setpt_action", actions.msg.SetptAction, execute_cb=self.execute_cb, auto_start=False)
         self.server.start()
 
         # Setup setpt and setpt_rel topics
@@ -65,6 +61,6 @@ class SetptActionServer(object):
 
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':
-    rospy.init_node('setpt_action_server')
+    rospy.init_node('position_server')
     setpt_action_server = SetptActionServer()
     rospy.spin()

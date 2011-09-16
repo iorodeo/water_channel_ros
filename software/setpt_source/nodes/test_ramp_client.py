@@ -5,7 +5,7 @@ import roslib
 roslib.load_manifest('setpt_source')
 import rospy
 import actionlib
-import action_servers.msg
+import actions.msg
 from msg_and_srv.srv import GetRamp
 from msg_and_srv.srv import RelToAbsCmd
 import sys
@@ -15,7 +15,7 @@ def ramp_action_client(pos,max_velo=500.0,accel=100.0):
     dt = 1.0/setpt_update_rate
 
     # Create the action client     
-    client = actionlib.SimpleActionClient('setpt_action', action_servers.msg.SetptAction)
+    client = actionlib.SimpleActionClient('setpt_action', actions.msg.SetptAction)
     client.wait_for_server()
 
     # Service Proxies 
@@ -35,7 +35,7 @@ def ramp_action_client(pos,max_velo=500.0,accel=100.0):
         raise IOError, "unable to reset setpt_rel_to_abs"
 
     # Creates a goal to send to the action server.
-    goal = action_servers.msg.SetptGoal()
+    goal = actions.msg.SetptGoal()
     goal.coord_frame = 'relative'
     goal.position_array = ramp 
 

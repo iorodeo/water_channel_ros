@@ -56,7 +56,7 @@ class SetptSource(object):
 
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':
-    rospy.init_node('setpt_source')
+    rospy.init_node('joystick_position')
     setpt = SetptSource()
     while not rospy.is_shutdown():
         setpt.update()

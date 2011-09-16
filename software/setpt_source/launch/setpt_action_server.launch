@@ -1,5 +1,5 @@
 <launch>
   <param name="setpt_update_rate" type="double" value="50"/>
-  <node name="setpt_source" pkg="setpt_source" type="setpt_action_server.py"/>
+  <node name="position_server" pkg="setpt_source" type="setpt_action_server.py"/>
   <node name="setpt_rel_to_abs" pkg="setpt_source" type="setpt_rel_to_abs.py"/>
 </launch>

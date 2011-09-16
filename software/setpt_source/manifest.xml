@@ -12,7 +12,7 @@
   <depend package="roslib"/>
   <depend package="joy"/>
   <depend package="msg_and_srv"/>
-  <depend package="action_servers"/>
+  <depend package="actions"/>
 
 </package>
 

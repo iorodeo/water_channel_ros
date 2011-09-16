@@ -5,20 +5,19 @@ import roslib
 roslib.load_manifest('setpt_source')
 import rospy
 import actionlib
-
-import action_servers.msg
+import actions.msg
 
 def setpt_action_client():
     # Creates the SimpleActionClient, passing the type of the action
     # (SetptAction) to the constructor.
-    client = actionlib.SimpleActionClient('setpt_action', action_servers.msg.SetptAction)
+    client = actionlib.SimpleActionClient('setpt_action', actions.msg.SetptAction)
 
     # Waits until the action server has started up and started
     # listening for goals.
     client.wait_for_server()
 
     # Creates a goal to send to the action server.
-    goal = action_servers.msg.SetptGoal()
+    goal = actions.msg.SetptGoal()
     goal.coord_frame = 'relative'
     goal.position_array = range(1000)
 
