@@ -14,3 +14,7 @@ class Dynamics(object):
     def update(self,force,dt):
         self.velocity += (dt/self.mass)*(force - self.damping*self.velocity)
         self.position += dt*self.velocity
+
+    def reset(self):
+        self.position = 0.0
+        self.velocity = 0.0
