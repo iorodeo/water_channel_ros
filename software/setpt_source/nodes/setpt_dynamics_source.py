@@ -1,4 +1,11 @@
 #!/usr/bin/env python
+"""
+setpt_dynamics_source.py
+
+Set point source for captive trajectory system.  Integrates applied forces to
+to calculate position set point. 
+
+"""
 from __future__ import division
 import roslib
 roslib.load_manifest('setpt_source')

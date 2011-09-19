@@ -20,9 +20,14 @@ class SetptActionServer(object):
         self.position_final = None
 
         # Setup action server
-        self.feedback = actions.msg.SetptFeedback()
-        self.result = actions.msg.SetptResult()
-        self.server = actionlib.SimpleActionServer("setpt_action", actions.msg.SetptAction, execute_cb=self.execute_cb, auto_start=False)
+        self.feedback = actions.msg.SetptOutscanFeedback()
+        self.result = actions.msg.SetptOutscanResult()
+        self.server = actionlib.SimpleActionServer(
+                "setpt_action", 
+                actions.msg.SetptOutscanAction, 
+                execute_cb=self.execute_cb, 
+                auto_start=False
+                )
         self.server.start()
 
         # Setup setpt and setpt_rel topics
@@ -34,7 +39,6 @@ class SetptActionServer(object):
 
     def execute_cb(self,goal):
         coord_frame = goal.coord_frame.lower()
-        print coord_frame
         if coord_frame == 'absolute':
             self.pub = self.setpt_abs_pub
         elif coord_frame == 'relative':
