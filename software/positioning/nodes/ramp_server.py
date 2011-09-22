@@ -2,7 +2,7 @@
 import roslib 
 roslib.load_manifest('positioning')
 import rospy
-import positioning_moves 
+import utilities
 from msg_and_srv.srv import GetRamp
 from msg_and_srv.srv import GetRampResponse
 
@@ -16,7 +16,7 @@ class RampServer(object):
         rospy.spin()
 
     def handle_ramp_request(self,req):
-        ramp = positioning_moves.get_ramp(
+        ramp = ramp.get_ramp(
                 req.pos_0,
                 req.pos_1,
                 req.max_velo,

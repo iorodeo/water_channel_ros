@@ -7,12 +7,12 @@ class HDF5_Logger(object):
     Simple HDF5 data logger class
     """
 
-    def __init__(self,filename):
+    def __init__(self,filename,mode='w'):
         self.filename = filename
         self.data_size = {}
         self.resize_incr = 1000
         self.date_format = '%m-%d-%Y %H:%M:%S'
-        self.f = h5py.File(self.filename,'w')
+        self.f = h5py.File(self.filename,mode)
 
     def __del__(self):
         """
@@ -24,6 +24,9 @@ class HDF5_Logger(object):
             new_shape = (size,) + elem_shape
             dataset.resize(new_shape)
         self.f.close()
+
+    def list(self,pathname):
+        return list(self.f[pathname])
 
     def add_attribute(self,pathname,name,value):
         """
@@ -157,6 +160,8 @@ if __name__ == '__main__':
         logger.add_dataset_value('/data/distance/distance_raw', i)
         logger.add_dataset_value('/data/distance/distance_kalman', i)
         logger.add_dataset_value('/data/distance/velocity_kalman', i)
+
+    print len(logger.list('/'))
 
     del logger
 
