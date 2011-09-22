@@ -16,7 +16,7 @@ class RampServer(object):
         rospy.spin()
 
     def handle_ramp_request(self,req):
-        ramp = ramp.get_ramp(
+        ramp = utilities.get_ramp(
                 req.pos_0,
                 req.pos_1,
                 req.max_velo,

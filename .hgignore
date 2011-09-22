@@ -15,5 +15,6 @@ dist
 deb_dist
 msg_gen
 srv_gen
-src
+src/*/msg
+src/*/srv
 software/actions/msg
