@@ -4,6 +4,7 @@
     <include file="$(find safety)/launch/bounds_checker.launch" />
     <include file="$(find safety)/launch/watchdog_pulse.launch" />
     <include file="$(find motor_cmd_source)/launch/position_controller.launch"/>
+    <include file="$(find setpt_source)/launch/setpt_rel_to_abs.launch" />
     <include file="$(find setpt_source)/launch/setpt_action_server.launch"/>
     <include file="$(find positioning)/launch/ramp_server.launch"/>
     <include file="$(find sled_io)/launch/sled_io.launch" />

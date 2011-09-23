@@ -4,5 +4,4 @@
   <param name="acceleration_max" type="double" value="70"/>
   <node name="joy_node" pkg="joy" type="joy_node"/>
   <node name="joystick_position" pkg="setpt_source" type="setpt_joystick_source.py"/>
-  <node name="setpt_rel_to_abs" pkg="setpt_source" type="setpt_rel_to_abs.py"/>
 </launch>

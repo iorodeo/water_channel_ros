@@ -1,0 +1,4 @@
+<launch>
+  <node name="setpt_rel_to_abs" pkg="setpt_source" type="setpt_rel_to_abs.py"/>
+</launch>
+

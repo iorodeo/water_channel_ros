@@ -1,0 +1,4 @@
+<launch>
+  <param name="actuator_update_rate" type="double" value="50"/>
+  <node name="actuator_server" pkg="actuator_source" type="actuator_action_server.py"/>
+</launch>
