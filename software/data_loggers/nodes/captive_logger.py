@@ -231,20 +231,32 @@ class Captive_Logger(object):
         """
         # Create HDF5 data logger
         filepath = os.path.join(self.directory,self.filename)
+        if os.path.isfile(filepath):
+            log_exists = True
+        else:
+            log_exists = False
         self.logger = HDF5_Logger(filepath,'a') 
+        if not log_exists:
+            # Create top level information for log file - as the log file
+            # has just been created.
+            self.top_info_path = '/info'
+            self.logger.add_group(self.top_info_path)
+            self.logger.add_datetime(self.top_info_path)
+            self.logger.add_attribute(self.top_info_path,'type', 'log_file')
 
         # Get number of current trial
-        trial_num = len(self.logger.list('/'))
+        trial_list = [grp for grp in self.logger.list('/') if grp[:5] == 'trial']
+        trial_num = len(trial_list)
         self.trial_str = 'trial_%d'%(trial_num,)
 
         # Create trial group
         self.logger.add_group('/%s'%(self.trial_str,))
 
         # Create info group 
-        info_path = '/%s/info'%(self.trial_str,)
-        self.logger.add_group(info_path)
-        self.logger.add_datetime(info_path)
-        self.logger.add_attribute(info_path, 'mode', 'captive_trajectory')
+        self.trial_info_path = '/%s/info'%(self.trial_str,)
+        self.logger.add_group(self.trial_info_path)
+        self.logger.add_datetime(self.trial_info_path)
+        self.logger.add_attribute(self.trial_info_path, 'mode', 'captive_trajectory')
 
         # Create time dataset
         self.time_path = '/%s/data/time'%(self.trial_str,)

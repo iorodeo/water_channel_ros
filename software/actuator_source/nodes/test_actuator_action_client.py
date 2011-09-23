@@ -20,9 +20,6 @@ def actuator_action_client():
     # listening for goals.
     client.wait_for_server()
 
-    print client.__dict__
-
-
     # Creates a goal to send to the action server.
     goal = actions.msg.ActuatorOutscanGoal()
     goal.type = 'pwm0'

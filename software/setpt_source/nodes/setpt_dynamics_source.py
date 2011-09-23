@@ -64,6 +64,7 @@ class DynamicsSetptSource(object):
         self.force_sub = rospy.Subscriber('force', ForceMsg, self.force_callback)
 
         # Setup setpt topic
+        #self.setptMsg = None
         self.setptMsg = SetptMsg()
         self.setptPub = rospy.Publisher('setpt_rel', SetptMsg)
 
@@ -105,12 +106,16 @@ class DynamicsSetptSource(object):
         """
         with self.lock:
             if req.enable:
+                #self.setptMsg = SetptMsg()
+                #self.setptPub = rospy.Publisher('setpt_rel', SetptMsg)
                 # Enable dynamics node
                 self.dynamics.reset()
                 self.enabled = True
             else:
                 # Disable dynamics node
                 self.enabled = False
+                #self.setptPub.unregister()
+
         message = ''
         return NodeEnableResponse(self.enabled,message)
 

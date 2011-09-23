@@ -30,11 +30,12 @@ def print_file_struct(group,show_attrs=False):
 
 print
 print 'log file strucuture'
-print_file_struct(f,show_attrs=True)
+print_file_struct(f,show_attrs=False)
 
 if 1:
     import pylab
     t = f['/trial_0/data/time']
+    print t.shape
     values = f['trial_0/data/actuator']
     t = pylab.array(t)
     t = t.reshape((t.shape[0],))
@@ -42,8 +43,8 @@ if 1:
 
     pylab.figure(1)
     pylab.plot(t,values)
-    pylab.figure(2)
-    pylab.plot(dt/dt.mean())
+    #pylab.figure(2)
+    #pylab.plot(dt/dt.mean())
     pylab.show()
 
 if 0:
