@@ -42,7 +42,7 @@ class Captive_Logger(Base_Logger):
         """
         Write data to log file.
         """
-        super(Captive_logger,self).write_data()
+        super(Captive_Logger,self).write_data()
 
         # Write force sensor data
         self.logger.add_dataset_value(self.force_path, self.force_data.force)

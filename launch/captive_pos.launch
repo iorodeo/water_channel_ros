@@ -8,6 +8,7 @@
     <include file="$(find setpt_source)/launch/dynamics.launch"/>
     <include file="$(find setpt_source)/launch/setpt_rel_to_abs.launch" />
     <include file="$(find motor_cmd_source)/launch/position_controller.launch"/>
+    <include file="$(find data_loggers)/launch/captive_logger.launch" />
     <include file="$(find sled_io)/launch/sled_io.launch" />
     <include file="$(find sled_io)/launch/set_mode.launch" />
 </launch>
