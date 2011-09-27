@@ -1,0 +1,6 @@
+string filename
+---
+bool status
+string message
+string mode
+uint32 number_of_runs

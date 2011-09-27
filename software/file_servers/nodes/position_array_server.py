@@ -10,8 +10,12 @@ class PositionArrayServer(object):
 
     def __init__(self):
 
-        # Setup controller service
-        self.srv = rospy.Service('load_position_array', LoadPositionArray, self.handle_load_request)
+        # Setup service
+        self.srv = rospy.Service(
+                'load_position_array', 
+                LoadPositionArray, 
+                self.handle_load_request
+                )
 
         # Initialize nodes
         rospy.init_node('position_array_server')
@@ -32,10 +36,18 @@ class PositionArrayServer(object):
                 status = True
         except Exception, e:
             message = e.__str__()
-        return LoadPositionArrayResponse(status,message,coord_frame,position_array)
+
+        # Create response
+        response = LoadPositionArrayResponse(
+                status,
+                message,
+                coord_frame,
+                position_array
+                )
+        return reponse
         
 
-# --------------------------------------------
+# -------------------------------------------------------------------------------
 if __name__ == '__main__':
     posArrayServer = PositionArrayServer()
     posArrayServer.run()

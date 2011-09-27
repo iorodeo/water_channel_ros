@@ -88,9 +88,15 @@ if __name__ == '__main__':
     filename = sys.argv[1]
     run_reader = HDF5_Run_Reader(filename)
 
-    for run in run_reader:
-        print_node_struct(run)
-        print 
+    if 0:
+        for run in run_reader:
+            print_node_struct(run)
+            print 
+    if 1:
+        for i in range(0,run_reader.number_of_runs):
+            run = run_reader.get_run(i)
+            print_node_struct(run)
+            print
     
             
         
