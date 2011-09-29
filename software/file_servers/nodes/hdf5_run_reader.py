@@ -17,11 +17,17 @@ class HDF5_Run_Reader(object):
         self.run_list = [x for x in list(self.h5file) if x[:3] == 'run']
         self.number_of_runs = len(self.run_list)
 
+    def close(self):
+        self.h5file.close()
+
     def __iter__(self):
         return self
 
     def get_info(self):
         return self.h5file['/info']
+
+    def get_mode(self):
+        return self.h5file['/info'].attrs['mode']
 
     def next(self):
         if self.pos < self.number_of_runs:

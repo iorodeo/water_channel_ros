@@ -2,6 +2,7 @@ int32 run_number
 ---
 bool status
 string message
+string filename
 float32[] values
 float32 mass
 float32 damping
