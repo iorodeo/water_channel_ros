@@ -5,6 +5,7 @@ import roslib
 roslib.load_manifest('file_servers')
 import rospy
 import sys
+import numpy
 
 # Services
 from msg_and_srv.srv import SetRunFile 
@@ -62,15 +63,24 @@ def get_run_data(run_number):
         print ' status:         ', response.status
         print ' message:        ', response.message
         print ' filename:       ', response.filename
-        print ' values:         ', response.values
+        print ' values:         ', 'shape =', numpy.array(response.values).shape
         print ' mass:           ', response.mass
         print ' damping:        ', response.damping
         print
+        values = numpy.array(response.values)
+        N = values.shape[0]
+        dt = 1.0/50.0
+        t = dt*pylab.arange(N)
+        dvalues = (values[1:] - values[:-1])/dt
+        #pylab.plot(t[1:],dvalues)
+        pylab.plot(t,values)
+        pylab.show()
     except rospy.ServiceException, e:
         print 'get_run_data service call failed: %s'(e,) 
     return response
 
 # -----------------------------------------------------------------------------
+import pylab
 
 filename = sys.argv[1]
 

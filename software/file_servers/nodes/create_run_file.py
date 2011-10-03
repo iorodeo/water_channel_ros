@@ -33,22 +33,37 @@ for i in range(0,num_runs):
 
     if i < num_runs/3:
         run_grp.attrs['type'] = 'constant'
+        prm_grp = run_grp.create_group('%s/params'%(run_str,))
 
-        T_ds = run_grp.create_dataset('T',(1,),'f',maxshape=(1,))
+        T_ds = prm_grp.create_dataset('T',(1,),'f',maxshape=(1,))
         T_ds[:] = 10.0
         T_ds.attrs['unit'] = 's'
 
-        value_ds = run_grp.create_dataset('value',(1,),'f',maxshape=(1,))
+        value_ds = prm_grp.create_dataset('value',(1,),'f',maxshape=(1,))
         value_ds[:] = 500.0
         value_ds.attrs['unit'] = 'us'
 
     elif i < 2*num_runs/3:
-        run_grp.attrs['type'] = 'trapeziodal'
+        run_grp.attrs['type'] = 'trapezoidal'
 
         prm_grp = run_grp.create_group('%s/params'%(run_str,))
-        prm_grp.attrs['T'] = 10.0
-        prm_grp.attrs['value'] = 300.0
-        prm_grp.attrs['rate'] = 100.0
+
+        T_ds = prm_grp.create_dataset('T',(1,),'f',maxshape=(1,))
+        T_ds[:] = 30.0
+        T_ds.attrs['unit'] = 's'
+
+        value_0_ds = prm_grp.create_dataset('value_0',(1,),'f',maxshape=(1,))
+        value_0_ds[:] = 1500.0
+        value_0_ds.attrs['unit'] = 'us'
+
+        value_1_ds = prm_grp.create_dataset('value_1',(1,),'f',maxshape=(1,))
+        value_1_ds[:] = 1200.0
+        value_1_ds.attrs['unit'] = 'us'
+
+        rate_ds = prm_grp.create_dataset('rate',(1,), 'f', maxshape=(1,))
+        rate_ds[:] = 100.0
+        rate_ds.attrs['unit'] = 'us pulse width/s'
+
     else:
         run_grp.attrs['type'] = 'array'
         array_values = numpy.random.rand(500)

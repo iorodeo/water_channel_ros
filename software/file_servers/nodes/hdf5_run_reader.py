@@ -101,6 +101,7 @@ if __name__ == '__main__':
     if 1:
         for i in range(0,run_reader.number_of_runs):
             run = run_reader.get_run(i)
+            print 'type:', run.attrs['type']
             print_node_struct(run)
             print
     
