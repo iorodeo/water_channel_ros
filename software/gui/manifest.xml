@@ -1,0 +1,16 @@
+<package>
+  <description brief="gui">
+
+     gui
+
+  </description>
+  <author></author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/gui</url>
+  <depend package="rospy"/>
+  <depend package="roscpp"/>
+
+</package>
+
+
