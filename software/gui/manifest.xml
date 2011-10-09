@@ -10,6 +10,7 @@
   <url>http://ros.org/wiki/gui</url>
   <depend package="rospy"/>
   <depend package="roscpp"/>
+  <depend package="msg_and_srv"/>
 
 </package>
 
