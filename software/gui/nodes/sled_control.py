@@ -19,6 +19,10 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.setupUi(self)
         self.connectActions()
         self.mainTabWidget.setCurrentIndex(0)
+        self.modeGroupBox.setChecked(False)
+        self.joystickPosGroupBox.setChecked(False)
+        self.feedbackPosGroupBox.setChecked(False)
+        self.modeGroupBox.setTitle('Captive Trajectory Mode')
 
         self.subscribeToMessages()
 
@@ -39,10 +43,13 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
     def connectActions(self):
 
         # Main window actions
-        self.stopPushButton.clicked.connect(self.stop_Callback)
-        self.enablePushButton.clicked.connect(self.enable_Callback)
+        self.enabledPushButton.clicked.connect(self.enabled_Callback)
+        self.disabledPushButton.clicked.connect(self.disabled_Callback)
 
-        # Actions for run tab
+        # Actions for Controls tab
+        self.stopPushButton.clicked.connect(self.stop_Callback)
+
+        # Actions for runs tab
         self.loadRunFilePushButton.clicked.connect(self.loadRunFile_Callback)
         self.startRunPushButton.clicked.connect(self.startRun_Callback)
 
@@ -70,9 +77,13 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
     def stop_Callback(self):
         print 'stop'
 
-    def enable_Callback(self):
-        print 'enable'
+    def enabled_Callback(self):
+        print 'enabled'
         self.runTreeWidget.setEnabled(True)
+
+    def disabled_Callback(self):
+        print 'disabled'
+    
 
     def setLogFile_Callback(self):
         print 'set log file'
