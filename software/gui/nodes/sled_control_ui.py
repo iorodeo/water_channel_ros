@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'sled_control.ui'
 #
-# Created: Tue Oct 11 13:32:41 2011
-#      by: PyQt4 UI code generator 4.7.4
+# Created: Sat Oct 15 16:30:36 2011
+#      by: PyQt4 UI code generator 4.7.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -78,12 +78,12 @@ class Ui_SledControl_MainWindow(object):
         self.line_3.setFrameShadow(QtGui.QFrame.Sunken)
         self.line_3.setObjectName("line_3")
         self.verticalLayout_6.addWidget(self.line_3)
-        self.joystickPosGroupBox = QtGui.QGroupBox(self.controlTab)
-        self.joystickPosGroupBox.setCheckable(True)
-        self.joystickPosGroupBox.setObjectName("joystickPosGroupBox")
-        self.verticalLayout_7 = QtGui.QVBoxLayout(self.joystickPosGroupBox)
+        self.joystickGroupBox = QtGui.QGroupBox(self.controlTab)
+        self.joystickGroupBox.setCheckable(True)
+        self.joystickGroupBox.setObjectName("joystickGroupBox")
+        self.verticalLayout_7 = QtGui.QVBoxLayout(self.joystickGroupBox)
         self.verticalLayout_7.setObjectName("verticalLayout_7")
-        self.widget = QtGui.QWidget(self.joystickPosGroupBox)
+        self.widget = QtGui.QWidget(self.joystickGroupBox)
         self.widget.setObjectName("widget")
         self.horizontalLayout = QtGui.QHBoxLayout(self.widget)
         self.horizontalLayout.setObjectName("horizontalLayout")
@@ -104,18 +104,18 @@ class Ui_SledControl_MainWindow(object):
         self.verticalLayout_7.addWidget(self.widget)
         spacerItem4 = QtGui.QSpacerItem(20, 5, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
         self.verticalLayout_7.addItem(spacerItem4)
-        self.verticalLayout_6.addWidget(self.joystickPosGroupBox)
+        self.verticalLayout_6.addWidget(self.joystickGroupBox)
         self.line = QtGui.QFrame(self.controlTab)
         self.line.setFrameShape(QtGui.QFrame.HLine)
         self.line.setFrameShadow(QtGui.QFrame.Sunken)
         self.line.setObjectName("line")
         self.verticalLayout_6.addWidget(self.line)
-        self.feedbackPosGroupBox = QtGui.QGroupBox(self.controlTab)
-        self.feedbackPosGroupBox.setCheckable(True)
-        self.feedbackPosGroupBox.setObjectName("feedbackPosGroupBox")
-        self.verticalLayout_8 = QtGui.QVBoxLayout(self.feedbackPosGroupBox)
+        self.feedbackGroupBox = QtGui.QGroupBox(self.controlTab)
+        self.feedbackGroupBox.setCheckable(True)
+        self.feedbackGroupBox.setObjectName("feedbackGroupBox")
+        self.verticalLayout_8 = QtGui.QVBoxLayout(self.feedbackGroupBox)
         self.verticalLayout_8.setObjectName("verticalLayout_8")
-        self.widget_4 = QtGui.QWidget(self.feedbackPosGroupBox)
+        self.widget_4 = QtGui.QWidget(self.feedbackGroupBox)
         self.widget_4.setObjectName("widget_4")
         self.horizontalLayout_5 = QtGui.QHBoxLayout(self.widget_4)
         self.horizontalLayout_5.setObjectName("horizontalLayout_5")
@@ -134,7 +134,7 @@ class Ui_SledControl_MainWindow(object):
         spacerItem5 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_5.addItem(spacerItem5)
         self.verticalLayout_8.addWidget(self.widget_4)
-        self.verticalLayout_6.addWidget(self.feedbackPosGroupBox)
+        self.verticalLayout_6.addWidget(self.feedbackGroupBox)
         spacerItem6 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         self.verticalLayout_6.addItem(spacerItem6)
         self.widget_3 = QtGui.QWidget(self.controlTab)
@@ -323,7 +323,7 @@ class Ui_SledControl_MainWindow(object):
         self.verticalLayout_10.addWidget(self.widget_6)
         SledControl_MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(SledControl_MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 745, 25))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 745, 23))
         self.menubar.setObjectName("menubar")
         SledControl_MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtGui.QStatusBar(SledControl_MainWindow)
@@ -340,9 +340,9 @@ class Ui_SledControl_MainWindow(object):
         self.delayLabel.setText(QtGui.QApplication.translate("SledControl_MainWindow", "Delay ", None, QtGui.QApplication.UnicodeUTF8))
         self.label.setText(QtGui.QApplication.translate("SledControl_MainWindow", "(s)", None, QtGui.QApplication.UnicodeUTF8))
         self.autorunCheckBox.setText(QtGui.QApplication.translate("SledControl_MainWindow", "Autorun", None, QtGui.QApplication.UnicodeUTF8))
-        self.joystickPosGroupBox.setTitle(QtGui.QApplication.translate("SledControl_MainWindow", "Joystick Positioning", None, QtGui.QApplication.UnicodeUTF8))
+        self.joystickGroupBox.setTitle(QtGui.QApplication.translate("SledControl_MainWindow", "Joystick Positioning", None, QtGui.QApplication.UnicodeUTF8))
         self.label_2.setText(QtGui.QApplication.translate("SledControl_MainWindow", "Max Velocity", None, QtGui.QApplication.UnicodeUTF8))
-        self.feedbackPosGroupBox.setTitle(QtGui.QApplication.translate("SledControl_MainWindow", "Feedback Positioning", None, QtGui.QApplication.UnicodeUTF8))
+        self.feedbackGroupBox.setTitle(QtGui.QApplication.translate("SledControl_MainWindow", "Feedback Positioning", None, QtGui.QApplication.UnicodeUTF8))
         self.label_3.setText(QtGui.QApplication.translate("SledControl_MainWindow", "Position", None, QtGui.QApplication.UnicodeUTF8))
         self.startRunPushButton.setText(QtGui.QApplication.translate("SledControl_MainWindow", "Start", None, QtGui.QApplication.UnicodeUTF8))
         self.stopPushButton.setText(QtGui.QApplication.translate("SledControl_MainWindow", "  Stop ", None, QtGui.QApplication.UnicodeUTF8))

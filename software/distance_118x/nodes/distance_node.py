@@ -77,6 +77,7 @@ class DistSensorNode(object):
                             value = self.dev.readSample(convert='float')
                         else:
                             value = random.normalvariate(1000,2.0) 
+                            rospy.sleep(1.0/50.0)
                     except:
                         value = None
                 else:

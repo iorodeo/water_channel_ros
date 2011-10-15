@@ -151,7 +151,7 @@
                </widget>
               </item>
               <item>
-               <widget class="QGroupBox" name="joystickPosGroupBox">
+               <widget class="QGroupBox" name="joystickGroupBox">
                 <property name="title">
                  <string>Joystick Positioning</string>
                 </property>
@@ -228,7 +228,7 @@
                </widget>
               </item>
               <item>
-               <widget class="QGroupBox" name="feedbackPosGroupBox">
+               <widget class="QGroupBox" name="feedbackGroupBox">
                 <property name="title">
                  <string>Feedback Positioning</string>
                 </property>
@@ -699,7 +699,7 @@
      <x>0</x>
      <y>0</y>
      <width>745</width>
-     <height>25</height>
+     <height>23</height>
     </rect>
    </property>
   </widget>

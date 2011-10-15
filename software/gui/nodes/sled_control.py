@@ -8,6 +8,7 @@ import sys
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 from sled_control_ui import Ui_SledControl_MainWindow
+from utilities import HDF5_Run_Reader
 
 # Messages
 from msg_and_srv.msg import DistMsg
@@ -17,12 +18,8 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
     def __init__(self,parent=None):
         super(SledControl_MainWindow,self).__init__(parent)
         self.setupUi(self)
+        self.initialize()
         self.connectActions()
-        self.mainTabWidget.setCurrentIndex(0)
-        self.modeGroupBox.setChecked(False)
-        self.joystickPosGroupBox.setChecked(False)
-        self.feedbackPosGroupBox.setChecked(False)
-        self.modeGroupBox.setTitle('Captive Trajectory Mode')
 
         self.subscribeToMessages()
 
@@ -39,6 +36,15 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.positionLabel.setText(positionText)
         self.velocityLabel.setText(velocityText)
 
+    def initialize(self):
+        # This will change based on start up conditions
+        self.modeGroupBox.setTitle('Captive Trajectory Mode')
+
+        # Set current tab to control tab - can this be done by name
+        self.mainTabWidget.setCurrentWidget(self.controlTab)
+        self.modeGroupBox.setChecked(False)
+        self.joystickGroupBox.setChecked(False)
+        self.feedbackGroupBox.setChecked(False)
 
     def connectActions(self):
 
@@ -47,6 +53,9 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.disabledPushButton.clicked.connect(self.disabled_Callback)
 
         # Actions for Controls tab
+        self.modeGroupBox.clicked.connect(self.modeCheck_Callback)
+        self.joystickGroupBox.clicked.connect(self.joystickCheck_Callback)
+        self.feedbackGroupBox.clicked.connect(self.feedbackCheck_Callback)
         self.stopPushButton.clicked.connect(self.stop_Callback)
 
         # Actions for runs tab
@@ -59,6 +68,32 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
 
         # Run tree actions
         self.runTreeWidget.itemClicked.connect(self.runTreeItemClicked_Callback)
+
+    def modeCheck_Callback(self,checkValue):
+        if checkValue:
+            self.joystickGroupBox.setEnabled(False)
+            self.feedbackGroupBox.setEnabled(False)
+        else:
+            self.controlGroupBoxEnableAll()
+
+    def joystickCheck_Callback(self,checkValue):
+        if checkValue:
+            self.modeGroupBox.setEnabled(False)
+            self.feedbackGroupBox.setEnabled(False)
+        else:
+            self.controlGroupBoxEnableAll()
+
+    def feedbackCheck_Callback(self,checkValue):
+        if checkValue:
+            self.modeGroupBox.setEnabled(False)
+            self.joystickGroupBox.setEnabled(False)
+        else:
+            self.controlGroupBoxEnableAll()
+        
+    def controlGroupBoxEnableAll(self):
+        self.modeGroupBox.setEnabled(True)
+        self.joystickGroupBox.setEnabled(True)
+        self.feedbackGroupBox.setEnabled(True)
 
     def runTreeItemClicked_Callback(self,item):
         print 'run tree - item clicked'

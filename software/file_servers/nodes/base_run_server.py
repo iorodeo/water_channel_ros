@@ -10,7 +10,7 @@ roslib.load_manifest('file_servers')
 import rospy
 import threading
 import numpy
-from hdf5_run_reader import HDF5_Run_Reader
+from utilities import HDF5_Run_Reader
 
 # Services
 from msg_and_srv.srv import SetRunFile 
