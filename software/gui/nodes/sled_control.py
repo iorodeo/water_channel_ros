@@ -37,7 +37,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.velocityLabel.setText(velocityText)
 
     def initialize(self):
-        # This will change based on start up conditions
+        # Set text for mode group box - this will change based on startup mode 
         self.modeGroupBox.setTitle('Captive Trajectory Mode')
 
         # Set current tab to control tab - can this be done by name
@@ -45,6 +45,18 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.modeGroupBox.setChecked(False)
         self.joystickGroupBox.setChecked(False)
         self.feedbackGroupBox.setChecked(False)
+
+        # Set background and text colors of status window
+        bgColor = QtGui.QColor(0,0,0)
+        textColor = QtGui.QColor(0,255,0)
+        palette = self.statusWindowTextEdit.palette()
+        palette.setColor(QtGui.QPalette.Active, QtGui.QPalette.Base, bgColor)
+        palette.setColor(QtGui.QPalette.Active, QtGui.QPalette.Text, textColor)
+        self.statusWindowTextEdit.setPalette(palette)
+        self.statusWindowTextEdit.append('1 > initializing ... done')
+        for i in range(0,200):
+            self.statusWindowTextEdit.append('%d > do something'%(i,))
+
 
     def connectActions(self):
 
@@ -68,6 +80,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
 
         # Run tree actions
         self.runTreeWidget.itemClicked.connect(self.runTreeItemClicked_Callback)
+
 
     def modeCheck_Callback(self,checkValue):
         if checkValue:
@@ -118,6 +131,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
 
     def disabled_Callback(self):
         print 'disabled'
+        print self.statusWindowTextEdit.height()
     
 
     def setLogFile_Callback(self):

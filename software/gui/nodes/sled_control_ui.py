@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'sled_control.ui'
 #
-# Created: Sat Oct 15 16:30:36 2011
+# Created: Sat Oct 15 17:35:29 2011
 #      by: PyQt4 UI code generator 4.7.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -294,9 +294,16 @@ class Ui_SledControl_MainWindow(object):
         self.label_4.setLayoutDirection(QtCore.Qt.LeftToRight)
         self.label_4.setObjectName("label_4")
         self.verticalLayout_5.addWidget(self.label_4)
-        self.textEdit = QtGui.QTextEdit(self.widget_2)
-        self.textEdit.setObjectName("textEdit")
-        self.verticalLayout_5.addWidget(self.textEdit)
+        self.statusWindowTextEdit = QtGui.QTextEdit(self.widget_2)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.statusWindowTextEdit.sizePolicy().hasHeightForWidth())
+        self.statusWindowTextEdit.setSizePolicy(sizePolicy)
+        self.statusWindowTextEdit.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.statusWindowTextEdit.setReadOnly(True)
+        self.statusWindowTextEdit.setObjectName("statusWindowTextEdit")
+        self.verticalLayout_5.addWidget(self.statusWindowTextEdit)
         self.frame_6 = QtGui.QFrame(self.widget_2)
         self.frame_6.setFrameShape(QtGui.QFrame.StyledPanel)
         self.frame_6.setObjectName("frame_6")
