@@ -10,6 +10,11 @@ from PyQt4 import QtGui
 from sled_control_ui import Ui_SledControl_MainWindow
 from utilities import HDF5_Run_Reader
 
+DEFAULT_AUTORUN_DELAY = 5.0
+DEFAULT_JOYSTICK_MAX_VELOCITY = 1.0
+STATUS_WINDOW_BACKGROUND_COLOR = (40,40,40)
+STATUS_WINDOW_TEXT_COLOR = (255,140,0)
+
 # Messages
 from msg_and_srv.msg import DistMsg
 
@@ -20,25 +25,48 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.setupUi(self)
         self.initialize()
         self.connectActions()
+        self.subscribeToROSMessages()
 
-        self.subscribeToMessages()
+    def resizeEvent(self,event):
+        super(SledControl_MainWindow,self).resizeEvent(event)
 
-    def subscribeToMessages(self):
-        self.distSubscriber= rospy.Subscriber('distance', DistMsg, self.distMsg_Handler)
+    def subscribeToROSMessages(self):
+        """
+        Subscribe to ROS messages
+        """
+        self.distSubscriber = rospy.Subscriber('distance', DistMsg, self.distMsg_Handler)
 
     def distMsg_Handler(self,data):
-        position = data.distance_kalman
-        velocity = data.velocity_kalman
-        position = 1.0e-3*position
-        velocity = 1.0e-3*velocity
-        positionText = 'Position:  {0:1.3f} (m)'.format(position)
-        velocityText = 'Velocity: {0:+1.3f} (m/s)'.format(velocity)
+        """
+        Handler for messages from the distance sensor. Displays the current position and 
+        velocity in the labels of the right hand side of the GUI.
+        """
+        with self.lock:
+            position = data.distance_kalman
+            velocity = data.velocity_kalman
+            position = 1.0e-3*position  # Convert position to meters
+            velocity = 1.0e-3*velocity  # Convert velocity to meters per second
+
+            # I'm getting some weird occasional crash ... try explicitly calling QString 
+            positionText = QtCore.QString('Position:  {0:1.3f} (m)'.format(position))
+            velocityText = QtCore.QString('Velocity: {0:+1.3f} (m/s)'.format(velocity))
+
         self.positionLabel.setText(positionText)
         self.velocityLabel.setText(velocityText)
 
     def initialize(self):
+        """
+        Initialize the state of the GUI and system.
+        """
+        self.lock = threading.Lock()
+        self.enabled = False
+        self.statusMessageCnt = 0
+        self.startupMode = 'captive trajectory'
+
+        self.writeStatusMessage('initializing')
+
         # Set text for mode group box - this will change based on startup mode 
-        self.modeGroupBox.setTitle('Captive Trajectory Mode')
+        self.modeGroupBox.setTitle(self.startupMode.title())
 
         # Set current tab to control tab - can this be done by name
         self.mainTabWidget.setCurrentWidget(self.controlTab)
@@ -47,32 +75,39 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.feedbackGroupBox.setChecked(False)
 
         # Set background and text colors of status window
-        bgColor = QtGui.QColor(0,0,0)
-        textColor = QtGui.QColor(0,255,0)
+        bgColor = QtGui.QColor(*STATUS_WINDOW_BACKGROUND_COLOR)
+        textColor = QtGui.QColor(*STATUS_WINDOW_TEXT_COLOR)
         palette = self.statusWindowTextEdit.palette()
         palette.setColor(QtGui.QPalette.Active, QtGui.QPalette.Base, bgColor)
         palette.setColor(QtGui.QPalette.Active, QtGui.QPalette.Text, textColor)
         self.statusWindowTextEdit.setPalette(palette)
-        self.statusWindowTextEdit.append('1 > initializing ... done')
-        for i in range(0,200):
-            self.statusWindowTextEdit.append('%d > do something'%(i,))
+
+        # Set default autorun delay and max velocity
+        self.autorunDelayLineEdit.setText('%1.2f'%(DEFAULT_AUTORUN_DELAY,))
+        self.joystickMaxVelocityLineEdit.setText('%1.2f'%(DEFAULT_JOYSTICK_MAX_VELOCITY,))
+
+        self.updateEnabledDisabled()
 
 
     def connectActions(self):
+        """
+        Connects events to the appropriate callback functions.
+        """
 
         # Main window actions
-        self.enabledPushButton.clicked.connect(self.enabled_Callback)
-        self.disabledPushButton.clicked.connect(self.disabled_Callback)
+        self.enableDisablePushButton.clicked.connect(self.enableDisable_Callback)
 
         # Actions for Controls tab
         self.modeGroupBox.clicked.connect(self.modeCheck_Callback)
+        self.autorunCheckBox.stateChanged.connect(self.autorunCheckBox_Callback)
+
         self.joystickGroupBox.clicked.connect(self.joystickCheck_Callback)
         self.feedbackGroupBox.clicked.connect(self.feedbackCheck_Callback)
         self.stopPushButton.clicked.connect(self.stop_Callback)
 
         # Actions for runs tab
         self.loadRunFilePushButton.clicked.connect(self.loadRunFile_Callback)
-        self.startRunPushButton.clicked.connect(self.startRun_Callback)
+        self.startPushButton.clicked.connect(self.start_Callback)
 
         # Actions for log tab
         self.setLogFilePushButton.clicked.connect(self.setLogFile_Callback)
@@ -83,30 +118,91 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
 
 
     def modeCheck_Callback(self,checkValue):
+        """
+        Callback for checkbox of modeGroupBox - this is called the the user
+        selects the current control mode (which depends on the startup
+        conditions) e.g. captive trajectory, interial run, positon control.
+        """
         if checkValue:
             self.joystickGroupBox.setEnabled(False)
             self.feedbackGroupBox.setEnabled(False)
+            msg = '%s enabled'%(self.startupMode,)
+            self.writeStatusMessage(msg)
+            self.startPushButton.setEnabled(True)
         else:
-            self.controlGroupBoxEnableAll()
+            self.controlGroupBoxSetEnabled(True)
+            self.startPushButton.setEnabled(False)
+            msg = '%s disabled'%(self.startupMode,)
+            self.writeStatusMessage(msg)
+
+    def autorunCheckBox_Callback(self,checkValue):
+        """
+        Callback for he autorun check box. Turns on/off the autorun feature.  
+        """
+        if checkValue == QtCore.Qt.Checked:
+            print 'autorun checked'
+        else:
+            print 'autorun unchecked'
 
     def joystickCheck_Callback(self,checkValue):
+        """
+        Callback for the checkbox of the joystickGroupBox. This is called when the user
+        selects/deselects joystick control mode.
+        """
         if checkValue:
             self.modeGroupBox.setEnabled(False)
             self.feedbackGroupBox.setEnabled(False)
+            self.startPushButton.setEnabled(True)
+            self.writeStatusMessage('joystick positioning enabled')
         else:
-            self.controlGroupBoxEnableAll()
+            self.controlGroupBoxSetEnabled(True)
+            self.startPushButton.setEnabled(False)
+            self.writeStatusMessage('joystick positioning disabled')
 
     def feedbackCheck_Callback(self,checkValue):
+        """
+        Callback for the checkbox of the feedbackGroupBox. This is called when the user
+        selects/deselects feedback position control mode.
+        """
         if checkValue:
             self.modeGroupBox.setEnabled(False)
             self.joystickGroupBox.setEnabled(False)
+            self.startPushButton.setEnabled(True)
+            self.writeStatusMessage('feedback positioning enabled')
         else:
-            self.controlGroupBoxEnableAll()
-        
-    def controlGroupBoxEnableAll(self):
-        self.modeGroupBox.setEnabled(True)
-        self.joystickGroupBox.setEnabled(True)
-        self.feedbackGroupBox.setEnabled(True)
+            self.controlGroupBoxSetEnabled(True)
+            self.startPushButton.setEnabled(False)
+            self.writeStatusMessage('feedback positioning disabled')
+
+    def controlGroupBoxSetEnabled(self,value,uncheck_on_disable=True,enable_only_checked=False):
+        """
+        Enable/Disable the group boxes on the control tab. If uncheck_on_disable is True than
+        all groupBoxes are unchecked when they are disabled. If enalbe_only_checked = True than
+        only groupBoxes which are checked will be enabled.
+        """
+        if enable_only_checked and value:
+            if self.modeGroupBox.isChecked():
+                self.modeGroupBox.setEnabled(True)
+            if self.joystickGroupBox.isChecked():
+                self.joystickGroupBox.setEnabled(True)
+            if self.feedbackGroupBox.isChecked():
+                self.feedbackGroupBox.setEnabled(True)
+        else:
+            self.modeGroupBox.setEnabled(value)
+            self.joystickGroupBox.setEnabled(value)
+            self.feedbackGroupBox.setEnabled(value)
+
+        if not value and uncheck_on_disable:
+            self.controlGroupBoxSetChecked(False)
+
+    def controlGroupBoxSetChecked(self,value):
+        """
+        Sets the checked state of all the groupboxes on the control tab.
+        """
+        self.modeGroupBox.setChecked(False)
+        self.joystickGroupBox.setChecked(False)
+        self.feedbackGroupBox.setChecked(False)
+
 
     def runTreeItemClicked_Callback(self,item):
         print 'run tree - item clicked'
@@ -118,21 +214,53 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.runTreeWidget.setEnabled(True)
         self.addItemsToRunTree()
 
-    def startRun_Callback(self):
+    def addItemsToRunTree(self):
+        """
+        Temporary test function.
+        """
+        topItem = QtGui.QTreeWidgetItem(self.runTreeWidget,0)
+        topItem.setText(0,'Filename')
+        for i in range(0,100):
+            item = QtGui.QTreeWidgetItem(topItem,0)
+            item.setText(0,'run %d'%(i,))
+
+    def start_Callback(self):
         print 'start run'
-        self.runTreeWidget.setEnabled(False)
+        self.stopPushButton.setEnabled(True)
+        self.startPushButton.setEnabled(False)
+        self.controlGroupBoxSetEnabled(False,uncheck_on_disable=False)
 
     def stop_Callback(self):
         print 'stop'
+        self.startPushButton.setEnabled(True)
+        self.stopPushButton.setEnabled(False)
+        self.controlGroupBoxSetEnabled(True,enable_only_checked=True)
 
-    def enabled_Callback(self):
-        print 'enabled'
-        self.runTreeWidget.setEnabled(True)
+    def enableDisable_Callback(self):
+        """
+        Callback for enable/disable button.
+        """
+        if self.enabled:
+            self.enabled = False
+        else:
+            self.enabled = True
+        self.updateEnabledDisabled()
 
-    def disabled_Callback(self):
-        print 'disabled'
-        print self.statusWindowTextEdit.height()
-    
+    def updateEnabledDisabled(self):
+        """
+        Sets the text of the display and enables/disables the appropriate 
+        widgets based the the enabled state of the system.
+        """
+        if self.enabled:
+            self.writeStatusMessage('system enabled')
+            self.enableDisablePushButton.setText('Disable')
+            self.controlGroupBoxSetEnabled(True)
+        else:
+            self.writeStatusMessage('system disabled')
+            self.enableDisablePushButton.setText('Enable')
+            self.startPushButton.setEnabled(False)
+            self.stopPushButton.setEnabled(False)
+            self.controlGroupBoxSetEnabled(False)
 
     def setLogFile_Callback(self):
         print 'set log file'
@@ -140,12 +268,19 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
     def deleteLogItem_Callback(self):
         print 'delete log item'
 
-    def addItemsToRunTree(self):
-        topItem = QtGui.QTreeWidgetItem(self.runTreeWidget,0)
-        topItem.setText(0,'Filename')
-        for i in range(0,100):
-            item = QtGui.QTreeWidgetItem(topItem,0)
-            item.setText(0,'run %d'%(i,))
+
+    def writeStatusMessage(self,msg):
+        """
+        Writes a status message to the status window.
+        """
+        # Write status message
+        statusMsg = '%d: %s'%(self.statusMessageCnt,msg)
+        self.statusMessageCnt += 1
+        self.statusWindowTextEdit.append(statusMsg)
+        # Move cursor to end of document
+        cursor = self.statusWindowTextEdit.textCursor()
+        cursor.movePosition(QtGui.QTextCursor.End)
+        self.statusWindowTextEdit.setTextCursor(cursor)
 
     def main(self):
         self.show()

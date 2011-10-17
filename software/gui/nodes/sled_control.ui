@@ -24,7 +24,7 @@
           <item>
            <widget class="QTabWidget" name="mainTabWidget">
             <property name="currentIndex">
-             <number>0</number>
+             <number>3</number>
             </property>
             <widget class="QWidget" name="controlTab">
              <attribute name="title">
@@ -63,6 +63,35 @@
                   <widget class="QWidget" name="widget_13" native="true">
                    <layout class="QHBoxLayout" name="horizontalLayout_8">
                     <item>
+                     <widget class="QCheckBox" name="autorunCheckBox">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="layoutDirection">
+                       <enum>Qt::RightToLeft</enum>
+                      </property>
+                      <property name="text">
+                       <string>Autorun</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <spacer name="horizontalSpacer_2">
+                      <property name="orientation">
+                       <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>40</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                    <item>
                      <widget class="QLabel" name="delayLabel">
                       <property name="text">
                        <string>Delay </string>
@@ -89,35 +118,6 @@
                      <widget class="QLabel" name="label">
                       <property name="text">
                        <string>(s)</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <spacer name="horizontalSpacer_2">
-                      <property name="orientation">
-                       <enum>Qt::Horizontal</enum>
-                      </property>
-                      <property name="sizeHint" stdset="0">
-                       <size>
-                        <width>40</width>
-                        <height>20</height>
-                       </size>
-                      </property>
-                     </spacer>
-                    </item>
-                    <item>
-                     <widget class="QCheckBox" name="autorunCheckBox">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="layoutDirection">
-                       <enum>Qt::RightToLeft</enum>
-                      </property>
-                      <property name="text">
-                       <string>Autorun</string>
                       </property>
                      </widget>
                     </item>
@@ -298,7 +298,7 @@
                <widget class="QWidget" name="widget_3" native="true">
                 <layout class="QHBoxLayout" name="horizontalLayout_2">
                  <item>
-                  <widget class="QPushButton" name="startRunPushButton">
+                  <widget class="QPushButton" name="startPushButton">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                      <horstretch>0</horstretch>
@@ -496,9 +496,9 @@
               </item>
              </layout>
             </widget>
-            <widget class="QWidget" name="plotTab">
+            <widget class="QWidget" name="plotsTab">
              <attribute name="title">
-              <string>Plot</string>
+              <string>Plots</string>
              </attribute>
             </widget>
            </widget>
@@ -631,6 +631,9 @@
              </sizepolicy>
             </property>
             <property name="verticalScrollBarPolicy">
+             <enum>Qt::ScrollBarAsNeeded</enum>
+            </property>
+            <property name="horizontalScrollBarPolicy">
              <enum>Qt::ScrollBarAlwaysOff</enum>
             </property>
             <property name="readOnly">
@@ -658,28 +661,9 @@
               </spacer>
              </item>
              <item>
-              <widget class="QPushButton" name="enabledPushButton">
+              <widget class="QPushButton" name="enableDisablePushButton">
                <property name="text">
-                <string>Enabled</string>
-               </property>
-               <property name="checkable">
-                <bool>true</bool>
-               </property>
-               <property name="checked">
-                <bool>false</bool>
-               </property>
-               <property name="default">
-                <bool>false</bool>
-               </property>
-               <property name="flat">
-                <bool>false</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="disabledPushButton">
-               <property name="text">
-                <string>Disabled</string>
+                <string>Enable</string>
                </property>
                <property name="checkable">
                 <bool>true</bool>
