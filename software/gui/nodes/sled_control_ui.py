@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'sled_control.ui'
 #
-# Created: Sun Oct 16 18:17:14 2011
+# Created: Sun Oct 23 22:56:39 2011
 #      by: PyQt4 UI code generator 4.7.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -166,6 +166,7 @@ class Ui_SledControl_MainWindow(object):
         self.verticalLayout_3 = QtGui.QVBoxLayout(self.runsTab)
         self.verticalLayout_3.setObjectName("verticalLayout_3")
         self.runTreeWidget = QtGui.QTreeWidget(self.runsTab)
+        self.runTreeWidget.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.runTreeWidget.setObjectName("runTreeWidget")
         self.runTreeWidget.headerItem().setText(0, "1")
         self.verticalLayout_3.addWidget(self.runTreeWidget)
@@ -186,9 +187,9 @@ class Ui_SledControl_MainWindow(object):
         self.loadRunFilePushButton.setSizePolicy(sizePolicy)
         self.loadRunFilePushButton.setObjectName("loadRunFilePushButton")
         self.horizontalLayout_4.addWidget(self.loadRunFilePushButton)
-        self.pushButton = QtGui.QPushButton(self.widget_5)
-        self.pushButton.setObjectName("pushButton")
-        self.horizontalLayout_4.addWidget(self.pushButton)
+        self.clearRunFilePushButton = QtGui.QPushButton(self.widget_5)
+        self.clearRunFilePushButton.setObjectName("clearRunFilePushButton")
+        self.horizontalLayout_4.addWidget(self.clearRunFilePushButton)
         spacerItem8 = QtGui.QSpacerItem(20, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_4.addItem(spacerItem8)
         self.verticalLayout_3.addWidget(self.widget_5)
@@ -300,7 +301,7 @@ class Ui_SledControl_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.statusWindowTextEdit.sizePolicy().hasHeightForWidth())
         self.statusWindowTextEdit.setSizePolicy(sizePolicy)
-        self.statusWindowTextEdit.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.statusWindowTextEdit.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.statusWindowTextEdit.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.statusWindowTextEdit.setReadOnly(True)
         self.statusWindowTextEdit.setObjectName("statusWindowTextEdit")
@@ -332,7 +333,7 @@ class Ui_SledControl_MainWindow(object):
         SledControl_MainWindow.setStatusBar(self.statusbar)
 
         self.retranslateUi(SledControl_MainWindow)
-        self.mainTabWidget.setCurrentIndex(3)
+        self.mainTabWidget.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(SledControl_MainWindow)
 
     def retranslateUi(self, SledControl_MainWindow):
@@ -349,7 +350,7 @@ class Ui_SledControl_MainWindow(object):
         self.stopPushButton.setText(QtGui.QApplication.translate("SledControl_MainWindow", "  Stop ", None, QtGui.QApplication.UnicodeUTF8))
         self.mainTabWidget.setTabText(self.mainTabWidget.indexOf(self.controlTab), QtGui.QApplication.translate("SledControl_MainWindow", "Control", None, QtGui.QApplication.UnicodeUTF8))
         self.loadRunFilePushButton.setText(QtGui.QApplication.translate("SledControl_MainWindow", "Load ", None, QtGui.QApplication.UnicodeUTF8))
-        self.pushButton.setText(QtGui.QApplication.translate("SledControl_MainWindow", "Remove", None, QtGui.QApplication.UnicodeUTF8))
+        self.clearRunFilePushButton.setText(QtGui.QApplication.translate("SledControl_MainWindow", "Clear", None, QtGui.QApplication.UnicodeUTF8))
         self.mainTabWidget.setTabText(self.mainTabWidget.indexOf(self.runsTab), QtGui.QApplication.translate("SledControl_MainWindow", "Runs", None, QtGui.QApplication.UnicodeUTF8))
         self.setLogFilePushButton.setText(QtGui.QApplication.translate("SledControl_MainWindow", "Set Log ", None, QtGui.QApplication.UnicodeUTF8))
         self.deleteLogItemPushButton.setText(QtGui.QApplication.translate("SledControl_MainWindow", "Del Item", None, QtGui.QApplication.UnicodeUTF8))

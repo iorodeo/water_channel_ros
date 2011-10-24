@@ -24,7 +24,7 @@
           <item>
            <widget class="QTabWidget" name="mainTabWidget">
             <property name="currentIndex">
-             <number>3</number>
+             <number>1</number>
             </property>
             <widget class="QWidget" name="controlTab">
              <attribute name="title">
@@ -348,6 +348,9 @@
              <layout class="QVBoxLayout" name="verticalLayout_3">
               <item>
                <widget class="QTreeWidget" name="runTreeWidget">
+                <property name="horizontalScrollBarPolicy">
+                 <enum>Qt::ScrollBarAsNeeded</enum>
+                </property>
                 <column>
                  <property name="text">
                   <string notr="true">1</string>
@@ -378,9 +381,9 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="pushButton">
+                  <widget class="QPushButton" name="clearRunFilePushButton">
                    <property name="text">
-                    <string>Remove</string>
+                    <string>Clear</string>
                    </property>
                   </widget>
                  </item>
@@ -631,7 +634,7 @@
              </sizepolicy>
             </property>
             <property name="verticalScrollBarPolicy">
-             <enum>Qt::ScrollBarAsNeeded</enum>
+             <enum>Qt::ScrollBarAlwaysOn</enum>
             </property>
             <property name="horizontalScrollBarPolicy">
              <enum>Qt::ScrollBarAlwaysOff</enum>

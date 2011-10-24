@@ -1,10 +1,18 @@
 #!/usr/bin/env python
+"""
+sled_control.py
+
+Main GUI for Caltech water channel sled control.
+
+"""
 import roslib 
 roslib.load_manifest('gui')
 import rospy
+import os
 import threading
 import time
 import sys
+import h5py
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 from sled_control_ui import Ui_SledControl_MainWindow
@@ -62,6 +70,8 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.enabled = False
         self.statusMessageCnt = 0
         self.startupMode = 'captive trajectory'
+        self.controlMode = None
+        self.runFileReader = None 
 
         self.writeStatusMessage('initializing')
 
@@ -79,6 +89,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         textColor = QtGui.QColor(*STATUS_WINDOW_TEXT_COLOR)
         palette = self.statusWindowTextEdit.palette()
         palette.setColor(QtGui.QPalette.Active, QtGui.QPalette.Base, bgColor)
+        palette.setColor(QtGui.QPalette.Inactive, QtGui.QPalette.Base, bgColor)
         palette.setColor(QtGui.QPalette.Active, QtGui.QPalette.Text, textColor)
         self.statusWindowTextEdit.setPalette(palette)
 
@@ -86,7 +97,20 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.autorunDelayLineEdit.setText('%1.2f'%(DEFAULT_AUTORUN_DELAY,))
         self.joystickMaxVelocityLineEdit.setText('%1.2f'%(DEFAULT_JOYSTICK_MAX_VELOCITY,))
 
-        self.updateEnabledDisabled()
+        # Enable/Disable appropriate widgets based on enabled state
+        self.updateUIEnabledDisabled()
+
+        # Setup default directories
+        self.defaultRunFileDir = os.getenv('HOME')
+        self.lastRunFileDir = self.defaultRunFileDir
+
+        # Enable load and clear run file pushbutton enable values
+        self.loadRunFilePushButton.setEnabled(True)
+        self.clearRunFilePushButton.setEnabled(False)
+
+        self.runTreeWidget.setColumnCount(2) 
+        self.runTreeWidget.setHeaderLabels(['name', 'type'])
+        self.statusbar.showMessage('')
 
 
     def connectActions(self):
@@ -100,14 +124,14 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         # Actions for Controls tab
         self.modeGroupBox.clicked.connect(self.modeCheck_Callback)
         self.autorunCheckBox.stateChanged.connect(self.autorunCheckBox_Callback)
-
         self.joystickGroupBox.clicked.connect(self.joystickCheck_Callback)
         self.feedbackGroupBox.clicked.connect(self.feedbackCheck_Callback)
+        self.startPushButton.clicked.connect(self.start_Callback)
         self.stopPushButton.clicked.connect(self.stop_Callback)
 
         # Actions for runs tab
         self.loadRunFilePushButton.clicked.connect(self.loadRunFile_Callback)
-        self.startPushButton.clicked.connect(self.start_Callback)
+        self.clearRunFilePushButton.clicked.connect(self.clearRunFile_Callback)
 
         # Actions for log tab
         self.setLogFilePushButton.clicked.connect(self.setLogFile_Callback)
@@ -129,11 +153,13 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             msg = '%s enabled'%(self.startupMode,)
             self.writeStatusMessage(msg)
             self.startPushButton.setEnabled(True)
+            self.controlMode = 'startupMode'
         else:
             self.controlGroupBoxSetEnabled(True)
             self.startPushButton.setEnabled(False)
             msg = '%s disabled'%(self.startupMode,)
             self.writeStatusMessage(msg)
+            self.controlMode = None
 
     def autorunCheckBox_Callback(self,checkValue):
         """
@@ -154,10 +180,12 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.feedbackGroupBox.setEnabled(False)
             self.startPushButton.setEnabled(True)
             self.writeStatusMessage('joystick positioning enabled')
+            self.controlMode = 'joystick'
         else:
             self.controlGroupBoxSetEnabled(True)
             self.startPushButton.setEnabled(False)
             self.writeStatusMessage('joystick positioning disabled')
+            self.controlMode = None
 
     def feedbackCheck_Callback(self,checkValue):
         """
@@ -169,10 +197,12 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.joystickGroupBox.setEnabled(False)
             self.startPushButton.setEnabled(True)
             self.writeStatusMessage('feedback positioning enabled')
+            self.controlMode = 'feedback'
         else:
             self.controlGroupBoxSetEnabled(True)
             self.startPushButton.setEnabled(False)
             self.writeStatusMessage('feedback positioning disabled')
+            self.controlMode = None
 
     def controlGroupBoxSetEnabled(self,value,uncheck_on_disable=True,enable_only_checked=False):
         """
@@ -203,27 +233,6 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.joystickGroupBox.setChecked(False)
         self.feedbackGroupBox.setChecked(False)
 
-
-    def runTreeItemClicked_Callback(self,item):
-        print 'run tree - item clicked'
-        print item.text(0)
-
-
-    def loadRunFile_Callback(self):
-        print 'load run file'
-        self.runTreeWidget.setEnabled(True)
-        self.addItemsToRunTree()
-
-    def addItemsToRunTree(self):
-        """
-        Temporary test function.
-        """
-        topItem = QtGui.QTreeWidgetItem(self.runTreeWidget,0)
-        topItem.setText(0,'Filename')
-        for i in range(0,100):
-            item = QtGui.QTreeWidgetItem(topItem,0)
-            item.setText(0,'run %d'%(i,))
-
     def start_Callback(self):
         print 'start run'
         self.stopPushButton.setEnabled(True)
@@ -244,9 +253,9 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.enabled = False
         else:
             self.enabled = True
-        self.updateEnabledDisabled()
+        self.updateUIEnabledDisabled()
 
-    def updateEnabledDisabled(self):
+    def updateUIEnabledDisabled(self):
         """
         Sets the text of the display and enables/disables the appropriate 
         widgets based the the enabled state of the system.
@@ -261,6 +270,72 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.startPushButton.setEnabled(False)
             self.stopPushButton.setEnabled(False)
             self.controlGroupBoxSetEnabled(False)
+
+    def loadRunFile_Callback(self):
+        print 'load run file'
+        filename = QtGui.QFileDialog.getOpenFileName(None,'Select run file',self.lastRunFileDir)
+        success = True
+        if filename:
+            filename = str(filename)
+            try:
+                self.runFileReader = HDF5_Run_Reader(filename)
+            except h5py.h5e.LowLevelIOError, e:
+                success = False
+                
+        if success:
+            self.populateRunTree()
+            self.loadRunFilePushButton.setEnabled(False)
+            self.clearRunFilePushButton.setEnabled(True)
+        else:
+            self.runFileReader.close()
+            self.runFileReader = None
+            self.runTreeWidget.clear()
+            self.loadRunFilePushButton.setEnabled(True)
+            self.clearRunFilePushButton.setEnabled(False)
+            self.statusbar.showMessage('')
+
+    def populateRunTree(self):
+        self.runTreeWidget.clear()
+        self.statusbar.showMessage('Run File: %s'%(self.runFileReader.filename,))
+        for run in self.runFileReader:
+            item = QtGui.QTreeWidgetItem(self.runTreeWidget,0)
+            item.setText(0,run.name[1:])
+            item.setText(1,run.attrs['type'])
+            self.addChildToRunTree(item,run)
+
+            print list(run)
+
+    def addChildToRunTree(self,parent,hdf5Item):
+        for name,obj in dict(hdf5Item).iteritems():
+            item = QtGui.QTreeWidgetItem(parent,0)
+            item.setText(0,name)
+        
+
+    def clearRunFile_Callback(self):
+        print 'clear run file'
+        self.runFileReader.close()
+        self.runFileReader = None
+        self.runTreeWidget.clear()
+        self.loadRunFilePushButton.setEnabled(True)
+        self.clearRunFilePushButton.setEnabled(False)
+        self.statusbar.showMessage('')
+
+
+    def runTreeItemClicked_Callback(self,item):
+        print 'run tree - item clicked'
+        print item.text(0)
+
+        #self.runTreeWidget.setEnabled(True)
+
+    #def addItemsToRunTree(self):
+    #    """
+    #    Temporary test function.
+    #    """
+    #    topItem = QtGui.QTreeWidgetItem(self.runTreeWidget,0)
+    #    topItem.setText(0,'Filename')
+    #    for i in range(0,100):
+    #        item = QtGui.QTreeWidgetItem(topItem,0)
+    #        item.setText(0,'run %d'%(i,))
 
     def setLogFile_Callback(self):
         print 'set log file'
