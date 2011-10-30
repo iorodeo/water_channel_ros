@@ -9,6 +9,7 @@ import roslib
 roslib.load_manifest('gui')
 import rospy
 import os
+import os.path
 import threading
 import time
 import sys
@@ -109,7 +110,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.clearRunFilePushButton.setEnabled(False)
 
         self.runTreeWidget.setColumnCount(2) 
-        self.runTreeWidget.setHeaderLabels(['name', 'type'])
+        self.runTreeWidget.setHeaderLabels(['name', 'type/value'])
         self.statusbar.showMessage('')
 
 
@@ -210,7 +211,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         all groupBoxes are unchecked when they are disabled. If enalbe_only_checked = True than
         only groupBoxes which are checked will be enabled.
         """
-        if enable_only_checked and value:
+        if value and enable_only_checked and self.isControlGroupBoxChecked():
             if self.modeGroupBox.isChecked():
                 self.modeGroupBox.setEnabled(True)
             if self.joystickGroupBox.isChecked():
@@ -218,28 +219,48 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             if self.feedbackGroupBox.isChecked():
                 self.feedbackGroupBox.setEnabled(True)
         else:
-            self.modeGroupBox.setEnabled(value)
+            # Only enable mode only runfile is loaded
+            if value and self.runFileReader is not None: 
+                self.modeGroupBox.setEnabled(True)
+            else:
+                self.modeGroupBox.setEnabled(False)
             self.joystickGroupBox.setEnabled(value)
             self.feedbackGroupBox.setEnabled(value)
 
         if not value and uncheck_on_disable:
             self.controlGroupBoxSetChecked(False)
+            
+    def isControlGroupBoxChecked(self):
+        """
+        Returns true if one of the control group boxes is checked.
+        """
+        value = False
+        value = value or self.modeGroupBox.isChecked()
+        value = value or self.joystickGroupBox.isChecked()
+        value = value or self.feedbackGroupBox.isChecked()
+        return value
 
     def controlGroupBoxSetChecked(self,value):
         """
         Sets the checked state of all the groupboxes on the control tab.
         """
-        self.modeGroupBox.setChecked(False)
-        self.joystickGroupBox.setChecked(False)
-        self.feedbackGroupBox.setChecked(False)
+        self.modeGroupBox.setChecked(value)
+        self.joystickGroupBox.setChecked(value)
+        self.feedbackGroupBox.setChecked(value)
 
     def start_Callback(self):
+        """
+        Callback for when the start button on the Control tab is clicked.
+        """
         print 'start run'
         self.stopPushButton.setEnabled(True)
         self.startPushButton.setEnabled(False)
         self.controlGroupBoxSetEnabled(False,uncheck_on_disable=False)
 
     def stop_Callback(self):
+        """
+        Callback for when the stop button in the Control tab is clicked.
+        """
         print 'stop'
         self.startPushButton.setEnabled(True)
         self.stopPushButton.setEnabled(False)
@@ -247,7 +268,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
 
     def enableDisable_Callback(self):
         """
-        Callback for enable/disable button.
+        Callback for when the enable/disable button is clicked.
         """
         if self.enabled:
             self.enabled = False
@@ -272,6 +293,11 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.controlGroupBoxSetEnabled(False)
 
     def loadRunFile_Callback(self):
+        """
+        Callback for loading run files - if the run file is valid it will populate 
+        the runFileTreeWidget from the data in the selected run file using the populateRunTree
+        method.
+        """
         print 'load run file'
         filename = QtGui.QFileDialog.getOpenFileName(None,'Select run file',self.lastRunFileDir)
         success = True
@@ -286,6 +312,10 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.populateRunTree()
             self.loadRunFilePushButton.setEnabled(False)
             self.clearRunFilePushButton.setEnabled(True)
+            pathname, filename = os.path.split(filename)
+            self.writeStatusMessage('run file loaded: %s'%(filename,))
+            if self.enabled:
+                self.controlGroupBoxSetEnabled(True,enable_only_checked=True)
         else:
             self.runFileReader.close()
             self.runFileReader = None
@@ -295,6 +325,9 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.statusbar.showMessage('')
 
     def populateRunTree(self):
+        """
+        Populates the the runTreeWidget from the current hdf5 run file.
+        """
         self.runTreeWidget.clear()
         self.statusbar.showMessage('Run File: %s'%(self.runFileReader.filename,))
         for run in self.runFileReader:
@@ -303,13 +336,37 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             item.setText(1,run.attrs['type'])
             self.addChildToRunTree(item,run)
 
-            print list(run)
-
     def addChildToRunTree(self,parent,hdf5Item):
-        for name,obj in dict(hdf5Item).iteritems():
+        """
+        Add child nodes to the run tree. 
+        """
+        name_list = list(hdf5Item)
+        name_list.sort()
+        for name in name_list:
+            obj = hdf5Item[name]
             item = QtGui.QTreeWidgetItem(parent,0)
             item.setText(0,name)
-        
+            self.addAttrsToItem(item,obj)
+            if isinstance(obj,h5py.highlevel.Dataset):
+                if obj.shape[0] == 1:
+                    value = float(obj[0])
+                    valueStr = '%1.3f'%(value,)
+                    item.setText(1,valueStr)
+                else:
+                    shape = obj.shape
+                    shapeStr = '%s'%(shape,)
+                    item.setText(1,shapeStr)
+            else:
+                self.addChildToRunTree(item, obj)
+
+    def addAttrsToItem(self,item,obj):
+        """
+        Adds child nodes to the run tree item for hdf5 attributes of the obj.  
+        """
+        for name, value in obj.attrs.iteritems():
+            attrItem = QtGui.QTreeWidgetItem(item,0)
+            attrItem.setText(0,name)
+            attrItem.setText(1,value)
 
     def clearRunFile_Callback(self):
         print 'clear run file'
@@ -319,13 +376,20 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.loadRunFilePushButton.setEnabled(True)
         self.clearRunFilePushButton.setEnabled(False)
         self.statusbar.showMessage('')
-
+        self.writeStatusMessage('run file cleared')
+        if self.enabled:
+            self.controlGroupBoxSetEnabled(True,enable_only_checked=True)
 
     def runTreeItemClicked_Callback(self,item):
         print 'run tree - item clicked'
+        topLevelParent = self.getRunTreeTopLevelParent(item)
         print item.text(0)
+        print topLevelParent.text(0)
 
-        #self.runTreeWidget.setEnabled(True)
+    def getRunTreeTopLevelParent(self,item):
+        while item.parent() is not None:
+            item = item.parent()
+        return item
 
     #def addItemsToRunTree(self):
     #    """
