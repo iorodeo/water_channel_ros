@@ -1,0 +1,3 @@
+<launch>
+  <node name="sled_control_GUI" pkg="gui" type="sled_control.py" required="true"/>
+</launch>

@@ -6,12 +6,18 @@ import threading
 import math
 import pid_controller
 import velocity_feedforward
+from gain_scheduler import GainScheduler
+
+# Messages
 from std_msgs.msg import Header
 from msg_and_srv.msg import DistMsg 
 from msg_and_srv.msg import MotorCmdMsg
 from msg_and_srv.msg import PIDMsg
 from setpt_source.msg import SetptMsg
-from gain_scheduler import GainScheduler
+
+# Services
+from msg_and_srv.srv import NodeEnable
+from msg_and_srv.srv import NodeEnableResponse
 
 class BaseController(object):
 
@@ -28,6 +34,7 @@ class BaseController(object):
         self.motorCmd = None
         self.update_rate = 0.001
         self.rate = rospy.Rate(self.update_rate)
+        self.enabled = False
 
         self.controller = pid_controller.PIDController()
         self.controller.pgain = rospy.get_param('controller_pgain', 0.5)
@@ -52,6 +59,23 @@ class BaseController(object):
         self.PIDMsg = PIDMsg()
         self.PIDPub = rospy.Publisher('pid_terms', PIDMsg)
 
+        # Setup enable/disable service 
+        self.nodeEnableSrv = rospy.Service(
+                'controller_enable', 
+                NodeEnable, 
+                self.handleNodeEnable
+                ) 
+
+    def handleNodeEnable(self,req):
+        with self.lock:
+            if req.enable:
+                self.enabled = True
+            else:
+                self.enabled = False
+        message = ''
+        return NodeEnableResponse(self.enabled,message)
+
+
     def getMotorCmd(self): 
         """ 
         Get motor command dummy function - child classes should  implement
@@ -70,7 +94,7 @@ class BaseController(object):
             self.haveSensorData = True
             self.position = data.distance_kalman
             self.velocity = data.velocity_kalman
-            if self.haveSetptData == True:
+            if self.enabled and self.haveSetptData == True:
                 self.getMotorCmd()
                 stamp = rospy.get_rostime()
                 # Write motor command message

@@ -18,6 +18,7 @@ from PyQt4 import QtCore
 from PyQt4 import QtGui
 from sled_control_ui import Ui_SledControl_MainWindow
 from utilities import HDF5_Run_Reader
+from utilities import ModeSwitcher
 
 DEFAULT_AUTORUN_DELAY = 5.0
 DEFAULT_JOYSTICK_MAX_VELOCITY = 1.0
@@ -38,6 +39,10 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
 
     def resizeEvent(self,event):
         super(SledControl_MainWindow,self).resizeEvent(event)
+
+    def closeEvent(self,event):
+        rospy.signal_shutdown('gui closed')
+        event.accept()
 
     def subscribeToROSMessages(self):
         """
@@ -73,6 +78,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.startupMode = 'captive trajectory'
         self.controlMode = None
         self.runFileReader = None 
+        self.modeSwitcher = ModeSwitcher()
 
         self.writeStatusMessage('initializing')
 
@@ -118,7 +124,6 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         """
         Connects events to the appropriate callback functions.
         """
-
         # Main window actions
         self.enableDisablePushButton.clicked.connect(self.enableDisable_Callback)
 
@@ -256,6 +261,8 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.stopPushButton.setEnabled(True)
         self.startPushButton.setEnabled(False)
         self.controlGroupBoxSetEnabled(False,uncheck_on_disable=False)
+        if self.controlMode == 'joystick':
+            self.modeSwitcher.enableJoystickMode()
 
     def stop_Callback(self):
         """
@@ -265,14 +272,18 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.startPushButton.setEnabled(True)
         self.stopPushButton.setEnabled(False)
         self.controlGroupBoxSetEnabled(True,enable_only_checked=True)
+        if self.controlMode == 'joystick':
+            self.modeSwitcher.disableJoystickMode()
 
     def enableDisable_Callback(self):
         """
         Callback for when the enable/disable button is clicked.
         """
         if self.enabled:
+            self.modeSwitcher.disableSledIO()
             self.enabled = False
         else:
+            self.modeSwitcher.enableSledIO()
             self.enabled = True
         self.updateUIEnabledDisabled()
 
