@@ -10,7 +10,7 @@ import h5py
 import numpy.random
 
 filename = 'test_run_file.hdf5'
-num_runs = 15
+num_runs = 100 
 
 f = h5py.File(filename,'w')
 
@@ -53,7 +53,7 @@ for i in range(0,num_runs):
 
 
     elif i < 3*num_runs/4:
-        run_grp.attrs['type'] = 'sinewave'
+        run_grp.attrs['type'] = 'cosine'
         prm_grp = run_grp.create_group('%s/params'%(run_str,))
 
         amp_ds = prm_grp.create_dataset('amplitude',(1,),'f',maxshape=(1,))

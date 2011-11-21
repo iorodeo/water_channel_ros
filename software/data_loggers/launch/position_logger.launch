@@ -1,0 +1,3 @@
+<launch>
+  <node name="position_logger" pkg="data_loggers" type="position_logger.py"/>
+</launch>

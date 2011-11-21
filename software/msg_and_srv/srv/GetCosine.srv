@@ -1,0 +1,6 @@
+float32 amplitude
+float32 period
+float32 cycles
+float32 dt
+---
+float32[] cosine 

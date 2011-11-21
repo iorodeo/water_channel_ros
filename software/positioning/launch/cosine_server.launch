@@ -1,0 +1,3 @@
+<launch>
+  <node name="cosine_server" pkg="positioning" type="cosine_server.py"/>
+</launch>

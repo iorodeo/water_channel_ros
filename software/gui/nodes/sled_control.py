@@ -19,17 +19,8 @@ from PyQt4 import QtGui
 from sled_control_ui import Ui_SledControl_MainWindow
 from utilities import HDF5_Run_Reader
 from utilities import ModeSwitcher
+from gui_constants import *
 
-DEFAULT_AUTORUN_DELAY = 5.0
-DEFAULT_JOYSTICK_MAX_VELOCITY = 1.0
-STATUS_WINDOW_BACKGROUND_COLOR = (40,40,40)
-STATUS_WINDOW_TEXT_COLOR = (255,140,0)
-
-ALLOWED_STARTUP_MODES = [
-        'captive trajectory',
-        'position trajectory',
-        'inertial sled',
-        ]
 
 # Messages
 from msg_and_srv.msg import DistMsg
@@ -87,8 +78,9 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.runFileReader = None 
         self.modeSwitcher = ModeSwitcher()
 
-        self.checkStartupMode()
         self.writeStatusMessage('initializing')
+        self.checkStartupMode()
+        self.writeStatusMessage('mode = %s'%(self.startupMode,))
 
         # Set text for mode group box - this will change based on startup mode 
         self.modeGroupBox.setTitle(self.startupMode.title())
@@ -108,9 +100,20 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         palette.setColor(QtGui.QPalette.Active, QtGui.QPalette.Text, textColor)
         self.statusWindowTextEdit.setPalette(palette)
 
+        # Set validators
+        maxVelValidator = QtGui.QIntValidator(1,100,self.joystickMaxVelocityLineEdit)
+        self.joystickMaxVelocityLineEdit.setValidator(maxVelValidator)
+
         # Set default autorun delay and max velocity
+        self.autorunDelay = DEFAULT_AUTORUN_DELAY
+        self.joystickMaxVelocity = DEFAULT_JOYSTICK_MAX_VELOCITY
+        self.autorun = DEFAULT_AUTORUN_CHECK
+        self.startPosition = DEFAULT_START_POSITION
+        self.runNumber = None
         self.autorunDelayLineEdit.setText('%1.2f'%(DEFAULT_AUTORUN_DELAY,))
-        self.joystickMaxVelocityLineEdit.setText('%1.2f'%(DEFAULT_JOYSTICK_MAX_VELOCITY,))
+        self.joystickMaxVelocityLineEdit.setText('%d'%(DEFAULT_JOYSTICK_MAX_VELOCITY,))
+        self.autorunCheckBox.setChecked(DEFAULT_AUTORUN_CHECK)
+        self.startPositionLineEdit.setText('%1.3f'%(DEFAULT_START_POSITION,))
 
         # Enable/Disable appropriate widgets based on enabled state
         self.updateUIEnabledDisabled()
@@ -225,20 +228,30 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         only groupBoxes which are checked will be enabled.
         """
         if value and enable_only_checked and self.isControlGroupBoxChecked():
-            if self.modeGroupBox.isChecked():
-                self.modeGroupBox.setEnabled(True)
+            self.positionBoundsGroupBox.setEnabled(True)
             if self.joystickGroupBox.isChecked():
                 self.joystickGroupBox.setEnabled(True)
             if self.feedbackGroupBox.isChecked():
                 self.feedbackGroupBox.setEnabled(True)
+            if self.modeGroupBox.isChecked() and (self.runFileReader is not None):
+                # We have a run file reader - enable
+                self.modeGroupBox.setEnabled(True)
+            else:
+                # No run file reader - disable and enable remaining
+                self.modeGroupBox.setEnabled(False)
+                self.modeGroupBox.setChecked(False)
+                if (not self.joystickGroupBox.isChecked()) and (not self.feedbackGroupBox.isChecked()):
+                    self.joystickGroupBox.setEnabled(True)
+                    self.feedbackGroupBox.setEnabled(True)
         else:
             # Only enable mode only runfile is loaded
-            if value and self.runFileReader is not None: 
+            if value and (self.runFileReader is not None): 
                 self.modeGroupBox.setEnabled(True)
             else:
                 self.modeGroupBox.setEnabled(False)
             self.joystickGroupBox.setEnabled(value)
             self.feedbackGroupBox.setEnabled(value)
+            self.positionBoundsGroupBox.setEnabled(value)
 
         if not value and uncheck_on_disable:
             self.controlGroupBoxSetChecked(False)
@@ -274,8 +287,9 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.writeStatusMessage('joystick positioning started')
         elif self.controlMode == 'feedback':
             self.writeStatusMessage('feedback positioning started')
+        elif self.controlMode == 'startupMode':
+            self.writeStatusMessage('%s started'%(self.startupMode,))
         
-
     def stop_Callback(self):
         """
         Callback for when the stop button in the Control tab is clicked.
@@ -289,6 +303,8 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.writeStatusMessage('joystick positioning stopped')
         elif self.controlMode == 'feedback':
             self.writeStatusMessage('feedback positioning stopped')
+        elif self.controlMode == 'startupMode':
+            self.writeStatusMessage('%s stopped'%(self.startupMode,))
 
     def enableDisable_Callback(self):
         """
@@ -348,6 +364,13 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.clearRunFilePushButton.setEnabled(True)
             pathname, filename = os.path.split(filename)
             self.writeStatusMessage('run file loaded: %s'%(filename,))
+            runNumber_validator = QtGui.QIntValidator(
+                        0,
+                        self.runFileReader.number_of_runs-1,
+                        self.runNumberLineEdit,
+                        )
+            self.runNumberLineEdit.setValidator(runNumber_validator)
+            self.setRunNumber(0)
             if self.enabled:
                 self.controlGroupBoxSetEnabled(True,enable_only_checked=True)
 
@@ -358,6 +381,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.loadRunFilePushButton.setEnabled(True)
         self.clearRunFilePushButton.setEnabled(False)
         self.statusbar.showMessage('')
+        self.runNumberLineEdit.setText('')
 
 
     def populateRunTree(self):
@@ -453,6 +477,13 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         cursor = self.statusWindowTextEdit.textCursor()
         cursor.movePosition(QtGui.QTextCursor.End)
         self.statusWindowTextEdit.setTextCursor(cursor)
+
+    def setRunNumber(self,value):
+        """
+        Sets the current run number
+        """
+        self.runNumber = value
+        self.runNumberLineEdit.setText('%d'%(value,))
 
     def checkStartupMode(self):
         if not self.startupMode in ALLOWED_STARTUP_MODES:
