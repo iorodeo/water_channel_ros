@@ -1,4 +1,3 @@
-<launch>
-  <param name="watchdog_update_rate" type="double" value="10"/>
-  <node name="watchdog_pulse" pkg="safety" type="watchdog_pulse_node.py"/>
+<launch> 
+    <node name="watchdog_pulse" pkg="safety" type="watchdog_pulse_node.py" required="true"/>
 </launch>

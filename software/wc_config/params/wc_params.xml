@@ -4,4 +4,8 @@
     <param name="dist_upper_bound" type="double" value="5410"/>
     <param name="dist_lower_bound_min" type="double" value="100" />
     <param name="dist_upper_bound_max" type="double" value="35000" />
+
+    <!-- Watchdog Pulse parameters -->
+    <param name="watchdog_update_rate" type="double" value="10"/>
+
 </launch>

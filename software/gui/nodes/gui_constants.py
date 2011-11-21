@@ -1,3 +1,4 @@
+# Notes, may want to move these to the wc_params.xml file
 DEFAULT_START_POSITION=3.0
 DEFAULT_AUTORUN_CHECK=False
 DEFAULT_AUTORUN_DELAY = 5.0
