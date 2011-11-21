@@ -25,15 +25,21 @@ DEFAULT_JOYSTICK_MAX_VELOCITY = 1.0
 STATUS_WINDOW_BACKGROUND_COLOR = (40,40,40)
 STATUS_WINDOW_TEXT_COLOR = (255,140,0)
 
+ALLOWED_STARTUP_MODES = [
+        'captive trajectory',
+        'position trajectory',
+        'inertial sled',
+        ]
+
 # Messages
 from msg_and_srv.msg import DistMsg
 
 class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
 
-    def __init__(self,parent=None):
+    def __init__(self,startupMode,parent=None):
         super(SledControl_MainWindow,self).__init__(parent)
         self.setupUi(self)
-        self.initialize()
+        self.initialize(startupMode)
         self.connectActions()
         self.subscribeToROSMessages()
 
@@ -68,18 +74,20 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.positionLabel.setText(positionText)
         self.velocityLabel.setText(velocityText)
 
-    def initialize(self):
+    def initialize(self,startupMode):
         """
         Initialize the state of the GUI and system.
         """
+        
         self.lock = threading.Lock()
         self.enabled = False
         self.statusMessageCnt = 0
-        self.startupMode = 'captive trajectory'
+        self.startupMode = startupMode 
         self.controlMode = None
         self.runFileReader = None 
         self.modeSwitcher = ModeSwitcher()
 
+        self.checkStartupMode()
         self.writeStatusMessage('initializing')
 
         # Set text for mode group box - this will change based on startup mode 
@@ -263,6 +271,10 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.controlGroupBoxSetEnabled(False,uncheck_on_disable=False)
         if self.controlMode == 'joystick':
             self.modeSwitcher.enableJoystickMode()
+            self.writeStatusMessage('joystick positioning started')
+        elif self.controlMode == 'feedback':
+            self.writeStatusMessage('feedback positioning started')
+        
 
     def stop_Callback(self):
         """
@@ -274,6 +286,9 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.controlGroupBoxSetEnabled(True,enable_only_checked=True)
         if self.controlMode == 'joystick':
             self.modeSwitcher.disableJoystickMode()
+            self.writeStatusMessage('joystick positioning stopped')
+        elif self.controlMode == 'feedback':
+            self.writeStatusMessage('feedback positioning stopped')
 
     def enableDisable_Callback(self):
         """
@@ -309,17 +324,25 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         the runFileTreeWidget from the data in the selected run file using the populateRunTree
         method.
         """
-        print 'load run file'
+        # Try to load run file
         filename = QtGui.QFileDialog.getOpenFileName(None,'Select run file',self.lastRunFileDir)
-        success = True
         if filename:
             filename = str(filename)
             try:
                 self.runFileReader = HDF5_Run_Reader(filename)
             except h5py.h5e.LowLevelIOError, e:
-                success = False
-                
-        if success:
+                self.cleanUpRunFile()
+                self.writeStatusMessage('run file load failed: %s'%(str(e),))
+                return
+
+            # File has beed successfully loaded check that mode is compatible
+            runFileMode = self.runFileReader.get_mode()
+            if self.startupMode != runFileMode:
+                self.cleanUpRunFile()
+                self.writeStatusMessage('file incompatible: mode = %s'%(runFileMode,))
+                return
+
+            # Mode matches populate run tree
             self.populateRunTree()
             self.loadRunFilePushButton.setEnabled(False)
             self.clearRunFilePushButton.setEnabled(True)
@@ -327,13 +350,15 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.writeStatusMessage('run file loaded: %s'%(filename,))
             if self.enabled:
                 self.controlGroupBoxSetEnabled(True,enable_only_checked=True)
-        else:
-            self.runFileReader.close()
-            self.runFileReader = None
-            self.runTreeWidget.clear()
-            self.loadRunFilePushButton.setEnabled(True)
-            self.clearRunFilePushButton.setEnabled(False)
-            self.statusbar.showMessage('')
+
+    def cleanUpRunFile(self): 
+        self.runFileReader.close()
+        self.runFileReader = None
+        self.runTreeWidget.clear()
+        self.loadRunFilePushButton.setEnabled(True)
+        self.clearRunFilePushButton.setEnabled(False)
+        self.statusbar.showMessage('')
+
 
     def populateRunTree(self):
         """
@@ -380,13 +405,10 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             attrItem.setText(1,value)
 
     def clearRunFile_Callback(self):
-        print 'clear run file'
-        self.runFileReader.close()
-        self.runFileReader = None
-        self.runTreeWidget.clear()
-        self.loadRunFilePushButton.setEnabled(True)
-        self.clearRunFilePushButton.setEnabled(False)
-        self.statusbar.showMessage('')
+        """
+        Clear loaded run file.
+        """
+        self.cleanUpRunFile()
         self.writeStatusMessage('run file cleared')
         if self.enabled:
             self.controlGroupBoxSetEnabled(True,enable_only_checked=True)
@@ -432,6 +454,10 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         cursor.movePosition(QtGui.QTextCursor.End)
         self.statusWindowTextEdit.setTextCursor(cursor)
 
+    def checkStartupMode(self):
+        if not self.startupMode in ALLOWED_STARTUP_MODES:
+            raise ValueError, 'unknown startup mode: %s'%(self.startupMode,)
+
     def main(self):
         self.show()
         
@@ -439,7 +465,8 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
-    sledControl = SledControl_MainWindow()
+    startupMode = sys.argv[1]
+    sledControl = SledControl_MainWindow(startupMode)
     sledControl.main()
     rospy.init_node('gui')
     app.exec_()

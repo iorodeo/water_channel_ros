@@ -12,5 +12,7 @@
     <include file="$(find positioning)/launch/ramp_server.launch" />
     <include file="$(find data_loggers)/launch/captive_logger.launch" />
     <include file="$(find sled_io)/launch/sled_io.launch" />
-    <include file="$(find gui)/launch/gui.launch" />
+    <include file="$(find gui)/launch/gui.launch">
+        <arg name="startup_mode" value="'captive trajectory'" />
+    </include>
 </launch>

@@ -1,3 +1,4 @@
 <launch>
-  <node name="sled_control_GUI" pkg="gui" type="sled_control.py" required="true"/>
+  <arg name="startup_mode"/>
+  <node name="sled_control_GUI" pkg="gui" type="sled_control.py" args="$(arg startup_mode)" required="true"/>
 </launch>

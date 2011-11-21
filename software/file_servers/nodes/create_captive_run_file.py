@@ -15,7 +15,7 @@ num_runs = 10
 f = h5py.File(filename,'w')
 
 info_grp = f.create_group('/info')
-info_grp.attrs['mode'] = 'captive_trajectory'
+info_grp.attrs['mode'] = 'captive trajectory'
 info_grp.attrs['notes'] = 'blah, blah, blah, ...'
 
 for i in range(0,num_runs):
@@ -74,3 +74,4 @@ for i in range(0,num_runs):
                 maxshape=array_values.shape
                 ) 
         array_values_ds[:] = array_values 
+        array_values_ds.attrs['unit'] = 'us'
