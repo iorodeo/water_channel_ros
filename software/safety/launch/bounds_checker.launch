@@ -1,5 +1,3 @@
 <launch>
-  <param name="dist_lower_bound" type="double" value="800"/>
-  <param name="dist_upper_bound" type="double" value="5410"/>
   <node name="bounds_checker" pkg="safety" type="bounds_check_node.py"/>
 </launch>

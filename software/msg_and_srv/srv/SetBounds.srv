@@ -1,0 +1,4 @@
+float32 lower_bound
+float32 upper_bound
+---
+bool flag

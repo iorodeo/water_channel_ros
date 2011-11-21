@@ -1,0 +1,15 @@
+<package>
+  <description brief="wc_config">
+
+     wc_config
+
+  </description>
+  <author></author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/wc_config</url>
+  <depend package="rospy"/>
+
+</package>
+
+
