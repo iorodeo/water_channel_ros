@@ -20,8 +20,8 @@ class SetptSource(object):
         self.lock =  threading.Lock()
 
         # Setpt source parameters
-        self.vel_max = rospy.get_param("velocity_max",1000)
-        self.acc_max = rospy.get_param("acceleration_max",1000)
+        self.vel_max = rospy.get_param("velocity_max",1.000)
+        self.acc_max = rospy.get_param("acceleration_max",1.000)
         self.vel_setpt = 0
         self.vel_setpt_goal = 0
         self.pos_setpt = 0

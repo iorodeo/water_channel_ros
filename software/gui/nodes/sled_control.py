@@ -18,7 +18,7 @@ from PyQt4 import QtCore
 from PyQt4 import QtGui
 from sled_control_ui import Ui_SledControl_MainWindow
 from utilities import HDF5_Run_Reader
-from utilities import ModeSwitcher
+from utilities import RobotControl 
 from gui_constants import *
 
 
@@ -55,9 +55,6 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         with self.lock:
             position = data.distance_kalman
             velocity = data.velocity_kalman
-            position = 1.0e-3*position  # Convert position to meters
-            velocity = 1.0e-3*velocity  # Convert velocity to meters per second
-
             # I'm getting some weird occasional crash ... try explicitly calling QString 
             positionText = QtCore.QString('Position:  {0:1.3f} (m)'.format(position))
             velocityText = QtCore.QString('Velocity: {0:+1.3f} (m/s)'.format(velocity))
@@ -76,7 +73,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.startupMode = startupMode 
         self.controlMode = None
         self.runFileReader = None 
-        self.modeSwitcher = ModeSwitcher()
+        self.robotControl = RobotControl()
 
         self.writeStatusMessage('initializing')
         self.checkStartupMode()
@@ -100,7 +97,16 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         palette.setColor(QtGui.QPalette.Active, QtGui.QPalette.Text, textColor)
         self.statusWindowTextEdit.setPalette(palette)
 
-        # Set validators
+        # Get current upper and lower bound setting
+        bounds = self.robotControl.getBounds()
+        self.lowerBound, self.upperBound, self.lowerBoundMin, self.upperBoundMax = bounds
+        self.setBoundValidators()
+        self.lowerBoundLineEdit.setText('%1.2f'%(self.lowerBound,))
+        self.upperBoundLineEdit.setText('%1.2f'%(self.upperBound,))
+        self.lowerBoundMinLabel.setText('Lower Min: %s'%(self.lowerBoundMinStr,))
+        self.upperBoundMaxLabel.setText('Upper Max: %s'%(self.upperBoundMaxStr,))
+
+        # Set validator for joystick input
         maxVelValidator = QtGui.QIntValidator(1,100,self.joystickMaxVelocityLineEdit)
         self.joystickMaxVelocityLineEdit.setValidator(maxVelValidator)
 
@@ -145,6 +151,8 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.feedbackGroupBox.clicked.connect(self.feedbackCheck_Callback)
         self.startPushButton.clicked.connect(self.start_Callback)
         self.stopPushButton.clicked.connect(self.stop_Callback)
+        self.lowerBoundLineEdit.editingFinished.connect(self.lowerBoundChanged_Callback)
+        self.upperBoundLineEdit.editingFinished.connect(self.upperBoundChanged_Callback)
 
         # Actions for runs tab
         self.loadRunFilePushButton.clicked.connect(self.loadRunFile_Callback)
@@ -221,6 +229,91 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.writeStatusMessage('feedback positioning disabled')
             self.controlMode = None
 
+    def boundStr(self, value):
+        return '%1.2f'%(value,)
+
+    @property
+    def lowerBoundStr(self):
+        return self.boundStr(self.lowerBound,)
+
+    @property
+    def upperBoundStr(self):
+        return self.boundStr(self.upperBound,) 
+    
+    @property
+    def lowerBoundMinStr(self):
+        return self.boundStr(self.lowerBoundMin,)
+
+    @property
+    def upperBoundMaxStr(self):
+        return self.boundStr(self.upperBoundMax,)
+
+
+    def lowerBoundChanged_Callback(self):
+        """
+        Callback for changes to the lower bound line edit.
+        """
+        lowerBoundOld = self.lowerBound
+        lowerBoundNew = float(self.lowerBoundLineEdit.text())
+        flag = self.robotControl.setBounds(lowerBoundNew,self.upperBound)
+        if flag:
+            self.lowerBound = lowerBoundNew
+            self.setBoundValidators()
+            if lowerBoundNew != lowerBoundOld:
+                msg = 'lower bound changed to %s m'%(self.lowerBoundStr,)
+                self.writeStatusMessage(msg)
+        else:
+            msg = 'setting lower bound failed'
+            self.writeStatusMessage(msg)
+        self.lowerBoundLineEdit.setText('%s'%(self.lowerBoundStr,))
+            
+    def upperBoundChanged_Callback(self):
+        """
+        Callback for changes to the upper bound line edit.
+        """
+        upperBoundOld = self.upperBound
+        upperBoundNew = float(self.upperBoundLineEdit.text())
+        flag = self.robotControl.setBounds(self.lowerBound,upperBoundNew)
+        if flag:
+            self.upperBound = upperBoundNew
+            self.setBoundValidators()
+            if upperBoundNew != upperBoundOld:
+                msg = 'upper bound changed to %s m'%(self.upperBoundStr,)
+                self.writeStatusMessage(msg)
+        else:
+            msg = 'setting upper bound failed'
+            self.writeStatusMessage(msg)
+        self.upperBoundLineEdit.setText('%s'%(self.upperBoundStr,))
+
+    def setBoundValidators(self):
+        """
+        Set validators for upper and lower bound line entries
+        """
+        lowerBoundValidator = QtGui.QDoubleValidator(self.lowerBoundLineEdit)
+        lowerBoundValidator.setRange(self.lowerBoundMin, self.upperBound, 2)
+        lowerBoundValidator.fixup = self.lowerBoundFixup
+        self.lowerBoundLineEdit.setValidator(lowerBoundValidator)
+
+        upperBoundValidator = QtGui.QDoubleValidator(self.upperBoundLineEdit)
+        upperBoundValidator.setRange(self.lowerBound, self.upperBoundMax, 2)
+        upperBoundValidator.fixup = self.upperBoundFixup
+        self.upperBoundLineEdit.setValidator(upperBoundValidator)
+
+    def lowerBoundFixup(self,value):
+        """
+        Fixup function for position lower bounds line edit entry. 
+        """
+        value = float(value)
+        if value == self.lowerBoundMin:
+            self.lowerBound = value
+        self.lowerBoundLineEdit.setText('%s'%(self.lowerBoundStr,))
+        
+    def upperBoundFixup(self,value):
+        """
+        Fixup function for position upper bound line edit enty.
+        """
+        self.upperBoundLineEdit.setText('%s'%(self.upperBoundStr,))
+
     def controlGroupBoxSetEnabled(self,value,uncheck_on_disable=True,enable_only_checked=False):
         """
         Enable/Disable the group boxes on the control tab. If uncheck_on_disable is True than
@@ -278,12 +371,11 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         """
         Callback for when the start button on the Control tab is clicked.
         """
-        print 'start run'
         self.stopPushButton.setEnabled(True)
         self.startPushButton.setEnabled(False)
         self.controlGroupBoxSetEnabled(False,uncheck_on_disable=False)
         if self.controlMode == 'joystick':
-            self.modeSwitcher.enableJoystickMode()
+            self.robotControl.enableJoystickMode()
             self.writeStatusMessage('joystick positioning started')
         elif self.controlMode == 'feedback':
             self.writeStatusMessage('feedback positioning started')
@@ -294,12 +386,11 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         """
         Callback for when the stop button in the Control tab is clicked.
         """
-        print 'stop'
         self.startPushButton.setEnabled(True)
         self.stopPushButton.setEnabled(False)
         self.controlGroupBoxSetEnabled(True,enable_only_checked=True)
         if self.controlMode == 'joystick':
-            self.modeSwitcher.disableJoystickMode()
+            self.robotControl.disableJoystickMode()
             self.writeStatusMessage('joystick positioning stopped')
         elif self.controlMode == 'feedback':
             self.writeStatusMessage('feedback positioning stopped')
@@ -311,10 +402,10 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         Callback for when the enable/disable button is clicked.
         """
         if self.enabled:
-            self.modeSwitcher.disableSledIO()
+            self.robotControl.disableSledIO()
             self.enabled = False
         else:
-            self.modeSwitcher.enableSledIO()
+            self.robotControl.enableSledIO()
             self.enabled = True
         self.updateUIEnabledDisabled()
 
@@ -477,6 +568,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         cursor = self.statusWindowTextEdit.textCursor()
         cursor.movePosition(QtGui.QTextCursor.End)
         self.statusWindowTextEdit.setTextCursor(cursor)
+
 
     def setRunNumber(self,value):
         """

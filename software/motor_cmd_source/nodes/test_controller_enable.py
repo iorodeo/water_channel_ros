@@ -16,7 +16,7 @@ def node_enable(value):
         resp = enable_cmd(value)
         print resp
     except rospy.ServiceException, e:
-        print 'Service call failed: %s'%(e,)
+        print 'Service call failed: %s'%(str(e),)
 
 if __name__ == '__main__':
 

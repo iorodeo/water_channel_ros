@@ -11,6 +11,8 @@ from msg_and_srv.srv import DistSensorCtlResponse
 from distance_sensor_118x import DistanceSensor
 import filters
 
+MM2M = 1.0e-3
+
 class DistSensorNode(object):
 
     def __init__(self, scale_factor=1000.0,port='/dev/USB_Distance'):
@@ -27,7 +29,7 @@ class DistSensorNode(object):
         if self.fakeit == False:
             self.dev = DistanceSensor(port) 
             self.dev.open()
-            self.dev.setScaleFactor(scale_factor)
+            self.dev.setScaleFactor(scale_factor) 
             self.dev.laserOn()
         self.laserOn = True
 
@@ -74,9 +76,9 @@ class DistSensorNode(object):
                 if self.laserOn == True:
                     try:
                         if self.fakeit == False:
-                            value = self.dev.readSample(convert='float')
+                            value = MM2M*self.dev.readSample(convert='float')
                         else:
-                            value = random.normalvariate(1000,2.0) 
+                            value = random.normalvariate(1.0,2.0) 
                             rospy.sleep(1.0/50.0)
                     except:
                         value = None

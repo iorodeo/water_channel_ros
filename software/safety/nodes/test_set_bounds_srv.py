@@ -26,8 +26,8 @@ if __name__ == '__main__':
     print 
 
     print 'set bounds to new values'
-    new_lower_bound = 500
-    new_upper_bound = 6000
+    new_lower_bound = 5.0
+    new_upper_bound = 6.0
     response = set_bounds(new_lower_bound,new_upper_bound)
     new_bounds = get_bounds()
     print 'set bounds reponse:', response
