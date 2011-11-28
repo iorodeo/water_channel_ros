@@ -65,6 +65,7 @@ class BoundsChecker(object):
         """
         Change the current bounds settings.
         """
+        response = False
         with self.lock:
             # Check bounds
             bounds_ok = True 
@@ -80,8 +81,7 @@ class BoundsChecker(object):
                 self.lower_bound = req.lower_bound
                 self.upper_bound = req.upper_bound
                 response = True
-            else:
-                response = False
+
         return SetBoundsResponse(response)
 
     def dist_callback(self,data):

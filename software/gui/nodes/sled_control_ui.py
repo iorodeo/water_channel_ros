@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'sled_control.ui'
 #
-# Created: Sat Nov 26 18:30:23 2011
+# Created: Sun Nov 27 19:49:56 2011
 #      by: PyQt4 UI code generator 4.7.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -12,7 +12,7 @@ from PyQt4 import QtCore, QtGui
 class Ui_SledControl_MainWindow(object):
     def setupUi(self, SledControl_MainWindow):
         SledControl_MainWindow.setObjectName("SledControl_MainWindow")
-        SledControl_MainWindow.resize(933, 745)
+        SledControl_MainWindow.resize(961, 746)
         self.centralwidget = QtGui.QWidget(SledControl_MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.verticalLayout_11 = QtGui.QVBoxLayout(self.centralwidget)
@@ -20,8 +20,10 @@ class Ui_SledControl_MainWindow(object):
         self.widget_6 = QtGui.QWidget(self.centralwidget)
         self.widget_6.setObjectName("widget_6")
         self.horizontalLayout_7 = QtGui.QHBoxLayout(self.widget_6)
+        self.horizontalLayout_7.setContentsMargins(-1, -1, -1, 0)
         self.horizontalLayout_7.setObjectName("horizontalLayout_7")
         self.widget_7 = QtGui.QWidget(self.widget_6)
+        self.widget_7.setEnabled(True)
         self.widget_7.setObjectName("widget_7")
         self.verticalLayout_9 = QtGui.QVBoxLayout(self.widget_7)
         self.verticalLayout_9.setObjectName("verticalLayout_9")
@@ -128,15 +130,15 @@ class Ui_SledControl_MainWindow(object):
         self.label_2 = QtGui.QLabel(self.widget)
         self.label_2.setObjectName("label_2")
         self.horizontalLayout.addWidget(self.label_2)
-        self.joystickMaxVelocityLineEdit = QtGui.QLineEdit(self.widget)
+        self.joystickMaxVeloLineEdit = QtGui.QLineEdit(self.widget)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.joystickMaxVelocityLineEdit.sizePolicy().hasHeightForWidth())
-        self.joystickMaxVelocityLineEdit.setSizePolicy(sizePolicy)
-        self.joystickMaxVelocityLineEdit.setMaximumSize(QtCore.QSize(70, 16777215))
-        self.joystickMaxVelocityLineEdit.setObjectName("joystickMaxVelocityLineEdit")
-        self.horizontalLayout.addWidget(self.joystickMaxVelocityLineEdit)
+        sizePolicy.setHeightForWidth(self.joystickMaxVeloLineEdit.sizePolicy().hasHeightForWidth())
+        self.joystickMaxVeloLineEdit.setSizePolicy(sizePolicy)
+        self.joystickMaxVeloLineEdit.setMaximumSize(QtCore.QSize(70, 16777215))
+        self.joystickMaxVeloLineEdit.setObjectName("joystickMaxVeloLineEdit")
+        self.horizontalLayout.addWidget(self.joystickMaxVeloLineEdit)
         self.label_7 = QtGui.QLabel(self.widget)
         self.label_7.setObjectName("label_7")
         self.horizontalLayout.addWidget(self.label_7)
@@ -245,6 +247,16 @@ class Ui_SledControl_MainWindow(object):
         self.verticalLayout_6.addWidget(self.positionBoundsGroupBox)
         spacerItem13 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         self.verticalLayout_6.addItem(spacerItem13)
+        self.line_4 = QtGui.QFrame(self.controlTab)
+        self.line_4.setFrameShape(QtGui.QFrame.HLine)
+        self.line_4.setFrameShadow(QtGui.QFrame.Sunken)
+        self.line_4.setObjectName("line_4")
+        self.verticalLayout_6.addWidget(self.line_4)
+        self.progressBar = QtGui.QProgressBar(self.controlTab)
+        self.progressBar.setMaximumSize(QtCore.QSize(16777215, 15))
+        self.progressBar.setProperty("value", 0)
+        self.progressBar.setObjectName("progressBar")
+        self.verticalLayout_6.addWidget(self.progressBar)
         self.widget_3 = QtGui.QWidget(self.controlTab)
         self.widget_3.setObjectName("widget_3")
         self.horizontalLayout_2 = QtGui.QHBoxLayout(self.widget_3)
@@ -433,7 +445,7 @@ class Ui_SledControl_MainWindow(object):
         self.verticalLayout_11.addWidget(self.widget_6)
         SledControl_MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(SledControl_MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 933, 25))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 961, 25))
         self.menubar.setObjectName("menubar")
         SledControl_MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtGui.QStatusBar(SledControl_MainWindow)

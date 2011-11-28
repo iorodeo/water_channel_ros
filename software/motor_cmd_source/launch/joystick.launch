@@ -1,5 +1,4 @@
 <launch>
-  <param name="motor_cmd_max_value" type="double" value="1000"/>
   <node name="joy_node" pkg="joy" type="joy_node"/>
   <node name="motor_cmd_source" pkg="motor_cmd_source" type="motor_cmd_joystick_source.py"/>
 </launch>

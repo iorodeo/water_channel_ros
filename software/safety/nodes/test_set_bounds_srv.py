@@ -19,6 +19,7 @@ def set_bounds(lower_bound,upper_bound):
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':
 
+    print
     print 'get original bounds'
     orig_bounds = get_bounds()
     print 'original bounds:'

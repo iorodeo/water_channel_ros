@@ -33,11 +33,22 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.initialize(startupMode)
         self.connectActions()
         self.subscribeToROSMessages()
+        self.setupIOModeCheckTimer()
 
     def resizeEvent(self,event):
         super(SledControl_MainWindow,self).resizeEvent(event)
 
     def closeEvent(self,event):
+        #######################################################################
+        #
+        # TODO ....
+        # Put robot into know state ... e.g. disable sled io, current mode, etc.
+        # prior to shutdown of gui. 
+        # 
+        ########################################################################
+        self.disableRobotControlMode()
+        self.ioModeCheckTimer.stop()
+
         rospy.signal_shutdown('gui closed')
         event.accept()
 
@@ -61,6 +72,32 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
 
         self.positionLabel.setText(positionText)
         self.velocityLabel.setText(velocityText)
+
+    def setupIOModeCheckTimer(self):
+        """
+        Setup timer which is used to check the whether or not the sled io mode has changed
+        - for example when the sled has gone out of bounds etc. This timer is started when
+        the sled io is enabled and stoped when the sled io is stopped.
+        """
+        self.ioModeCheckTimer = QtCore.QTimer(self)
+        self.ioModeCheckTimer.setInterval(IO_MODE_CHECK_TIMER_DT)
+        self.ioModeCheckTimer.timeout.connect(self.ioModeCheckTimer_Callback)
+
+    def ioModeCheckTimer_Callback(self,):
+        """
+        When this timer is running sled io should always be enabled. If it is not something
+        has happed - like going past the current bounds settings. In which case we need to 
+        disable the gui etc. 
+        """
+        sled_io_enabled = self.robotControl.isSledIOEnabled()
+        if not sled_io_enabled:
+            self.ioModeCheckTimer.stop()
+            self.writeStatusMessage('external disable event')
+            self.disableRobotControlMode()
+            self.enabled = False
+            self.controlMode = None
+            self.controlGroupBoxSetEnabled(False)       
+            self.updateUIEnabledDisabled()
 
     def initialize(self,startupMode):
         """
@@ -97,27 +134,29 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         palette.setColor(QtGui.QPalette.Active, QtGui.QPalette.Text, textColor)
         self.statusWindowTextEdit.setPalette(palette)
 
-        # Get current upper and lower bound setting
+        # Get current upper and lower bound settings
         bounds = self.robotControl.getBounds()
         self.lowerBound, self.upperBound, self.lowerBoundMin, self.upperBoundMax = bounds
+        
+        # Create bound validators and set text values
         self.setBoundValidators()
         self.lowerBoundLineEdit.setText('%1.2f'%(self.lowerBound,))
         self.upperBoundLineEdit.setText('%1.2f'%(self.upperBound,))
         self.lowerBoundMinLabel.setText('Lower Min: %s'%(self.lowerBoundMinStr,))
         self.upperBoundMaxLabel.setText('Upper Max: %s'%(self.upperBoundMaxStr,))
 
-        # Set validator for joystick input
-        maxVelValidator = QtGui.QIntValidator(1,100,self.joystickMaxVelocityLineEdit)
-        self.joystickMaxVelocityLineEdit.setValidator(maxVelValidator)
+        # Get current joystick max velocity setting, create validator and set line edit
+        self.joystickMaxVelo = int(self.robotControl.getJoystickMaxVelo())
+        maxVelValidator = QtGui.QIntValidator(1,100,self.joystickMaxVeloLineEdit)
+        self.joystickMaxVeloLineEdit.setValidator(maxVelValidator)
+        self.joystickMaxVeloLineEdit.setText('%d'%(self.joystickMaxVelo,))
 
         # Set default autorun delay and max velocity
         self.autorunDelay = DEFAULT_AUTORUN_DELAY
-        self.joystickMaxVelocity = DEFAULT_JOYSTICK_MAX_VELOCITY
         self.autorun = DEFAULT_AUTORUN_CHECK
         self.startPosition = DEFAULT_START_POSITION
         self.runNumber = None
         self.autorunDelayLineEdit.setText('%1.2f'%(DEFAULT_AUTORUN_DELAY,))
-        self.joystickMaxVelocityLineEdit.setText('%d'%(DEFAULT_JOYSTICK_MAX_VELOCITY,))
         self.autorunCheckBox.setChecked(DEFAULT_AUTORUN_CHECK)
         self.startPositionLineEdit.setText('%1.3f'%(DEFAULT_START_POSITION,))
 
@@ -135,7 +174,9 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.runTreeWidget.setColumnCount(2) 
         self.runTreeWidget.setHeaderLabels(['name', 'type/value'])
         self.statusbar.showMessage('')
-
+        
+        self.progressBar.setValue(0)
+        self.progressBar.setVisible(False)
 
     def connectActions(self):
         """
@@ -153,6 +194,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.stopPushButton.clicked.connect(self.stop_Callback)
         self.lowerBoundLineEdit.editingFinished.connect(self.lowerBoundChanged_Callback)
         self.upperBoundLineEdit.editingFinished.connect(self.upperBoundChanged_Callback)
+        self.joystickMaxVeloLineEdit.editingFinished.connect(self.joystickMaxVeloChanged_Callback)
 
         # Actions for runs tab
         self.loadRunFilePushButton.clicked.connect(self.loadRunFile_Callback)
@@ -212,6 +254,26 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.writeStatusMessage('joystick positioning disabled')
             self.controlMode = None
 
+    def joystickMaxVeloChanged_Callback(self):
+        """
+        Callback function for when joystick positioning mode max velocity
+        line edit. 
+        """
+        joystickMaxVeloNew = self.joystickMaxVeloLineEdit.text()
+        joystickMaxVeloNew = float(joystickMaxVeloNew)
+        joystickMaxVeloOld = self.joystickMaxVelo
+        if joystickMaxVeloNew != joystickMaxVeloOld:
+            flag = self.robotControl.setJoystickMaxVelo(joystickMaxVeloNew)
+            if flag:
+                # Value set succefully
+                self.joystickMaxVelo = joystickMaxVeloNew
+                msg = 'joystick max velocity set to %d'%(int(joystickMaxVeloNew),)
+                self.writeStatusMessage(msg)
+            else:
+                # Value set failed.
+                msg = 'setting joystick max velocity failed'
+                self.writeStatusMessage(msg)
+
     def feedbackCheck_Callback(self,checkValue):
         """
         Callback for the checkbox of the feedbackGroupBox. This is called when the user
@@ -255,16 +317,19 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         """
         lowerBoundOld = self.lowerBound
         lowerBoundNew = float(self.lowerBoundLineEdit.text())
-        flag = self.robotControl.setBounds(lowerBoundNew,self.upperBound)
-        if flag:
-            self.lowerBound = lowerBoundNew
-            self.setBoundValidators()
-            if lowerBoundNew != lowerBoundOld:
-                msg = 'lower bound changed to %s m'%(self.lowerBoundStr,)
+        if lowerBoundNew != lowerBoundOld:
+            flag = self.robotControl.setBounds(lowerBoundNew,self.upperBound)
+            if flag:
+                # Value set successfully
+                self.lowerBound = lowerBoundNew
+                self.setBoundValidators()
+                if lowerBoundNew != lowerBoundOld:
+                    msg = 'lower bound changed to %s m'%(self.lowerBoundStr,)
+                    self.writeStatusMessage(msg)
+            else:
+                # Value set failed
+                msg = 'setting lower bound failed'
                 self.writeStatusMessage(msg)
-        else:
-            msg = 'setting lower bound failed'
-            self.writeStatusMessage(msg)
         self.lowerBoundLineEdit.setText('%s'%(self.lowerBoundStr,))
             
     def upperBoundChanged_Callback(self):
@@ -273,16 +338,19 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         """
         upperBoundOld = self.upperBound
         upperBoundNew = float(self.upperBoundLineEdit.text())
-        flag = self.robotControl.setBounds(self.lowerBound,upperBoundNew)
-        if flag:
-            self.upperBound = upperBoundNew
-            self.setBoundValidators()
-            if upperBoundNew != upperBoundOld:
-                msg = 'upper bound changed to %s m'%(self.upperBoundStr,)
+        if upperBoundNew != upperBoundOld:
+            flag = self.robotControl.setBounds(self.lowerBound,upperBoundNew)
+            if flag:
+                # Value set successfully
+                self.upperBound = upperBoundNew
+                self.setBoundValidators()
+                if upperBoundNew != upperBoundOld:
+                    msg = 'upper bound changed to %s m'%(self.upperBoundStr,)
+                    self.writeStatusMessage(msg)
+            else:
+                # Value set failed
+                msg = 'setting upper bound failed'
                 self.writeStatusMessage(msg)
-        else:
-            msg = 'setting upper bound failed'
-            self.writeStatusMessage(msg)
         self.upperBoundLineEdit.setText('%s'%(self.upperBoundStr,))
 
     def setBoundValidators(self):
@@ -321,7 +389,6 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         only groupBoxes which are checked will be enabled.
         """
         if value and enable_only_checked and self.isControlGroupBoxChecked():
-            self.positionBoundsGroupBox.setEnabled(True)
             if self.joystickGroupBox.isChecked():
                 self.joystickGroupBox.setEnabled(True)
             if self.feedbackGroupBox.isChecked():
@@ -344,7 +411,6 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
                 self.modeGroupBox.setEnabled(False)
             self.joystickGroupBox.setEnabled(value)
             self.feedbackGroupBox.setEnabled(value)
-            self.positionBoundsGroupBox.setEnabled(value)
 
         if not value and uncheck_on_disable:
             self.controlGroupBoxSetChecked(False)
@@ -373,14 +439,9 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         """
         self.stopPushButton.setEnabled(True)
         self.startPushButton.setEnabled(False)
+        self.positionBoundsGroupBox.setEnabled(False)
         self.controlGroupBoxSetEnabled(False,uncheck_on_disable=False)
-        if self.controlMode == 'joystick':
-            self.robotControl.enableJoystickMode()
-            self.writeStatusMessage('joystick positioning started')
-        elif self.controlMode == 'feedback':
-            self.writeStatusMessage('feedback positioning started')
-        elif self.controlMode == 'startupMode':
-            self.writeStatusMessage('%s started'%(self.startupMode,))
+        self.enableRobotControlMode()
         
     def stop_Callback(self):
         """
@@ -388,24 +449,51 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         """
         self.startPushButton.setEnabled(True)
         self.stopPushButton.setEnabled(False)
+        self.positionBoundsGroupBox.setEnabled(True)
         self.controlGroupBoxSetEnabled(True,enable_only_checked=True)
+        self.disableRobotControlMode()
+
+    def enableRobotControlMode(self):
+        """
+        Enable current control mode via roboControl
+        """
+        if self.controlMode == 'joystick':
+            self.robotControl.enableJoystickMode()
+            self.writeStatusMessage('joystick positioning started')
+        elif self.controlMode == 'feedback':
+            self.writeStatusMessage('feedback positioning started')
+            self.progressBar.setVisible(True)
+        elif self.controlMode == 'startupMode':
+            self.writeStatusMessage('%s started'%(self.startupMode,))
+            self.progressBar.setVisible(True)
+
+    def disableRobotControlMode(self):
+        """
+        Disable current control mode via robotControl
+        """
         if self.controlMode == 'joystick':
             self.robotControl.disableJoystickMode()
             self.writeStatusMessage('joystick positioning stopped')
         elif self.controlMode == 'feedback':
             self.writeStatusMessage('feedback positioning stopped')
+            self.progressBar.setVisible(False)
         elif self.controlMode == 'startupMode':
             self.writeStatusMessage('%s stopped'%(self.startupMode,))
+            self.progressBar.setVisible(False)
 
     def enableDisable_Callback(self):
         """
-        Callback for when the enable/disable button is clicked.
+        Callback for when the enable/disable button is clicked.  Enables sled
+        IO by putting the sled_io_node into motor command mode. Disables sled
+        IO by puttin the seld_io_nod into off mode. 
         """
         if self.enabled:
             self.robotControl.disableSledIO()
+            self.ioModeCheckTimer.stop()
             self.enabled = False
         else:
             self.robotControl.enableSledIO()
+            self.ioModeCheckTimer.start()
             self.enabled = True
         self.updateUIEnabledDisabled()
 
@@ -424,6 +512,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.startPushButton.setEnabled(False)
             self.stopPushButton.setEnabled(False)
             self.controlGroupBoxSetEnabled(False)
+            self.positionBoundsGroupBox.setEnabled(True)
 
     def loadRunFile_Callback(self):
         """

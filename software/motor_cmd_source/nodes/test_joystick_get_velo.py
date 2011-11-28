@@ -20,7 +20,9 @@ def get_max_velo():
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':
     value = get_max_velo()
-    print value
+    print 
+    print 'joystick max velo:', value
+    print
 
 
 
