@@ -40,7 +40,7 @@ class ActuatorActionServer(object):
         count = len(goal.actuator_array)
         secs_to_completion = count*self.dt
 
-        for value in goal.actuator_array:
+        for i, value in enumerate(goal.actuator_array):
 
             # Publish actuator message
             self.actuator_msg.header.stamp = rospy.get_rostime()
@@ -50,7 +50,9 @@ class ActuatorActionServer(object):
 
             # Publish feedback
             secs_to_completion -= self.dt
+            percent_complete = 100*i/count
             self.feedback.secs_to_completion = secs_to_completion
+            self.feedback.percent_complete = percent_complete
             self.server.publish_feedback(self.feedback)
 
             self.value_final = value 

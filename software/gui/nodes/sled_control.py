@@ -14,6 +14,8 @@ import threading
 import time
 import sys
 import h5py
+import Queue
+import numpy
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 from sled_control_ui import Ui_SledControl_MainWindow
@@ -22,56 +24,82 @@ from utilities import RobotControl
 from gui_constants import *
 
 
-# Messages
-from msg_and_srv.msg import DistMsg
-
 class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
+    """
+    Main control GUI for the water channel sled control software.
+    """
 
     def __init__(self,startupMode,parent=None):
         super(SledControl_MainWindow,self).__init__(parent)
         self.setupUi(self)
         self.initialize(startupMode)
         self.connectActions()
-        self.subscribeToROSMessages()
-        self.setupIOModeCheckTimer()
+        self.setupTimers()
 
     def resizeEvent(self,event):
+        """
+        Window resize event. 
+        """
         super(SledControl_MainWindow,self).resizeEvent(event)
 
     def closeEvent(self,event):
-        #######################################################################
-        #
-        # TODO ....
-        # Put robot into know state ... e.g. disable sled io, current mode, etc.
-        # prior to shutdown of gui. 
-        # 
-        ########################################################################
+        """
+        Close event handler. Put robot into know state - e.g. disable sled io, 
+        current node, etc. prior to shutdown of GUI.
+        """
         self.disableRobotControlMode()
         self.ioModeCheckTimer.stop()
-
         rospy.signal_shutdown('gui closed')
         event.accept()
 
-    def subscribeToROSMessages(self):
+    def setupTimers(self):
         """
-        Subscribe to ROS messages
+        Setup timers used by the GUI
         """
-        self.distSubscriber = rospy.Subscriber('distance', DistMsg, self.distMsg_Handler)
+        self.setupDistVeloMsgTimer()
+        self.setupProgressBarTimer()
+        self.setupIOModeCheckTimer()
+        self.setupStatusMessageTimer()
+        self.setupOutscanMonitorTimer()
 
-    def distMsg_Handler(self,data):
+    def setupDistVeloMsgTimer(self):
         """
-        Handler for messages from the distance sensor. Displays the current position and 
-        velocity in the labels of the right hand side of the GUI.
+        Setup timer for updating distance and velocity messages.
         """
-        with self.lock:
-            position = data.distance_kalman
-            velocity = data.velocity_kalman
-            # I'm getting some weird occasional crash ... try explicitly calling QString 
+        self.distVeloMsgTimer = QtCore.QTimer(self)
+        self.distVeloMsgTimer.setInterval(DIST_VELO_MSG_TIMER_DT)
+        self.distVeloMsgTimer.timeout.connect(self.distVeloMsgTimer_Callback)
+        self.distVeloMsgTimer.start()
+
+    def distVeloMsgTimer_Callback(self):
+        """
+        Updates distance and velocity labels using data from the roboControl object.
+        """
+        position = self.robotControl.position
+        velocity = self.robotControl.velocity
+        if position is not None:
             positionText = QtCore.QString('Position:  {0:1.3f} (m)'.format(position))
             velocityText = QtCore.QString('Velocity: {0:+1.3f} (m/s)'.format(velocity))
-
+        else:
+            positionText = QtCore.QString('Position: None')
+            velocityText = QtCore.QString('Velocity: None')
         self.positionLabel.setText(positionText)
         self.velocityLabel.setText(velocityText)
+
+    def setupProgressBarTimer(self):
+        """
+        Setup timer for updating the progress bar for outscan progress
+        """
+        self.progressBarTimer = QtCore.QTimer(self)
+        self.progressBarTimer.setInterval(PROGRESS_BAR_TIMER_DT)
+        self.progressBarTimer.timeout.connect(self.progressBarTimer_Callback)
+        self.progressBarTimer.start()
+
+    def progressBarTimer_Callback(self):
+        """
+        Updates the progress bar based on the outscanPercentComplete value.
+        """
+        self.progressBar.setValue(self.outscanPercentComplete)
 
     def setupIOModeCheckTimer(self):
         """
@@ -83,7 +111,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.ioModeCheckTimer.setInterval(IO_MODE_CHECK_TIMER_DT)
         self.ioModeCheckTimer.timeout.connect(self.ioModeCheckTimer_Callback)
 
-    def ioModeCheckTimer_Callback(self,):
+    def ioModeCheckTimer_Callback(self):
         """
         When this timer is running sled io should always be enabled. If it is not something
         has happed - like going past the current bounds settings. In which case we need to 
@@ -99,6 +127,51 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.controlGroupBoxSetEnabled(False)       
             self.updateUIEnabledDisabled()
 
+    def setupStatusMessageTimer(self):
+        """
+        Setup status message timer which is used to  any messages in the statusMessageQueue.
+        The status message queue is used for writing messages to the GUI from other threads.
+        I wasn't sure how safe it was to access the Qt stuff from outside the main GUI thread 
+        so I decided this queueing approach instead. 
+        """
+        self.statusMessageTimer = QtCore.QTimer(self)
+        self.statusMessageTimer.setInterval(STATUS_MESSAGE_TIMER_DT)
+        self.statusMessageTimer.timeout.connect(self.statusMessageTimer_Callback)
+        self.statusMessageTimer.start()
+
+    def statusMessageTimer_Callback(self):
+        """
+        Writes any messages in the statusMessageQueue to the status message window.
+        """
+        try:
+            message = self.statusMessageQueue.get(False)
+            self.writeStatusMessage(message)
+        except Queue.Empty:
+            pass
+
+    def setupOutscanMonitorTimer(self):
+        """
+        Setup outscan monitor timer. This timer is used to monitor the outscanInProgress
+        variable to determine when an outscan has completed.
+        """
+        self.outscanMonitorTimer = QtCore.QTimer(self)
+        self.outscanMonitorTimer.setInterval(OUTSCAN_MONITOR_TIMER_DT)
+        self.outscanMonitorTimer.timeout.connect(self.outscanMonitorTimer_Callback)
+        self.outscanMonitorTimer.start()
+
+    def outscanMonitorTimer_Callback(self):
+        """
+        Updates the GUI state based on the value of the outscanStopSignal. 
+        """
+        if self.enabled:
+            with self.lock:
+                if self.outscanStopSignal:
+                    stop = True
+                else:
+                    stop = False
+            if stop:
+                self.outscanStopActions()
+
     def initialize(self,startupMode):
         """
         Initialize the state of the GUI and system.
@@ -107,9 +180,20 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.lock = threading.Lock()
         self.enabled = False
         self.statusMessageCnt = 0
+        self.statusMessageQueue = Queue.Queue()
         self.startupMode = startupMode 
         self.controlMode = None
         self.runFileReader = None 
+        self.outscanPercentComplete = 0
+        self.outscanInProgress = False
+        self.outscanStopSignal = False
+        self.autorunDelay = int(DEFAULT_AUTORUN_DELAY)
+        self.startPosition = DEFAULT_START_POSITION
+        self.runNumber = None
+        self.updateAutorun(DEFAULT_AUTORUN_CHECK)
+
+        # Start ros node and initialize robot control
+        rospy.init_node('gui')
         self.robotControl = RobotControl()
 
         self.writeStatusMessage('initializing')
@@ -151,14 +235,19 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.joystickMaxVeloLineEdit.setValidator(maxVelValidator)
         self.joystickMaxVeloLineEdit.setText('%d'%(self.joystickMaxVelo,))
 
-        # Set default autorun delay and max velocity
-        self.autorunDelay = DEFAULT_AUTORUN_DELAY
-        self.autorun = DEFAULT_AUTORUN_CHECK
-        self.startPosition = DEFAULT_START_POSITION
-        self.runNumber = None
-        self.autorunDelayLineEdit.setText('%1.2f'%(DEFAULT_AUTORUN_DELAY,))
-        self.autorunCheckBox.setChecked(DEFAULT_AUTORUN_CHECK)
-        self.startPositionLineEdit.setText('%1.3f'%(DEFAULT_START_POSITION,))
+        # Set  autorun delay validator and line edit text 
+        autorunDelayValidator = QtGui.QIntValidator(
+                MIN_AUTORUN_DELAY,
+                MAX_AUTORUN_DELAY,
+                self.autorunDelayLineEdit,
+                )
+        self.autorunDelayLineEdit.setValidator(autorunDelayValidator)
+        self.autorunDelayLineEdit.setText('%d'%(self.autorunDelay,))
+
+        # Set start position validator and line edit text
+        self.setStartPositionValidator()
+        #self.startPositionLineEdit.setText('%1.3f'%(DEFAULT_START_POSITION,))
+        self.startPositionLineEdit.setText('%s'%(self.startPositionStr,))
 
         # Enable/Disable appropriate widgets based on enabled state
         self.updateUIEnabledDisabled()
@@ -178,6 +267,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.progressBar.setValue(0)
         self.progressBar.setVisible(False)
 
+
     def connectActions(self):
         """
         Connects events to the appropriate callback functions.
@@ -188,6 +278,10 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         # Actions for Controls tab
         self.modeGroupBox.clicked.connect(self.modeCheck_Callback)
         self.autorunCheckBox.stateChanged.connect(self.autorunCheckBox_Callback)
+        self.runNumberLineEdit.editingFinished.connect(self.runNumberChanged_Callback)
+        self.startPositionLineEdit.editingFinished.connect(self.startPositionChanged_Callback)
+        self.autorunDelayLineEdit.editingFinished.connect(self.autorunDelayChanged_Callback)
+        
         self.joystickGroupBox.clicked.connect(self.joystickCheck_Callback)
         self.feedbackGroupBox.clicked.connect(self.feedbackCheck_Callback)
         self.startPushButton.clicked.connect(self.start_Callback)
@@ -233,9 +327,74 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         Callback for he autorun check box. Turns on/off the autorun feature.  
         """
         if checkValue == QtCore.Qt.Checked:
-            print 'autorun checked'
+            self.autorun = True
+            self.writeStatusMessage('autorun enabled')
         else:
-            print 'autorun unchecked'
+            self.autorun = False
+            self.writeStatusMessage('autorun disabled')
+
+    def updateAutorun(self,value):
+        """
+        Updates autorun value and checkbox.
+        """
+        self.autorun = value
+        self.autorunCheckBox.setChecked(value)
+
+    def runNumberChanged_Callback(self):
+        """
+        Callback for updating changes to the run number
+        """
+        runNumberNew = self.runNumberLineEdit.text()
+        runNumberNew = int(runNumberNew)
+        if runNumberNew != self.runNumber:
+            self.runNumber = runNumberNew
+            self.writeStatusMessage('run number set to %d'%(self.runNumber,))
+
+    @property
+    def startPositionStr(self):
+        """
+        Provides a string representation for the start position
+        """
+        return '%1.3f'%(self.startPosition,)
+
+    def startPositionChanged_Callback(self):
+        """
+        Callback for handling changes to the start position.
+        """
+        startPositionNew = self.startPositionLineEdit.text()
+        startPositionNew = float(startPositionNew)
+        if startPositionNew != self.startPosition:
+            startPositionNew = startPositionNew
+            self.startPosition = startPositionNew
+            self.writeStatusMessage('start position set to %s m'%(self.startPositionStr,))
+        self.startPositionLineEdit.setText('%s'%(self.startPositionStr,))
+
+    def setStartPositionValidator(self):
+        """
+        Sets start position validator based on the current upper and lower
+        bounds settings.
+        """
+        startPositionValidator = QtGui.QDoubleValidator(self.startPositionLineEdit)
+        startPositionValidator.setRange(self.lowerBound, self.upperBound, 3)
+        startPositionValidator.fixup = self.startPositionFixup
+        self.startPositionLineEdit.setValidator(startPositionValidator)
+
+    def startPositionFixup(self,value):
+        """
+        Fixup funtion for start position value which are out of bounds.  Just puts 
+        the start position back to the previous value if it is set out of bounds.
+        """
+        self.startPositionLineEdit.setText('%s'%(self.startPositionStr,))
+
+    def autorunDelayChanged_Callback(self):
+        """
+        Callback for handling updates tothe autorun delay value
+        """
+        autorunDelayNew = self.autorunDelayLineEdit.text()
+        autorunDelayNew = int(autorunDelayNew)
+        if autorunDelayNew != self.autorunDelay:
+            self.autorunDelay = autorunDelayNew
+            self.writeStatusMessage('autorun delay set to %d s'%(self.autorunDelay,))
 
     def joystickCheck_Callback(self,checkValue):
         """
@@ -247,7 +406,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.feedbackGroupBox.setEnabled(False)
             self.startPushButton.setEnabled(True)
             self.writeStatusMessage('joystick positioning enabled')
-            self.controlMode = 'joystick'
+            self.controlMode = 'joystick' 
         else:
             self.controlGroupBoxSetEnabled(True)
             self.startPushButton.setEnabled(False)
@@ -331,6 +490,8 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
                 msg = 'setting lower bound failed'
                 self.writeStatusMessage(msg)
         self.lowerBoundLineEdit.setText('%s'%(self.lowerBoundStr,))
+        self.checkStartPosOnBoundChange()
+        self.setStartPositionValidator()
             
     def upperBoundChanged_Callback(self):
         """
@@ -352,6 +513,8 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
                 msg = 'setting upper bound failed'
                 self.writeStatusMessage(msg)
         self.upperBoundLineEdit.setText('%s'%(self.upperBoundStr,))
+        self.checkStartPosOnBoundChange()
+        self.setStartPositionValidator()
 
     def setBoundValidators(self):
         """
@@ -381,6 +544,24 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         Fixup function for position upper bound line edit enty.
         """
         self.upperBoundLineEdit.setText('%s'%(self.upperBoundStr,))
+
+    def checkStartPosOnBoundChange(self):
+        """
+        Checks the start position when the lower and upper bounds are changed. Adjusts
+        the start position if it is out side of the bounds.
+        """
+        changed = False
+        if self.startPosition < self.lowerBound:
+            self.startPosition = self.lowerBound
+            changed = True
+            msg = 'start position < lower bound, changed to %s m'%(self.startPositionStr,)
+        if self.startPosition > self.upperBound:
+            self.startPosition = self.upperBound
+            changed = True
+            msg = 'start position > upper bound, changed to %s m'%(self.startPositionStr,)
+        if changed:
+            self.startPositionLineEdit.setText('%s'%(self.startPositionStr,))
+            self.writeStatusMessage(msg)
 
     def controlGroupBoxSetEnabled(self,value,uncheck_on_disable=True,enable_only_checked=False):
         """
@@ -441,17 +622,43 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.startPushButton.setEnabled(False)
         self.positionBoundsGroupBox.setEnabled(False)
         self.controlGroupBoxSetEnabled(False,uncheck_on_disable=False)
+        with self.lock:
+            self.outscanInProgress = True
         self.enableRobotControlMode()
         
     def stop_Callback(self):
         """
         Callback for when the stop button in the Control tab is clicked.
         """
-        self.startPushButton.setEnabled(True)
-        self.stopPushButton.setEnabled(False)
-        self.positionBoundsGroupBox.setEnabled(True)
-        self.controlGroupBoxSetEnabled(True,enable_only_checked=True)
-        self.disableRobotControlMode()
+        self.outscanStopActions()
+
+    def outscanStopActions(self):
+        """
+        Actions which which should be performed when an outscan is stopped.
+        """
+        with self.lock:
+            self.outscanStopSignal = False
+            self.outscanInProgress = False
+            self.startPushButton.setEnabled(True)
+            self.stopPushButton.setEnabled(False)
+            self.positionBoundsGroupBox.setEnabled(True)
+            self.controlGroupBoxSetEnabled(True,enable_only_checked=True)
+            self.disableRobotControlMode()
+
+    def disableRobotControlMode(self):
+        """
+        Disable current control mode via robotControl
+        """
+        if self.controlMode == 'joystick':
+            self.robotControl.disableJoystickMode()
+            self.writeStatusMessage('joystick positioning stopped')
+        elif self.controlMode == 'feedback':
+            self.writeStatusMessage('feedback positioning stopped')
+            self.progressBar.setVisible(False)
+        elif self.controlMode == 'startupMode':
+            self.robotControl.stopSetptOutscan()
+            self.progressBar.setVisible(False)
+            self.writeStatusMessage('%s stopped'%(self.startupMode,))
 
     def enableRobotControlMode(self):
         """
@@ -466,20 +673,66 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         elif self.controlMode == 'startupMode':
             self.writeStatusMessage('%s started'%(self.startupMode,))
             self.progressBar.setVisible(True)
+            self.progressBar.setValue(0)
+            self.writeStatusMessage('loading run # %d for outscan'%(self.runNumber,))
+            self.startSetptOutscan()
 
-    def disableRobotControlMode(self):
+    def startSetptOutscan(self): 
         """
-        Disable current control mode via robotControl
+        Starts a set point outscan using the roboControl object.
         """
-        if self.controlMode == 'joystick':
-            self.robotControl.disableJoystickMode()
-            self.writeStatusMessage('joystick positioning stopped')
-        elif self.controlMode == 'feedback':
-            self.writeStatusMessage('feedback positioning stopped')
-            self.progressBar.setVisible(False)
-        elif self.controlMode == 'startupMode':
-            self.writeStatusMessage('%s stopped'%(self.startupMode,))
-            self.progressBar.setVisible(False)
+        # Load run based on run number
+        setptValues = numpy.arange(1000,dtype=numpy.float)
+        setptValues[0] = self.robotControl.position
+
+        # Start setpt outscan
+        self.writeStatusMessage('running outscan')
+        with self.lock:
+            self.outscanPercentComplete = 0
+        try:
+            self.robotControl.startSetptOutscan(
+                    setptValues,
+                    feedback_cb = self.outscanFeedback_Callback,
+                    done_cb = self.outscanDone_Callback,
+                    )
+        except ValueError, e:
+            self.writeStatusMessage('error: %s'%(str(e),))
+            with self.lock:
+                self.outscanStopSignal = True
+        
+    def outscanFeedback_Callback(self,data):
+        """
+        Callback funtion for outscan feed back. Gets the percent complete and
+        stores it for display by the progressBarTimer_Callback.
+        """
+        with self.lock:
+            self.outscanPercentComplete = int(data.percent_complete)
+
+    def outscanDone_Callback(self,state,result):
+        """
+        Callback function for signaling when a run is complete.
+        """
+        if state == 'succeeded':
+            self.statusMessageQueue.put('outscan complete')
+        elif state == 'aborted':
+            self.updateAutorun(False)
+            self.statusMessageQueue.put('outscan aborted')
+        else:
+            self.updateAutorun(False)
+            self.statusMessageQueue.put('unknow state messsage - aborting')
+
+        with self.lock:
+            self.outscanPercentComplete = 100
+            # Take action based on autorun setting
+            if self.autorun == False:
+                # Check if the system thinks an outscan is inProgress - if so send
+                # the outscan stop signal to take appropriate actions.
+                if self.outscanInProgress:
+                    self.outscanStopSignal = True
+            else:
+                # Autorun is enabled - move to the starting position and load the
+                # next run.
+                pass
 
     def enableDisable_Callback(self):
         """
@@ -490,6 +743,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         if self.enabled:
             self.robotControl.disableSledIO()
             self.ioModeCheckTimer.stop()
+            self.outscanStopActions()
             self.enabled = False
         else:
             self.robotControl.enableSledIO()
@@ -658,7 +912,6 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         cursor.movePosition(QtGui.QTextCursor.End)
         self.statusWindowTextEdit.setTextCursor(cursor)
 
-
     def setRunNumber(self,value):
         """
         Sets the current run number
@@ -680,6 +933,5 @@ if __name__ == '__main__':
     startupMode = sys.argv[1]
     sledControl = SledControl_MainWindow(startupMode)
     sledControl.main()
-    rospy.init_node('gui')
     app.exec_()
 

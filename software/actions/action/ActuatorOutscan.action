@@ -7,3 +7,4 @@ float32 value
 ---
 # Define a feedback message
 float32 secs_to_completion
+float32 percent_complete
