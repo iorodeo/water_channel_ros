@@ -25,7 +25,7 @@ from actions.msg import SetptOutscanGoal
 # Constants
 DFLT_IN_POSITION_TOL = 0.005
 
-class RobotControl(object):
+class Robot_Control(object):
     """
     Interface for controlling the sled robot. 
     """

@@ -1,13 +1,43 @@
+from __future__ import division
 import scipy
+
+
+def get_constant_velo(v,T,dt,t_output=False):
+    """
+    Returns constant velocity trajectory starting at 0 with the
+    given duration, T,  and time step, dt.
+    """
+    N = scipy.floor(T/dt)
+    t = scipy.arange(0,N)*dt
+    x = v*t
+    if not t_output:
+        return x
+    else:
+        return t,x
+
+
+def get_cosine(amplitude,period,cycles,dt,t_output=False):
+    """
+    Returns a cosine with the given amplitude, period, number of cycles,
+    and time step.
+    """
+    T = period*cycles
+    N = scipy.floor(T/dt)
+    t = scipy.arange(0,N)*dt
+    x = amplitude*scipy.cos(2*scipy.pi*t/period)
+    if not t_output:
+        return x
+    else:
+        return t, x
 
 def get_ramp(x0,x1,vmax,a,dt, output='ramp only'):
     """
-    Generate a ramp trajectory from x0 to x1 with constant
-    acceleration, a, to maximum velocity v_max. 
+    Generates a ramp trajectory from x0 to x1 with constant acceleration, a, to
+    maximum velocity v_max. 
 
-    Note, the main purlpose of this routine is to generate a
-    trajectory from x0 to x1. For this reason v_max and a are adjusted
-    slightly to work with the given time step.
+    Note, the main purlpose of this routine is to generate a trajectory from x0
+    to x1. For this reason v_max and a are adjusted slightly to work with the
+    given time step.
 
     Arguments:
      x0 = starting position
@@ -97,17 +127,44 @@ def get_ramp(x0,x1,vmax,a,dt, output='ramp only'):
     else:
         raise ValueError, 'unknown keyword option output=%s'%(output,)
 
-
 # -----------------------------------------------------------------------------
-if __name__ == '__main__': 
-    import matplotlib.pylab as pylab
-    x0 = 0.0
-    x1 = 1000.0
-    vmax = 1000.0
-    a = 50.0
-    dt = 1.0/50.0
-    ramp = get_ramp(x0,x1,vmax,a,dt)
-    pylab.plot(ramp)
-    pylab.show()
-   
+if __name__ == '__main__':
+    import pylab
 
+    if 1:
+        """
+        Debugging constant velocity move.
+        """
+        v = 5.0
+        T = 10.0
+        dt = 1/50
+        t,x = get_constant_velo(v,T,dt,t_output=True)
+        pylab.plot(t,x)
+        pylab.show()
+
+    if 0:
+        """
+        Debugging cosine move
+        """
+        amplitude = 2.0
+        period = 2.0
+        cycles = 2
+        dt = 1.0/50.0
+        t,x = get_cosine(amplitude,period,cycles,dt,t_output=True)
+        print dt, t[1]-t[0]
+        pylab.plot(t,x,'.')
+        #pylab.plot(t+cycles*period,x,'.r')
+        pylab.show()
+
+    if 0:
+        """
+        Debugging ramp move
+        """
+        x0 = 0.0
+        x1 = 1000.0
+        vmax = 1000.0
+        a = 50.0
+        dt = 1.0/50.0
+        ramp = get_ramp(x0,x1,vmax,a,dt)
+        pylab.plot(ramp)
+        pylab.show()

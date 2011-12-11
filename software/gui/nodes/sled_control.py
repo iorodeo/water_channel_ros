@@ -19,10 +19,9 @@ import numpy
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 from sled_control_ui import Ui_SledControl_MainWindow
-from utilities import HDF5_Run_Reader
-from utilities import RobotControl 
+from utilities.hdf5_run_reader import HDF5_Run_Reader
+from utilities.robot_control import Robot_Control 
 from gui_constants import *
-
 
 class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
     """
@@ -194,7 +193,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
 
         # Start ros node and initialize robot control
         rospy.init_node('gui')
-        self.robotControl = RobotControl()
+        self.robotControl = Robot_Control()
 
         self.writeStatusMessage('initializing')
         self.checkStartupMode()
@@ -674,8 +673,17 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.writeStatusMessage('%s started'%(self.startupMode,))
             self.progressBar.setVisible(True)
             self.progressBar.setValue(0)
+
             self.writeStatusMessage('loading run # %d for outscan'%(self.runNumber,))
+            run = self.runFileReader.get_run(self.runNumber)
+
             self.startSetptOutscan()
+
+    def moveToStartPosition(self):
+        pass
+
+    def loadRunData(self):
+        pass
 
     def startSetptOutscan(self): 
         """
@@ -817,7 +825,6 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.statusbar.showMessage('')
         self.runNumberLineEdit.setText('')
 
-
     def populateRunTree(self):
         """
         Populates the the runTreeWidget from the current hdf5 run file.
@@ -881,16 +888,6 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         while item.parent() is not None:
             item = item.parent()
         return item
-
-    #def addItemsToRunTree(self):
-    #    """
-    #    Temporary test function.
-    #    """
-    #    topItem = QtGui.QTreeWidgetItem(self.runTreeWidget,0)
-    #    topItem.setText(0,'Filename')
-    #    for i in range(0,100):
-    #        item = QtGui.QTreeWidgetItem(topItem,0)
-    #        item.setText(0,'run %d'%(i,))
 
     def setLogFile_Callback(self):
         print 'set log file'

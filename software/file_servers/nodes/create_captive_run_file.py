@@ -9,7 +9,7 @@ run specification files.
 import h5py
 import numpy.random
 
-filename = 'test_run_file.hdf5'
+filename = 'test_captive_run_file.hdf5'
 num_runs = 10
 
 f = h5py.File(filename,'w')
@@ -68,7 +68,7 @@ for i in range(0,num_runs):
         run_grp.attrs['type'] = 'array'
         array_values = numpy.random.rand(500)
         array_values_ds = run_grp.create_dataset(
-                'values',
+                'params',
                 array_values.shape,
                 dtype=array_values.dtype,
                 maxshape=array_values.shape

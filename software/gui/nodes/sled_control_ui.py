@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'sled_control.ui'
 #
-# Created: Sun Nov 27 19:49:56 2011
+# Created: Sat Dec 10 13:42:11 2011
 #      by: PyQt4 UI code generator 4.7.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -348,9 +348,6 @@ class Ui_SledControl_MainWindow(object):
         self.horizontalLayout_3.addItem(spacerItem18)
         self.verticalLayout_2.addWidget(self.widget_10)
         self.mainTabWidget.addTab(self.logTab, "")
-        self.plotsTab = QtGui.QWidget()
-        self.plotsTab.setObjectName("plotsTab")
-        self.mainTabWidget.addTab(self.plotsTab, "")
         self.verticalLayout_9.addWidget(self.mainTabWidget)
         self.horizontalLayout_7.addWidget(self.widget_7)
         self.widget_2 = QtGui.QWidget(self.widget_6)
@@ -453,7 +450,7 @@ class Ui_SledControl_MainWindow(object):
         SledControl_MainWindow.setStatusBar(self.statusbar)
 
         self.retranslateUi(SledControl_MainWindow)
-        self.mainTabWidget.setCurrentIndex(0)
+        self.mainTabWidget.setCurrentIndex(2)
         QtCore.QMetaObject.connectSlotsByName(SledControl_MainWindow)
 
     def retranslateUi(self, SledControl_MainWindow):
@@ -488,7 +485,6 @@ class Ui_SledControl_MainWindow(object):
         self.deleteLogItemPushButton.setText(QtGui.QApplication.translate("SledControl_MainWindow", "Del Item", None, QtGui.QApplication.UnicodeUTF8))
         self.editLogNotesPushButton.setText(QtGui.QApplication.translate("SledControl_MainWindow", "Notes", None, QtGui.QApplication.UnicodeUTF8))
         self.mainTabWidget.setTabText(self.mainTabWidget.indexOf(self.logTab), QtGui.QApplication.translate("SledControl_MainWindow", "Log", None, QtGui.QApplication.UnicodeUTF8))
-        self.mainTabWidget.setTabText(self.mainTabWidget.indexOf(self.plotsTab), QtGui.QApplication.translate("SledControl_MainWindow", "Plots", None, QtGui.QApplication.UnicodeUTF8))
         self.positionLabel.setText(QtGui.QApplication.translate("SledControl_MainWindow", "Position: 14.234 (m)", None, QtGui.QApplication.UnicodeUTF8))
         self.velocityLabel.setText(QtGui.QApplication.translate("SledControl_MainWindow", "Velocity: 1.234 (m/s)", None, QtGui.QApplication.UnicodeUTF8))
         self.label_4.setText(QtGui.QApplication.translate("SledControl_MainWindow", "Status Window", None, QtGui.QApplication.UnicodeUTF8))

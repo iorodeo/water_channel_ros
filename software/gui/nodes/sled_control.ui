@@ -30,7 +30,7 @@
           <item>
            <widget class="QTabWidget" name="mainTabWidget">
             <property name="currentIndex">
-             <number>0</number>
+             <number>2</number>
             </property>
             <widget class="QWidget" name="controlTab">
              <attribute name="title">
@@ -802,11 +802,6 @@
                </widget>
               </item>
              </layout>
-            </widget>
-            <widget class="QWidget" name="plotsTab">
-             <attribute name="title">
-              <string>Plots</string>
-             </attribute>
             </widget>
            </widget>
           </item>
