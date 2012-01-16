@@ -21,7 +21,12 @@ from PyQt4 import QtGui
 from sled_control_ui import Ui_SledControl_MainWindow
 from utilities.hdf5_run_reader import HDF5_Run_Reader
 from utilities.robot_control import Robot_Control 
+from utilities import run_defs
+from utilities import run_converter
 from gui_constants import *
+
+# DEBUG
+import pylab
 
 class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
     """
@@ -150,7 +155,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
 
     def setupOutscanMonitorTimer(self):
         """
-        Setup outscan monitor timer. This timer is used to monitor the outscanInProgress
+        Setup outscan monitor timer. This timer is used to monitor the outscanStopSignal
         variable to determine when an outscan has completed.
         """
         self.outscanMonitorTimer = QtCore.QTimer(self)
@@ -162,14 +167,21 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         """
         Updates the GUI state based on the value of the outscanStopSignal. 
         """
+        print 'timer: ', self.outscanInProgress
         if self.enabled:
+
+            # Check to see of the stop signal has been issued.
             with self.lock:
-                if self.outscanStopSignal:
-                    stop = True
-                else:
-                    stop = False
+                stop = self.outscanStopSignal
             if stop:
                 self.outscanStopActions()
+                return
+
+            if self.runInProgress: 
+                with self.lock:
+                    outscanInProgress = self.outscanInProgress
+                if outscanInProgress == False and self.autorun:
+                    self.startNextOutscan()
 
     def initialize(self,startupMode):
         """
@@ -186,6 +198,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.outscanPercentComplete = 0
         self.outscanInProgress = False
         self.outscanStopSignal = False
+        self.runInProgress = False
         self.autorunDelay = int(DEFAULT_AUTORUN_DELAY)
         self.startPosition = DEFAULT_START_POSITION
         self.runNumber = None
@@ -660,8 +673,6 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.startPushButton.setEnabled(False)
         self.positionBoundsGroupBox.setEnabled(False)
         self.controlGroupBoxSetEnabled(False,uncheck_on_disable=False)
-        with self.lock:
-            self.outscanInProgress = True
         self.enableRobotControlMode()
         
     def stop_Callback(self):
@@ -677,6 +688,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         with self.lock:
             self.outscanStopSignal = False
             self.outscanInProgress = False
+            self.runInProgress = False
             self.startPushButton.setEnabled(True)
             self.stopPushButton.setEnabled(False)
             self.positionBoundsGroupBox.setEnabled(True)
@@ -707,49 +719,91 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.writeStatusMessage('joystick positioning started')
         elif self.controlMode == 'feedback':
             self.writeStatusMessage('feedback positioning started')
-            self.progressBar.setVisible(True)
+            self.runInProgress = True
             self.startFeedbackPositioning()
-
         elif self.controlMode == 'startupMode':
             self.writeStatusMessage('%s started'%(self.startupMode,))
-            self.progressBar.setVisible(True)
-            self.progressBar.setValue(0)
-
+            self.runInProgress = True
+            self.startNextOutscan()
 
     def startFeedbackPositioning(self):
         """
         Start feedback positioning move.
         """
-        setptValues = numpy.arange(1000,dtype=numpy.float)
-        setptValues[0] = self.robotControl.position
+        self.progressBar.setVisible(True)
+        setptValues = run_defs.get_ramp( 
+                self.robotControl.position,
+                self.feedbackPosition,
+                FEEDBACK_POSITIONING_VELOCITY,
+                FEEDBACK_POSITIONING_ACCELERATION,
+                self.robotControl.dt,
+                )
         self.startSetptOutscan(setptValues)
 
-    def startRunFileOutscan(self):
+    def updateRunState(self):
+        if self.runState == 'moveToStart':
+            self.runState = 'runDelay'
+        elif self.runState == 'runDelay':
+            self.runState = 'fileOutscan'
+        else:
+            self.runState = 'moveToStart'
+            # Increment run number - if less than maximum run number
+            # otherwise send the stop signal. 
 
+    def startNextOutscan(self):
+        if self.runState == 'moveToStart':
+            self.startMoveToStartOutscan()
+        elif self.runState == 'runDelay':
+            self.startRunDelay()
+        elif self.runState == 'fileOutscan':
+            self.startFileOutscan()
+        else:
+            raise ValueError, 'unknown runState %s'%(runState,)
+            
+    def startMoveToStartOutscan(self):
+        """
+        Starts the move to starting position outscan
+        """
+        # Move to starting position
+        self.progressBar.setVisible(True)
+        self.progressBar.setValue(0)
+        self.writeStatusMessage('moving to start position %s m'%(self.startPositionStr,))
+        setptValues = run_defs.get_ramp(
+                self.robotControl.position,
+                self.startPosition,
+                FEEDBACK_POSITIONING_VELOCITY,
+                FEEDBACK_POSITIONING_ACCELERATION,
+                self.robotControl.dt,
+                )
+        self.startSetptOutscan(setptValues)
+
+    def startFileOutscan(self):
+        """
+        Starts an outscan of the curent run number form the currently loaded 
+        run file.
+        """
+        # Load run data
         self.writeStatusMessage('loading run # %d for outscan'%(self.runNumber,))
         run = self.runFileReader.get_run(self.runNumber)
-        # Load run data
-
-        # Move to starting position
+        runConverter = run_converter.Run_Converter(self.startupMode,self.robotControl.dt)
+        values = runConverter.get(run,self.startPosition)
 
         # Start Run outscan
-
-        # Increment run number, repeat?
-
 
     def startSetptOutscan(self,setptValues): 
         """
         Starts a set point outscan using the roboControl object.
         """
-
         # Start setpt outscan
         self.writeStatusMessage('running outscan')
         with self.lock:
+            self.outscanInProgress = True
             self.outscanPercentComplete = 0
+            print 'start', self.outscanInProgress
         try:
             self.robotControl.startSetptOutscan(
                     setptValues,
-                    feedback_cb = self.outscanFeedback_Callback,
+                    feedback_cb = self.outscanProgress_Callback,
                     done_cb = self.outscanDone_Callback,
                     )
         except ValueError, e:
@@ -757,7 +811,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             with self.lock:
                 self.outscanStopSignal = True
         
-    def outscanFeedback_Callback(self,data):
+    def outscanProgress_Callback(self,data):
         """
         Callback funtion for outscan feed back. Gets the percent complete and
         stores it for display by the progressBarTimer_Callback.
@@ -781,15 +835,12 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         with self.lock:
             self.outscanPercentComplete = 100
             # Take action based on autorun setting
-            if self.autorun == False:
-                # Check if the system thinks an outscan is inProgress - if so send
-                # the outscan stop signal to take appropriate actions.
-                if self.outscanInProgress:
-                    self.outscanStopSignal = True
+            if (self.autorun == False) or (self.controlMode != self.startupMode):
+                self.outscanInProgress = False
+                self.outscanStopSignal = True
             else:
-                # Autorun is enabled - move to the starting position and load the
-                # next run.
-                pass
+                # Autorun is enabled and we are in startup mode - move to the                 
+                self.outscanInProgress = False 
 
     def enableDisable_Callback(self):
         """

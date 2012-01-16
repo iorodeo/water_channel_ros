@@ -42,6 +42,8 @@ class Robot_Control(object):
                 self.distMsgHandler,
                 )
 
+        self.update_rate = rospy.get_param('update_rate')
+
         # Initialize variables for storing position and velocity. Note These
         # variables (starting with an _) should not be accessed directly.
         # Instead use the position and velocity properties. 
@@ -82,6 +84,10 @@ class Robot_Control(object):
                 SetptOutscanAction
                 )
         self.setptActionClient.wait_for_server()
+
+    @property
+    def dt(self):
+        return 1.0/self.update_rate
 
     @property
     def position(self):
