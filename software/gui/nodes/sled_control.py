@@ -223,10 +223,15 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         
         # Create bound validators and set text values
         self.setBoundValidators()
-        self.lowerBoundLineEdit.setText('%1.2f'%(self.lowerBound,))
-        self.upperBoundLineEdit.setText('%1.2f'%(self.upperBound,))
+        self.lowerBoundLineEdit.setText(self.lowerBoundStr)   
+        self.upperBoundLineEdit.setText(self.upperBoundStr)
         self.lowerBoundMinLabel.setText('Lower Min: %s'%(self.lowerBoundMinStr,))
         self.upperBoundMaxLabel.setText('Upper Max: %s'%(self.upperBoundMaxStr,))
+        
+        # Set feedback positioning default values
+        self.setFeedbackPositionValidator()
+        self.feedbackPosition = 0.5*(self.upperBound + self.lowerBound)
+        self.feedbackPositionLineEdit.setText(self.feedbackPositionStr)
 
         # Get current joystick max velocity setting, create validator and set line edit
         self.joystickMaxVelo = int(self.robotControl.getJoystickMaxVelo())
@@ -245,7 +250,6 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
 
         # Set start position validator and line edit text
         self.setStartPositionValidator()
-        #self.startPositionLineEdit.setText('%1.3f'%(DEFAULT_START_POSITION,))
         self.startPositionLineEdit.setText('%s'%(self.startPositionStr,))
 
         # Enable/Disable appropriate widgets based on enabled state
@@ -288,6 +292,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.lowerBoundLineEdit.editingFinished.connect(self.lowerBoundChanged_Callback)
         self.upperBoundLineEdit.editingFinished.connect(self.upperBoundChanged_Callback)
         self.joystickMaxVeloLineEdit.editingFinished.connect(self.joystickMaxVeloChanged_Callback)
+        self.feedbackPositionLineEdit.editingFinished.connect(self.feedbackPositionChanged_Callback)
 
         # Actions for runs tab
         self.loadRunFilePushButton.clicked.connect(self.loadRunFile_Callback)
@@ -363,10 +368,9 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         startPositionNew = self.startPositionLineEdit.text()
         startPositionNew = float(startPositionNew)
         if startPositionNew != self.startPosition:
-            startPositionNew = startPositionNew
             self.startPosition = startPositionNew
             self.writeStatusMessage('start position set to %s m'%(self.startPositionStr,))
-        self.startPositionLineEdit.setText('%s'%(self.startPositionStr,))
+        self.startPositionLineEdit.setText(self.startPositionStr)
 
     def setStartPositionValidator(self):
         """
@@ -448,6 +452,41 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.startPushButton.setEnabled(False)
             self.writeStatusMessage('feedback positioning disabled')
             self.controlMode = None
+
+    @property
+    def feedbackPositionStr(self):
+        return '%1.3f'%(self.feedbackPosition,)
+
+    def feedbackPositionChanged_Callback(self):
+        """
+        Callback for changes to the feedback position line edit text.
+        """
+        feedbackPositionNew = self.feedbackPositionLineEdit.text()
+        feedbackPositionNew = float(feedbackPositionNew)
+        if feedbackPositionNew != self.feedbackPosition:
+            self.feedbackPosition = feedbackPositionNew
+            self.writeStatusMessage('feedback position set to %s'%(self.feedbackPositionStr,))
+        self.feedbackPositionLineEdit.setText(self.feedbackPositionStr)
+
+    def setFeedbackPositionValidator(self):
+        """
+        Set the validator for the feedback position line edit, based on the
+        upper and lower bounds.
+        """
+        feedbackPositionValidator = QtGui.QDoubleValidator(self.feedbackPositionLineEdit)
+        feedbackPositionValidator.setRange(self.lowerBound, self.upperBound, 3)
+        feedbackPositionValidator.fixup = self.feedbackPositionFixup
+        self.feedbackPositionLineEdit.setValidator(feedbackPositionValidator)
+
+    def feedbackPositionFixup(self,value):
+        """
+        Fixup function for the feedback position line edit.
+        """
+        value = float(value)
+        if value == self.lowerBound: 
+            self.feedbackPosition = value
+        self.feedbackPositionLineEdit.setText(self.feedbackPositionStr)
+
 
     def boundStr(self, value):
         return '%1.2f'%(value,)
@@ -669,29 +708,39 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         elif self.controlMode == 'feedback':
             self.writeStatusMessage('feedback positioning started')
             self.progressBar.setVisible(True)
+            self.startFeedbackPositioning()
+
         elif self.controlMode == 'startupMode':
             self.writeStatusMessage('%s started'%(self.startupMode,))
             self.progressBar.setVisible(True)
             self.progressBar.setValue(0)
 
-            self.writeStatusMessage('loading run # %d for outscan'%(self.runNumber,))
-            run = self.runFileReader.get_run(self.runNumber)
 
-            self.startSetptOutscan()
+    def startFeedbackPositioning(self):
+        """
+        Start feedback positioning move.
+        """
+        setptValues = numpy.arange(1000,dtype=numpy.float)
+        setptValues[0] = self.robotControl.position
+        self.startSetptOutscan(setptValues)
 
-    def moveToStartPosition(self):
-        pass
+    def startRunFileOutscan(self):
 
-    def loadRunData(self):
-        pass
+        self.writeStatusMessage('loading run # %d for outscan'%(self.runNumber,))
+        run = self.runFileReader.get_run(self.runNumber)
+        # Load run data
 
-    def startSetptOutscan(self): 
+        # Move to starting position
+
+        # Start Run outscan
+
+        # Increment run number, repeat?
+
+
+    def startSetptOutscan(self,setptValues): 
         """
         Starts a set point outscan using the roboControl object.
         """
-        # Load run based on run number
-        setptValues = numpy.arange(1000,dtype=numpy.float)
-        setptValues[0] = self.robotControl.position
 
         # Start setpt outscan
         self.writeStatusMessage('running outscan')

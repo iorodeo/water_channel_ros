@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'sled_control.ui'
 #
-# Created: Sat Dec 10 13:42:11 2011
+# Created: Sun Jan 15 17:54:42 2012
 #      by: PyQt4 UI code generator 4.7.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -165,15 +165,15 @@ class Ui_SledControl_MainWindow(object):
         self.label_3 = QtGui.QLabel(self.widget_4)
         self.label_3.setObjectName("label_3")
         self.horizontalLayout_5.addWidget(self.label_3)
-        self.joystickMaxVelocityLineEdit_2 = QtGui.QLineEdit(self.widget_4)
+        self.feedbackPositionLineEdit = QtGui.QLineEdit(self.widget_4)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.joystickMaxVelocityLineEdit_2.sizePolicy().hasHeightForWidth())
-        self.joystickMaxVelocityLineEdit_2.setSizePolicy(sizePolicy)
-        self.joystickMaxVelocityLineEdit_2.setMaximumSize(QtCore.QSize(70, 16777215))
-        self.joystickMaxVelocityLineEdit_2.setObjectName("joystickMaxVelocityLineEdit_2")
-        self.horizontalLayout_5.addWidget(self.joystickMaxVelocityLineEdit_2)
+        sizePolicy.setHeightForWidth(self.feedbackPositionLineEdit.sizePolicy().hasHeightForWidth())
+        self.feedbackPositionLineEdit.setSizePolicy(sizePolicy)
+        self.feedbackPositionLineEdit.setMaximumSize(QtCore.QSize(70, 16777215))
+        self.feedbackPositionLineEdit.setObjectName("feedbackPositionLineEdit")
+        self.horizontalLayout_5.addWidget(self.feedbackPositionLineEdit)
         self.label_8 = QtGui.QLabel(self.widget_4)
         self.label_8.setObjectName("label_8")
         self.horizontalLayout_5.addWidget(self.label_8)
@@ -450,7 +450,7 @@ class Ui_SledControl_MainWindow(object):
         SledControl_MainWindow.setStatusBar(self.statusbar)
 
         self.retranslateUi(SledControl_MainWindow)
-        self.mainTabWidget.setCurrentIndex(2)
+        self.mainTabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(SledControl_MainWindow)
 
     def retranslateUi(self, SledControl_MainWindow):

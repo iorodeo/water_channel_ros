@@ -30,7 +30,7 @@
           <item>
            <widget class="QTabWidget" name="mainTabWidget">
             <property name="currentIndex">
-             <number>2</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="controlTab">
              <attribute name="title">
@@ -364,7 +364,7 @@
                      </widget>
                     </item>
                     <item>
-                     <widget class="QLineEdit" name="joystickMaxVelocityLineEdit_2">
+                     <widget class="QLineEdit" name="feedbackPositionLineEdit">
                       <property name="sizePolicy">
                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                         <horstretch>0</horstretch>
