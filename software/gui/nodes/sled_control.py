@@ -16,6 +16,7 @@ import sys
 import h5py
 import Queue
 import numpy
+import pylab
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 from sled_control_ui import Ui_SledControl_MainWindow
@@ -25,8 +26,10 @@ from utilities import run_defs
 from utilities import run_converter
 from gui_constants import *
 
+
+
 # DEBUG
-import pylab
+
 
 class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
     """
@@ -51,6 +54,8 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         Close event handler. Put robot into know state - e.g. disable sled io, 
         current node, etc. prior to shutdown of GUI.
         """
+        pylab.ioff()
+        pylab.close()
         self.disableRobotControlMode()
         self.ioModeCheckTimer.stop()
         rospy.signal_shutdown('gui closed')
@@ -65,6 +70,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.setupIOModeCheckTimer()
         self.setupStatusMessageTimer()
         self.setupOutscanMonitorTimer()
+        self.setupAutorunDelayTimer()
 
     def setupDistVeloMsgTimer(self):
         """
@@ -167,26 +173,62 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         """
         Updates the GUI state based on the value of the outscanStopSignal. 
         """
-        print 'timer: ', self.outscanInProgress
         if self.enabled:
 
             # Check to see of the stop signal has been issued.
             with self.lock:
-                stop = self.outscanStopSignal
-            if stop:
+                stopSignal = self.outscanStopSignal
+            if stopSignal:
                 self.outscanStopActions()
                 return
 
+            # No stop signal - check if run in is progress
             if self.runInProgress: 
                 with self.lock:
                     outscanInProgress = self.outscanInProgress
-                if outscanInProgress == False and self.autorun:
-                    self.startNextOutscan()
+                # Check if  outscan is in progress - if not update
+                if outscanInProgress == False:
+                    if self.controlMode == 'startupMode':
+                        self.updateTrialState()
+                        if self.runState != 'done':
+                            self.startNextOutscan()
+                        else:
+                            self.outscanStopActions()
+                    else:
+                        self.outscanStopActions()
+
+    def setupAutorunDelayTimer(self):
+        """
+        Creates the timer used for handling the autorun delays. 
+        """
+        self.autorunDelayTimer = QtCore.QTimer(self)
+        self.updateAutorunDelayTimerInterval(self.autorunDelay)
+        self.autorunDelayTimer.timeout.connect(self.autorunDelayTimer_Callback)
+
+    def updateAutorunDelayTimerInterval(self,value):
+        if value > 0:
+            autorunTimerDelay = sec2ms(value)/AUTORUN_DELAY_TIMER_MAX_COUNT
+        else:
+            autorunTimerDelay
+        self.autorunDelayTimer.setInterval(autorunTimerDelay)
+
+    def autorunDelayTimer_Callback(self):
+        """
+        Autorun delay  timer callback.
+        """
+        self.autorunDelayCount+=1
+        with self.lock:
+            self.outscanPercentComplete = self.autorunDelayCount
+        if self.autorunDelayCount == AUTORUN_DELAY_TIMER_MAX_COUNT:
+            self.autorunDelayTimer.stop()
+            with self.lock:
+                self.outscanInProgress = False
 
     def initialize(self,startupMode):
         """
         Initialize the state of the GUI and system.
         """
+        pylab.ion()
         
         self.lock = threading.Lock()
         self.enabled = False
@@ -200,6 +242,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.outscanStopSignal = False
         self.runInProgress = False
         self.autorunDelay = int(DEFAULT_AUTORUN_DELAY)
+        self.autorunDelayCount = 0
         self.startPosition = DEFAULT_START_POSITION
         self.runNumber = None
         self.updateAutorun(DEFAULT_AUTORUN_CHECK)
@@ -315,8 +358,8 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.setLogFilePushButton.clicked.connect(self.setLogFile_Callback)
         self.deleteLogItemPushButton.clicked.connect(self.deleteLogItem_Callback)
 
-        # Run tree actions
-        self.runTreeWidget.itemClicked.connect(self.runTreeItemClicked_Callback)
+        # Run tree actions - plot run on right click
+        self.runTreeWidget.contextMenuEvent = self.runTreeItemRightClicked_Callback
 
 
     def modeCheck_Callback(self,checkValue):
@@ -410,6 +453,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         autorunDelayNew = int(autorunDelayNew)
         if autorunDelayNew != self.autorunDelay:
             self.autorunDelay = autorunDelayNew
+            self.updateAutorunDelayTimerInterval(self.autorunDelay)
             self.writeStatusMessage('autorun delay set to %d s'%(self.autorunDelay,))
 
     def joystickCheck_Callback(self,checkValue):
@@ -720,10 +764,15 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         elif self.controlMode == 'feedback':
             self.writeStatusMessage('feedback positioning started')
             self.runInProgress = True
+            with self.lock:
+                self.outscanInProgress = False
             self.startFeedbackPositioning()
         elif self.controlMode == 'startupMode':
             self.writeStatusMessage('%s started'%(self.startupMode,))
             self.runInProgress = True
+            with self.lock:
+                self.outscanInProgress = False
+            self.runState = 'move to start'
             self.startNextOutscan()
 
     def startFeedbackPositioning(self):
@@ -740,33 +789,45 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
                 )
         self.startSetptOutscan(setptValues)
 
-    def updateRunState(self):
-        if self.runState == 'moveToStart':
-            self.runState = 'runDelay'
-        elif self.runState == 'runDelay':
-            self.runState = 'fileOutscan'
+    def updateTrialState(self):
+        """
+        Update the trial state of the system. 
+        """
+        if self.runState == 'move to start':
+            self.runState = 'autorun delay';
+        elif self.runState == 'autorun delay':
+            self.runState = 'trial outscan'
+        elif self.runState == 'trial outscan': 
+            maxRunNumber = self.runFileReader.number_of_runs - 1
+            if not self.autorun or self.runNumber >= maxRunNumber:
+                self.runState = 'done'
+            else:
+                self.runState = 'move to start'
+                self.setRunNumber(self.runNumber+1)
         else:
-            self.runState = 'moveToStart'
-            # Increment run number - if less than maximum run number
-            # otherwise send the stop signal. 
+            raise ValueError, 'uknown runState %s'%(self.runState,)
 
     def startNextOutscan(self):
-        if self.runState == 'moveToStart':
+        """
+        Starts the next outscan based on the current runState of the 
+        system.
+        """
+        if self.runState == 'move to start':
             self.startMoveToStartOutscan()
-        elif self.runState == 'runDelay':
-            self.startRunDelay()
-        elif self.runState == 'fileOutscan':
-            self.startFileOutscan()
+        elif self.runState == 'autorun delay':
+            self.startAutorunDelay()
+        elif self.runState == 'trial outscan':
+            self.startTrialOutscan()
         else:
-            raise ValueError, 'unknown runState %s'%(runState,)
+            raise ValueError, 'unknown runState %s'%(self.runState,)
             
     def startMoveToStartOutscan(self):
         """
         Starts the move to starting position outscan
         """
         # Move to starting position
-        self.progressBar.setVisible(True)
         self.progressBar.setValue(0)
+        self.progressBar.setVisible(True)
         self.writeStatusMessage('moving to start position %s m'%(self.startPositionStr,))
         setptValues = run_defs.get_ramp(
                 self.robotControl.position,
@@ -777,18 +838,37 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
                 )
         self.startSetptOutscan(setptValues)
 
-    def startFileOutscan(self):
+    def startAutorunDelay(self):
+        """
+        Starts the autorun delay timer.
+        """
+        self.autorunDelayCount = 0
+        self.progressBar.setValue(0)
+        self.progressBar.setVisible(True)
+
+        self.writeStatusMessage('starting delay of %d s'%(self.autorunDelay,))
+        with self.lock:
+            self.outscanInProgress = True
+        self.autorunDelayTimer.start()
+
+    def startTrialOutscan(self):
         """
         Starts an outscan of the curent run number form the currently loaded 
         run file.
         """
-        # Load run data
+        # Setup progress bar 
+        self.progressBar.setValue(0)
+        self.progressBar.setVisible(True)
+
+        # Load run from file
         self.writeStatusMessage('loading run # %d for outscan'%(self.runNumber,))
         run = self.runFileReader.get_run(self.runNumber)
         runConverter = run_converter.Run_Converter(self.startupMode,self.robotControl.dt)
-        values = runConverter.get(run,self.startPosition)
 
-        # Start Run outscan
+        # Start outscan - should I use actual position or start position?
+        #setptValues = runConverter.get(run,self.startPosition)
+        setptValues = runConverter.get(run,self.robotControl.position)
+        self.startSetptOutscan(setptValues)
 
     def startSetptOutscan(self,setptValues): 
         """
@@ -799,7 +879,6 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         with self.lock:
             self.outscanInProgress = True
             self.outscanPercentComplete = 0
-            print 'start', self.outscanInProgress
         try:
             self.robotControl.startSetptOutscan(
                     setptValues,
@@ -834,13 +913,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
 
         with self.lock:
             self.outscanPercentComplete = 100
-            # Take action based on autorun setting
-            if (self.autorun == False) or (self.controlMode != self.startupMode):
-                self.outscanInProgress = False
-                self.outscanStopSignal = True
-            else:
-                # Autorun is enabled and we are in startup mode - move to the                 
-                self.outscanInProgress = False 
+            self.outscanInProgress = False
 
     def enableDisable_Callback(self):
         """
@@ -978,13 +1051,38 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         if self.enabled:
             self.controlGroupBoxSetEnabled(True,enable_only_checked=True)
 
-    def runTreeItemClicked_Callback(self,item):
-        print 'run tree - item clicked'
-        topLevelParent = self.getRunTreeTopLevelParent(item)
-        print item.text(0)
-        print topLevelParent.text(0)
+    def runTreeItemRightClicked_Callback(self,event):
+        """
+        Plot run on right click of item in run tree
+        """
+        # Extract run number
+        item = self.runTreeWidget.itemAt(event.pos())
+        topLevelParent = self.getTreeWidgetTopLevelParent(item)
+        indexObj = self.runTreeWidget.indexFromItem(topLevelParent)
+        runNumber = indexObj.row()
 
-    def getRunTreeTopLevelParent(self,item):
+        # Load run data and create time array
+        run = self.runFileReader.get_run(runNumber)
+        runConverter = run_converter.Run_Converter(self.startupMode,self.robotControl.dt)
+        values = runConverter.get(run,self.startPosition)
+        numPts = values.shape[0]
+        t = numpy.arange(0,numPts)*self.robotControl.dt
+
+        # Plot run data
+        pylab.clf()
+        pylab.plot(t,values)
+        pylab.title('Run %s'%(runNumber,))
+        if self.startupMode == 'position trajectory':
+            pylab.xlabel('time (s)')
+            pylab.ylabel('position (m)')
+        pylab.grid('on')
+        pylab.show()
+
+
+    def getTreeWidgetTopLevelParent(self,item):
+        """
+        Returns the top level parent of an item in a QTreeWidget.
+        """
         while item.parent() is not None:
             item = item.parent()
         return item
@@ -1023,6 +1121,9 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
     def main(self):
         self.show()
         
+
+def sec2ms(x):
+    return 1000*x
 
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':
