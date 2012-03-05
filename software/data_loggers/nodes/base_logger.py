@@ -9,7 +9,7 @@ import threading
 import os
 import os.path
 import numpy
-from  hdf5_logger import HDF5_Logger
+from utilities.hdf5_logger import HDF5_Logger
 
 # Messages
 from msg_and_srv.msg import DistMsg 
@@ -66,7 +66,7 @@ class Base_Logger(object):
         #test &= self.force_data is not None
         test &= self.dist_data is not None
         test &= self.setpt_data is not None
-        test &= self.actuator_data is not None
+        #test &= self.actuator_data is not None
         test &= self.motor_data is not None
         test &= self.analog_data is not None
         return test
@@ -152,7 +152,8 @@ class Base_Logger(object):
         self.logger.add_dataset_value(self.setpt_error_path, self.setpt_data.error,)
 
         # Actuator data
-        self.logger.add_dataset_value(self.actuator_path, self.actuator_data.value)
+        if not self.actuator_data is None:
+            self.logger.add_dataset_value(self.actuator_path, self.actuator_data.value)
 
         # Motor command data
         self.logger.add_dataset_value(self.motor_cmd_path, self.motor_data.motor_cmd)

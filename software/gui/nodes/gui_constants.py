@@ -1,3 +1,5 @@
+import os
+
 # Notes, may want to move these to the wc_params.xml file
 DEFAULT_START_POSITION = 3.0
 DEFAULT_AUTORUN_CHECK = False
@@ -16,13 +18,18 @@ ALLOWED_STARTUP_MODES = [
         'inertial sled',
         ]
 
-# Timer update rates
-IO_MODE_CHECK_TIMER_DT = 100   # ms
-DIST_VELO_MSG_TIMER_DT = 100   # ms
-PROGRESS_BAR_TIMER_DT = 100    # ms
-STATUS_MESSAGE_TIMER_DT = 100  # ms
-OUTSCAN_MONITOR_TIMER_DT = 100 # ms
+# Timer update rates (ms)
+IO_MODE_CHECK_TIMER_DT = 100   
+DIST_VELO_MSG_TIMER_DT = 100   
+PROGRESS_BAR_TIMER_DT = 100    
+STATUS_MESSAGE_TIMER_DT = 100  
+OUTSCAN_MONITOR_TIMER_DT = 100 
+LOG_UPDATE_TIMER_DT = 500 
 
 # Feedback positining parameters
 FEEDBACK_POSITIONING_VELOCITY = 0.2
 FEEDBACK_POSITIONING_ACCELERATION = 0.5
+
+# Default log file
+DEFAULT_LOG_FILE = os.path.join(os.environ['HOME'],'default_log.hdf5')
+

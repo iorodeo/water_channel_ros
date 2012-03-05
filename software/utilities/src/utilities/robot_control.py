@@ -5,6 +5,8 @@ import sys
 import actionlib
 import threading
 import functools
+import os
+import os.path
 
 # Messages
 from msg_and_srv.msg import DistMsg
@@ -17,6 +19,7 @@ from msg_and_srv.srv import GetBounds
 from msg_and_srv.srv import SetBounds
 from msg_and_srv.srv import GetJoystickMax
 from msg_and_srv.srv import SetJoystickMax
+from msg_and_srv.srv import SetLogFile
 
 # Actions
 from actions.msg import SetptOutscanAction
@@ -76,6 +79,24 @@ class Robot_Control(object):
         self.setJoystickMaxVeloProxy = rospy.ServiceProxy(
                 'set_joystick_max_velo',
                 SetJoystickMax
+                )
+
+        rospy.wait_for_service('set_logger_file')
+        self.setLogFileProxy = rospy.ServiceProxy(
+                'set_logger_file',
+                SetLogFile
+                )
+
+        rospy.wait_for_service('logger_enable')
+        self.loggerEnableProxy = rospy.ServiceProxy(
+                'logger_enable',
+                NodeEnable,
+                )
+
+        rospy.wait_for_service('controller_enable')
+        self.controllerEnableProxy = rospy.ServiceProxy(
+                'controller_enable',
+                NodeEnable,
                 )
 
         # Setup action clients
@@ -209,6 +230,36 @@ class Robot_Control(object):
         resp = self.setJoystickMaxVeloProxy(percent_max_velo)
         return resp.flag
 
+    def setLogFile(self,filepath):
+        """
+        Sets the current log file.
+        """
+        directory, filename = os.path.split(filepath)
+        resp = self.setLogFileProxy(filename,directory)
+        return resp.status, resp.message
+
+    def enableLogger(self):
+        """
+        Enable logging.
+        """
+        resp = self.loggerEnableProxy(True)
+        return resp.status, resp.message
+
+    def disableLogger(self):
+        """
+        Disable logging.
+        """
+        resp = self.loggerEnableProxy(False)
+        return resp.status, resp.message
+
+    def enableControllerMode(self):
+        print 'enableControllerMode'
+        resp = self.controllerEnableProxy(True)
+
+    def disableControllerMode(self):
+        print 'disableControllerMode'
+        resp = self.controllerEnableProxy(False)
+
     def startSetptOutscan(self,setptValues,feedback_cb=None,done_cb=None):
         """
         Starts a setpt outscan on the setpt action server using
@@ -230,6 +281,7 @@ class Robot_Control(object):
             goal.position_array = list(setptValues)
 
             # Send gaol to action server
+            self.enableControllerMode()
             self.setptActionClient.send_goal(
                     goal,
                     feedback_cb=feedback_cb,
@@ -241,6 +293,7 @@ class Robot_Control(object):
         Stops the current setpt outscan on the setpt action server.
         """
         self.setptActionClient.cancel_all_goals()
+        self.disableControllerMode()
 
     def startActuatorOutscan(self,actuatorArray,callback):
         pass
