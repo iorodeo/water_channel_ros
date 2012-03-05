@@ -23,7 +23,7 @@ class Position_Logger(Base_Logger):
         Determine whether or not we have data form logging.
         Note, should be called on with the threading lock. 
         """
-        test = super(Positon_Logger,self).have_data()
+        test = super(Position_Logger,self).have_data()
         test &= self.force_data is not None
         return test
 

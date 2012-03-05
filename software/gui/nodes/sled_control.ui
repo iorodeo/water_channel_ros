@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>961</width>
-    <height>746</height>
+    <width>971</width>
+    <height>798</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -30,7 +30,7 @@
           <item>
            <widget class="QTabWidget" name="mainTabWidget">
             <property name="currentIndex">
-             <number>0</number>
+             <number>2</number>
             </property>
             <widget class="QWidget" name="controlTab">
              <attribute name="title">
@@ -680,7 +680,7 @@
                     </sizepolicy>
                    </property>
                    <property name="text">
-                    <string>Load </string>
+                    <string>Set Run File</string>
                    </property>
                   </widget>
                  </item>
@@ -735,21 +735,18 @@
                  <item>
                   <widget class="QPushButton" name="setLogFilePushButton">
                    <property name="text">
-                    <string>Set Log </string>
+                    <string>Set Log File</string>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <spacer name="horizontalSpacer_10">
+                  <spacer name="horizontalSpacer_11">
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
                    </property>
-                   <property name="sizeType">
-                    <enum>QSizePolicy::Fixed</enum>
-                   </property>
                    <property name="sizeHint" stdset="0">
                     <size>
-                     <width>15</width>
+                     <width>40</width>
                      <height>20</height>
                     </size>
                    </property>
@@ -763,25 +760,9 @@
                   </widget>
                  </item>
                  <item>
-                  <spacer name="horizontalSpacer_11">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeType">
-                    <enum>QSizePolicy::Fixed</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>15</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="editLogNotesPushButton">
+                  <widget class="QPushButton" name="clearLogFilePushButton">
                    <property name="text">
-                    <string>Notes</string>
+                    <string>Clear</string>
                    </property>
                   </widget>
                  </item>
@@ -990,6 +971,66 @@
       </layout>
      </widget>
     </item>
+    <item>
+     <widget class="QWidget" name="widget_14" native="true">
+      <layout class="QHBoxLayout" name="horizontalLayout_12">
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <spacer name="horizontalSpacer_17">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Fixed</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>5</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QWidget" name="widget_15" native="true">
+         <layout class="QVBoxLayout" name="verticalLayout_12">
+          <item>
+           <widget class="QLabel" name="runFileLabel">
+            <property name="text">
+             <string>Run File: </string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="logFileLabel">
+            <property name="text">
+             <string>Log File: </string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QWidget" name="widget_16" native="true">
+      <layout class="QHBoxLayout" name="horizontalLayout_13">
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+      </layout>
+     </widget>
+    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -997,7 +1038,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>961</width>
+     <width>971</width>
      <height>25</height>
     </rect>
    </property>
