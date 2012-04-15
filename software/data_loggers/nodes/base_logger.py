@@ -226,17 +226,14 @@ class Base_Logger(object):
         else:
             log_exists = False
         self.logger = HDF5_Logger(filepath,'a') 
-        if not log_exists:
-            # Create top level information for log file - as the log file
-            # has just been created.
-            self.top_info_path = '/info'
-            self.logger.add_group(self.top_info_path)
-            self.logger.add_datetime(self.top_info_path)
-            self.logger.add_attribute(self.top_info_path,'type', 'log_file')
 
         # Get number of current trial
         trial_list = [grp for grp in self.logger.list('/') if grp[:5] == 'trial']
-        trial_num = len(trial_list)
+        if trial_list:
+            trial_list.sort(cmp=trial_name_cmp_func)
+            trial_num = int(trial_list[-1].split('_')[1]) + 1
+        else:
+            trial_num = 0
         self.trial_str = 'trial_%d'%(trial_num,)
 
         # Create trial group
@@ -255,28 +252,28 @@ class Base_Logger(object):
         # Create distance sensor dataset
         self.distance_raw_path = '/%s/data/distance/distance_raw'%(self.trial_str,)
         self.logger.add_dataset(self.distance_raw_path, (1,))
-        self.logger.add_attribute(self.distance_raw_path, 'unit', 'mm')
+        self.logger.add_attribute(self.distance_raw_path, 'unit', 'm')
 
         self.distance_kalman_path = '/%s/data/distance/distance_kalman'%(self.trial_str,)
         self.logger.add_dataset(self.distance_kalman_path, (1,))
-        self.logger.add_attribute(self.distance_kalman_path, 'unit', 'mm')
+        self.logger.add_attribute(self.distance_kalman_path, 'unit', 'm')
 
         self.velocity_kalman_path = '/%s/data/distance/velocity_kalman'%(self.trial_str,)
         self.logger.add_dataset(self.velocity_kalman_path, (1,))
-        self.logger.add_attribute(self.velocity_kalman_path, 'unit', 'mm/s')
+        self.logger.add_attribute(self.velocity_kalman_path, 'unit', 'm/s')
 
         # Create setpt dataset
         self.setpt_position_path = '/%s/data/setpt/position'%(self.trial_str,)
         self.logger.add_dataset(self.setpt_position_path, (1,))
-        self.logger.add_attribute(self.setpt_position_path, 'unit', 'mm')
+        self.logger.add_attribute(self.setpt_position_path, 'unit', 'm')
 
         self.setpt_velocity_path = '/%s/data/setpt/velocity'%(self.trial_str,)
         self.logger.add_dataset(self.setpt_velocity_path, (1,))
-        self.logger.add_attribute(self.setpt_velocity_path, 'unit', 'mm/s')
+        self.logger.add_attribute(self.setpt_velocity_path, 'unit', 'm/s')
 
-        self.setpt_error_path = '/%s/data/sept/error'%(self.trial_str,)
+        self.setpt_error_path = '/%s/data/setpt/error'%(self.trial_str,)
         self.logger.add_dataset(self.setpt_error_path, (1,))
-        self.logger.add_attribute(self.setpt_error_path, 'unit', 'mm')
+        self.logger.add_attribute(self.setpt_error_path, 'unit', 'm')
 
         # Create actuator actuator dataset 
         self.actuator_path = '/%s/data/actuator'%(self.trial_str,)
@@ -310,6 +307,22 @@ class Base_Logger(object):
                 self.logger = None
             except:
                 pass
+
+
+def trial_name_cmp_func(x,y):
+    """
+    Comparison function for sorting trial names
+    """
+    num_x = int(x.split('_')[1])
+    num_y = int(y.split('_')[1])
+    if num_x > num_y:
+        value = 1
+    elif num_y > num_x:
+        value = -1
+    else:
+        value = 0
+    return value
+    
 
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':

@@ -187,6 +187,12 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
                     outscanInProgress = self.outscanInProgress
                 # Check if  outscan is in progress - if not update
                 if outscanInProgress == False:
+
+                    # Update log view
+                    if self.logFileName is not None:
+                        self.populateLogTree()
+
+                    # Update run state
                     if self.controlMode == 'startupMode':
                         self.updateTrialState()
                         if self.runState != 'done':
@@ -334,7 +340,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.logTreeWidget.setColumnCount(2)
         self.logTreeWidget.setHeaderLabels(['trial', 'type/value'])
 
-        self.statusbar.showMessage('')
+        self.statusbar.showMessage('System Disabled')
         self.progressBar.setValue(0)
         self.progressBar.setVisible(False)
 
@@ -376,6 +382,14 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
 
         #Log tree actions - plot run on right click
         self.logTreeWidget.contextMenuEvent = self.logTreeItemRightClicked_Callback
+        self.logTreeWidget.itemClicked.connect(self.logTreeItemClicked_Callback)
+
+    def logTreeItemClicked_Callback(self):
+        currentItem = self.logTreeWidget.currentItem()
+        if currentItem.parent() is None:
+            self.deleteLogItemPushButton.setEnabled(True)
+        else:
+            self.deleteLogItemPushButton.setEnabled(False)
 
 
     def modeCheck_Callback(self,checkValue):
@@ -733,7 +747,10 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.startPushButton.setEnabled(False)
         self.positionBoundsGroupBox.setEnabled(False)
         self.controlGroupBoxSetEnabled(False,uncheck_on_disable=False)
+        self.runsTab.setEnabled(False)
+        self.logTab.setEnabled(False)
         self.enableRobotControlMode()
+        self.statusbar.showMessage('System Enabled - Running')
         
     def stop_Callback(self):
         """
@@ -751,10 +768,15 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.runInProgress = False
             self.startPushButton.setEnabled(True)
             self.stopPushButton.setEnabled(False)
+            self.logTab.setEnabled(True)
+            self.runsTab.setEnabled(True)
             self.positionBoundsGroupBox.setEnabled(True)
             self.controlGroupBoxSetEnabled(True,enable_only_checked=True)
             self.disableRobotControlMode()
             self.robotControl.disableLogger()
+            self.statusbar.showMessage('System Enabled - Stopped')
+            if self.logFileName is not None:
+                self.populateLogTree()
 
     def disableRobotControlMode(self):
         """
@@ -948,10 +970,12 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.ioModeCheckTimer.stop()
             self.outscanStopActions()
             self.enabled = False
+            self.statusbar.showMessage('System Disabled')
         else:
             self.robotControl.enableSledIO()
             self.ioModeCheckTimer.start()
             self.enabled = True
+            self.statusbar.showMessage('System Enabled - Stopped')
         self.updateUIEnabledDisabled()
 
     def updateUIEnabledDisabled(self):
@@ -1141,15 +1165,35 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             status, message = self.robotControl.setLogFile(filename)
             self.logFileName = filename
             self.clearLogFilePushButton.setEnabled(True)
-            self.deleteLogItemPushButton.setEnabled(True)
             self.setLogFilePushButton.setEnabled(False)
             self.logFileLabel.setText('Log File: %s'%(self.logFileName,))
             self.writeStatusMessage('log file set: %s'%(self.logFileName,))
             self.populateLogTree()
 
-
     def deleteLogItem_Callback(self):
-        print 'delete log item'
+        msgBoxTitle = 'Delete Log Item'
+        currentItem = self.logTreeWidget.currentItem()
+        if currentItem is not None:
+            if currentItem.parent() is None:
+                # Top level item - Ok to delete
+                try:
+                    f = h5py.File(self.logFileName)
+                except h5py.h5e.LowLevelIOError, e:
+                    msg = 'unable to delete log item: %s'%(str(e),)
+                    QtGui.QMessageBox.critical(self,msgBoxtitle,msg)
+                    return
+                itemName = str(currentItem.text(0))
+                del f[itemName]
+                self.populateLogTree()
+            else:
+                # Note a top level item - dont't delete
+                msg = 'unable to delete log item - select top level item'
+                QtGui.QMessageBox.information(self, msgBoxTitle, msg) 
+                return 
+        else:
+            msg = 'unable to delete log item - no item selected'
+            QtGui.QMessageBox.information(self, msgBoxTitle, msg) 
+            return
 
     def clearLogFile_Callback(self):
         self.logFileName = None
@@ -1161,14 +1205,15 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.setLogFilePushButton.setEnabled(True)
 
     def populateLogTree(self):
+        self.logTreeWidget.clear()
         if os.path.isfile(self.logFileName):
             try:
                 f = h5py.File(self.logFileName,'r')
             except h5py.h5e.LowLevelIOError, e:
                 return
-
-            self.logTreeWidget.clear()
-            for name in list(f):
+            logTopLevelList = list(f)
+            logTopLevelList.sort(cmp=logFileCmpFunc)
+            for name in logTopLevelList:
                 treeItem = QtGui.QTreeWidgetItem(self.logTreeWidget,0)
                 treeItem.setText(0,name)
                 logData = f[name]
@@ -1177,7 +1222,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             treeItem = QtGui.QTreeWidgetItem(self.logTreeWidget,0)
             treeItem.setText(0,'log file empty')
 
-    def     addChildToLogTree(self,parent,hdf5Item):
+    def addChildToLogTree(self,parent,hdf5Item):
         """
         Add child nodes to the run tree. 
         """
@@ -1233,6 +1278,23 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
 
 def sec2ms(x):
     return 1000*x
+
+def logFileCmpFunc(x,y):
+    """
+    Comparison function for sorting the log file names.
+    """
+    xNum = int(x.split('_')[1])
+    yNum = int(y.split('_')[1])
+    if xNum > yNum:
+        value = 1
+    elif yNum > xNum:
+        value = -1
+    else:
+        value = 0
+    return value
+
+
+    
 
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':

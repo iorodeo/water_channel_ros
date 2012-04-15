@@ -253,11 +253,11 @@ class Robot_Control(object):
         return resp.status, resp.message
 
     def enableControllerMode(self):
-        print 'enableControllerMode'
+        #print 'enableControllerMode'
         resp = self.controllerEnableProxy(True)
 
     def disableControllerMode(self):
-        print 'disableControllerMode'
+        #print 'disableControllerMode'
         resp = self.controllerEnableProxy(False)
 
     def startSetptOutscan(self,setptValues,feedback_cb=None,done_cb=None):
