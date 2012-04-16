@@ -30,6 +30,8 @@ LOG_UPDATE_TIMER_DT = 500
 FEEDBACK_POSITIONING_VELOCITY = 0.2
 FEEDBACK_POSITIONING_ACCELERATION = 0.5
 
+PLUGIN_DIRECTORY = os.path.join(os.environ['HOME'],'plugins')
+
 # Default log file
 DEFAULT_LOG_FILE = os.path.join(os.environ['HOME'],'default_log.hdf5')
 

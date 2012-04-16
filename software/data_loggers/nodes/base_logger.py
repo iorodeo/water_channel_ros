@@ -117,7 +117,7 @@ class Base_Logger(object):
                     # First call since reset - create analog input dataset
                     n = len(data.values)
                     self.logger.add_dataset(self.analog_input_path, (n,))
-                    self.logger.add_attribute(self.analog_input_path, 'unit', 'V')
+                    self.logger.add_attribute(self.analog_input_path, 'unit', 'int')
                 self.analog_data = data
                 
 

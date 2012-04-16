@@ -173,26 +173,17 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         Updates the GUI state based on the value of the outscanStopSignal. 
         """
         if self.enabled:
-
-            # Check to see of the stop signal has been issued.
             with self.lock:
                 stopSignal = self.outscanStopSignal
             if stopSignal:
                 self.outscanStopActions()
                 return
-
-            # No stop signal - check if run in is progress
             if self.runInProgress: 
                 with self.lock:
                     outscanInProgress = self.outscanInProgress
-                # Check if  outscan is in progress - if not update
                 if outscanInProgress == False:
-
-                    # Update log view
                     if self.logFileName is not None:
                         self.populateLogTree()
-
-                    # Update run state
                     if self.controlMode == 'startupMode':
                         self.updateTrialState()
                         if self.runState != 'done':
@@ -200,7 +191,14 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
                         else:
                             self.outscanStopActions()
                     else:
-                        self.outscanStopActions()
+                        if self.pluginRunning:
+                            if self.runState != 'done':
+                                self.pluginObj.startNextOutscan()
+                            else:
+                                self.pluginObj.cleanup()
+                                self.outscanStopActions()
+                        else:
+                            self.outscanStopActions()
 
     def setupAutorunDelayTimer(self):
         """
@@ -344,6 +342,17 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.progressBar.setValue(0)
         self.progressBar.setVisible(False)
 
+        # Setup plugins
+        self.pluginObj = None
+        self.pluginRunning = False
+        self.pluginDict = self.importPlugins()
+        for pluginName in self.pluginDict:
+            listItem = QtGui.QListWidgetItem(self.pluginListWidget)
+            listItem.setText(pluginName)
+            self.pluginListWidget.addItem(listItem)
+
+        self.pluginStartPushButton.setEnabled(False)
+        self.pluginStopPushButton.setEnabled(False)
 
     def connectActions(self):
         """
@@ -384,13 +393,61 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.logTreeWidget.contextMenuEvent = self.logTreeItemRightClicked_Callback
         self.logTreeWidget.itemClicked.connect(self.logTreeItemClicked_Callback)
 
+        # Actions for the plugin tab
+        self.pluginStartPushButton.clicked.connect(self.pluginStart_Callback)
+        self.pluginStopPushButton.clicked.connect(self.pluginStop_Callback)
+        self.pluginListWidget.itemClicked.connect(self.pluginItemClicked_Callback)
+
+    def pluginStart_Callback(self):
+        currentItem = self.pluginListWidget.currentItem()
+        if currentItem is not None:
+            self.pluginStartPushButton.setEnabled(False)
+            self.pluginStopPushButton.setEnabled(True)
+            pluginName = str(currentItem.text())
+            pluginModule = self.pluginDict[pluginName]
+            self.pluginObj = pluginModule.SledControlPlugin(
+                    self.robotControl, 
+                    self.pluginSetOutscanInProgress,
+                    self.pluginSetRunStateDone,
+                    self.writeStatusMessage,
+                    )
+            self.runInProgress = True
+            self.pluginRunning = True
+            self.runState = 'plugin running'
+            with self.lock:
+                self.outscanInProgress = False
+            self.controlTab.setEnabled(False)
+            self.runsTab.setEnabled(False)
+            self.logTab.setEnabled(False)
+            self.statusbar.showMessage('System Enabled - Plugin Running')
+
+    def pluginStop_Callback(self):
+        self.pluginStartPushButton.setEnabled(True)
+        self.pluginStopPushButton.setEnabled(False)
+
+    def pluginItemClicked_Callback(self):
+        currentItem = self.pluginListWidget.currentItem()
+        self.pluginStartPushButton.setEnabled(True)
+
+    def pluginSetOutscanInProgress(self,value):
+        value = bool(value)
+        with self.lock:
+            self.outscanInProgress = value
+
+    def pluginSetRunStateDone(self):
+        with self.lock:
+            self.runState = 'done'
+
+    def pluginWriteStatusMessage(self,msg):
+        self.writeStatusMessage(msg)
+        self.statusWindowTextEdit.repaint()
+
     def logTreeItemClicked_Callback(self):
         currentItem = self.logTreeWidget.currentItem()
         if currentItem.parent() is None:
             self.deleteLogItemPushButton.setEnabled(True)
         else:
             self.deleteLogItemPushButton.setEnabled(False)
-
 
     def modeCheck_Callback(self,checkValue):
         """
@@ -401,12 +458,14 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         if checkValue:
             self.joystickGroupBox.setEnabled(False)
             self.feedbackGroupBox.setEnabled(False)
+            self.pluginTab.setEnabled(False)
             msg = '%s enabled'%(self.startupMode,)
             self.writeStatusMessage(msg)
             self.startPushButton.setEnabled(True)
             self.controlMode = 'startupMode'
         else:
             self.controlGroupBoxSetEnabled(True)
+            self.pluginTab.setEnabled(True)
             self.startPushButton.setEnabled(False)
             msg = '%s disabled'%(self.startupMode,)
             self.writeStatusMessage(msg)
@@ -494,11 +553,13 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         if checkValue:
             self.modeGroupBox.setEnabled(False)
             self.feedbackGroupBox.setEnabled(False)
+            self.pluginTab.setEnabled(False)
             self.startPushButton.setEnabled(True)
             self.writeStatusMessage('joystick positioning enabled')
             self.controlMode = 'joystick' 
         else:
             self.controlGroupBoxSetEnabled(True)
+            self.pluginTab.setEnabled(True)
             self.startPushButton.setEnabled(False)
             self.writeStatusMessage('joystick positioning disabled')
             self.controlMode = None
@@ -531,11 +592,13 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         if checkValue:
             self.modeGroupBox.setEnabled(False)
             self.joystickGroupBox.setEnabled(False)
+            self.pluginTab.setEnabled(False)
             self.startPushButton.setEnabled(True)
             self.writeStatusMessage('feedback positioning enabled')
             self.controlMode = 'feedback'
         else:
             self.controlGroupBoxSetEnabled(True)
+            self.pluginTab.setEnabled(True)
             self.startPushButton.setEnabled(False)
             self.writeStatusMessage('feedback positioning disabled')
             self.controlMode = None
@@ -749,6 +812,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.controlGroupBoxSetEnabled(False,uncheck_on_disable=False)
         self.runsTab.setEnabled(False)
         self.logTab.setEnabled(False)
+        self.pluginTab.setEnabled(False)
         self.enableRobotControlMode()
         self.statusbar.showMessage('System Enabled - Running')
         
@@ -766,17 +830,25 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.outscanStopSignal = False
             self.outscanInProgress = False
             self.runInProgress = False
-            self.startPushButton.setEnabled(True)
-            self.stopPushButton.setEnabled(False)
+            self.controlTab.setEnabled(True)
             self.logTab.setEnabled(True)
             self.runsTab.setEnabled(True)
-            self.positionBoundsGroupBox.setEnabled(True)
-            self.controlGroupBoxSetEnabled(True,enable_only_checked=True)
+            self.pluginTab.setEnabled(True)
+            if not self.pluginRunning:
+                self.startPushButton.setEnabled(True)
+                self.stopPushButton.setEnabled(False)
+                self.positionBoundsGroupBox.setEnabled(True)
+                self.controlGroupBoxSetEnabled(True,enable_only_checked=True)
+            else:
+                self.pluginRunning = False
+                self.pluginStartPushButton.setEnabled(True)
+                self.pluginStopPushButton.setEnabled(False)
             self.disableRobotControlMode()
             self.robotControl.disableLogger()
             self.statusbar.showMessage('System Enabled - Stopped')
             if self.logFileName is not None:
                 self.populateLogTree()
+
 
     def disableRobotControlMode(self):
         """
@@ -987,6 +1059,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.writeStatusMessage('system enabled')
             self.enableDisablePushButton.setText('Disable')
             self.controlGroupBoxSetEnabled(True)
+            self.pluginTab.setEnabled(True)
         else:
             self.writeStatusMessage('system disabled')
             self.enableDisablePushButton.setText('Enable')
@@ -994,6 +1067,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.stopPushButton.setEnabled(False)
             self.controlGroupBoxSetEnabled(False)
             self.positionBoundsGroupBox.setEnabled(True)
+            self.pluginTab.setEnabled(False)
 
     def loadRunFile_Callback(self):
         """
@@ -1246,8 +1320,57 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
                 self.addChildToLogTree(item, obj)
 
     def logTreeItemRightClicked_Callback(self,event):
-        print 'logTreeItemRightClicked'
+        currentItem = self.logTreeWidget.currentItem()
+        if currentItem is not None:
+            fullName = self.getTreeWidgetItemFullName(currentItem)
+            trialName = fullName.split('/')[1]
+            timeName = '/{0}/data/time'.format(trialName)
+            if fullName == timeName:
+                return
+            try:
+                f = h5py.File(self.logFileName,'r')
+            except h5py.h5e.LowLevelIOError, e:
+                return
+            try:
+                dataValues = f[fullName]
+            except KeyError, e:
+                return
+            try: 
+                timeValues = f[timeName]
+            except KeyError:
+                return
+            try:
+                dataShape = dataValues.shape
+                timeShape = timeValues.shape
+            except AttributeError, e:
+                return
+            if not dataShape[0] == timeShape[0]:
+                return
+            try:
+                dataUnits = dataValues.attrs['unit']
+                timeUnits = timeValues.attrs['unit']
+            except AttributeError, e:
+                return
+            pylab.clf()
+            for i in range(dataShape[1]): 
+                pylab.plot(timeValues[:,0],dataValues[:,i]) 
+                pylab.xlabel(timeUnits)
+                pylab.ylabel(dataUnits)
+                pylab.title(fullName) 
+            pylab.grid('on')
+            pylab.show()
 
+
+    def getTreeWidgetItemFullName(self,item):
+        fullName = [str(item.text(0))]
+        while item.parent() is not None:
+            item = item.parent()
+            fullName.append(str(item.text(0)))
+        fullName.reverse()
+        fullName.insert(0,'')
+        fullName = '/'.join(fullName)
+        return fullName
+            
     def writeStatusMessage(self,msg):
         """
         Writes a status message to the status window.
@@ -1272,9 +1395,38 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         if not self.startupMode in ALLOWED_STARTUP_MODES:
             raise ValueError, 'unknown startup mode: %s'%(self.startupMode,)
 
+    def getPluginFiles(self):
+        """
+        Returns list of plugin files.
+        """
+        fileList = os.listdir(PLUGIN_DIRECTORY)
+        pluginList = []
+        for f in fileList:
+            base, ext = os.path.splitext(f)
+            if ext == '.py':
+                pluginList.append(base)
+        return pluginList
+
+    def importPlugins(self):
+        """
+        Imports plugins
+        """
+        pluginDict = {}
+        pluginFiles = self.getPluginFiles()
+        if pluginFiles:
+            sys.path.append(PLUGIN_DIRECTORY) 
+            for f in pluginFiles:
+                try:
+                    pluginModule = __import__(f)
+                    pluginDict[pluginModule.PLUGIN_NAME] = pluginModule
+                except Exception, e:
+                    errorMsg = 'unable to import plugin {0}: {1}'.format(f,str(e))
+                    QtGui.QMessageBox.critical(self,'Plugin Import Error', errorMsg) 
+        return pluginDict
+
     def main(self):
         self.show()
-        
+# -----------------------------------------------------------------------------
 
 def sec2ms(x):
     return 1000*x
@@ -1293,8 +1445,6 @@ def logFileCmpFunc(x,y):
         value = 0
     return value
 
-
-    
 
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':
