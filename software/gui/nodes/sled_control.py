@@ -898,7 +898,8 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
                 FEEDBACK_POSITIONING_ACCELERATION,
                 self.robotControl.dt,
                 )
-        self.startSetptOutscan(setptValues)
+        #self.startSetptOutscan(setptValues)
+        self.startOutscan(setptValues,'setpt')
 
     def updateTrialState(self):
         """
@@ -947,7 +948,8 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
                 FEEDBACK_POSITIONING_ACCELERATION,
                 self.robotControl.dt,
                 )
-        self.startSetptOutscan(setptValues)
+        #self.startSetptOutscan(setptValues)
+        self.startOutscan(setptValues, 'setpt')
 
     def startAutorunDelay(self):
         """
@@ -975,27 +977,38 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.writeStatusMessage('loading run # %d for outscan'%(self.runNumber,))
         run = self.runFileReader.get_run(self.runNumber)
         runConverter = run_converter.Run_Converter(self.startupMode,self.robotControl.dt)
-
         # Start outscan - should I use actual position or start position?
         #setptValues = runConverter.get(run,self.startPosition)
-        setptValues = runConverter.get(run,self.robotControl.position)
-
+        values = runConverter.get(run,self.robotControl.position)
         self.robotControl.enableLogger()
-        self.startSetptOutscan(setptValues)
+        #self.startSetptOutscan(values)
+        if self.startupMode == 'position trajectory':
+            self.startOutscan(values, 'setpt')
+        elif self.startupMode == 'captive trajectory':
+            self.startOutscan(values, 'actuator')
+        else:
+            raise ValueError, 'unknown startup mode'
 
-    def startSetptOutscan(self,setptValues): 
+    def startOutscan(self,values,outscanType):
         """
-        Starts a set point outscan using the roboControl object.
+        Starts outscan using the roboControl object.
         """
         # Start setpt outscan
         self.writeStatusMessage('running outscan')
         with self.lock:
             self.outscanInProgress = True
             self.outscanPercentComplete = 0
+            
+        if outscanType == 'setpt':
+            outscanFunc = self.robotControl.startSetptOutscan
+        elif outscanType == 'actuator':
+            outscanFunc = self.robotControl.startActuatorOutscan
+        else:
+            raise ValueError, 'unknown outscan type'
 
         try:
-            self.robotControl.startSetptOutscan(
-                    setptValues,
+            outscanFunc( 
+                    values,
                     feedback_cb = self.outscanProgress_Callback,
                     done_cb = self.outscanDone_Callback,
                     )
@@ -1003,6 +1016,27 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.writeStatusMessage('error: %s'%(str(e),))
             with self.lock:
                 self.outscanStopSignal = True
+
+    #def startSetptOutscan(self,setptValues): 
+    #    """
+    #    Starts a set point outscan using the roboControl object.
+    #    """
+    #    # Start setpt outscan
+    #    self.writeStatusMessage('running outscan')
+    #    with self.lock:
+    #        self.outscanInProgress = True
+    #        self.outscanPercentComplete = 0
+
+    #    try:
+    #        self.robotControl.startSetptOutscan(
+    #                setptValues,
+    #                feedback_cb = self.outscanProgress_Callback,
+    #                done_cb = self.outscanDone_Callback,
+    #                )
+    #    except ValueError, e:
+    #        self.writeStatusMessage('error: %s'%(str(e),))
+    #        with self.lock:
+    #            self.outscanStopSignal = True
         
     def outscanProgress_Callback(self,data):
         """
@@ -1206,9 +1240,11 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         if self.startupMode == 'position trajectory':
             pylab.xlabel('time (s)')
             pylab.ylabel('position (m)')
+        elif self.startupMode == 'captive trajectory':
+            pylab.xlabel('time (s)')
+            pylab.ylabel('actuator value (us)')
         pylab.grid('on')
         pylab.show()
-
 
     def getTreeWidgetTopLevelParent(self,item):
         """

@@ -24,6 +24,8 @@ from msg_and_srv.srv import SetLogFile
 # Actions
 from actions.msg import SetptOutscanAction
 from actions.msg import SetptOutscanGoal
+from actions.msg import ActuatorOutscanAction
+from actions.msg import ActuatorOutscanGoal
 
 # Constants
 DFLT_IN_POSITION_TOL = 0.005
@@ -105,6 +107,13 @@ class Robot_Control(object):
                 SetptOutscanAction
                 )
         self.setptActionClient.wait_for_server()
+
+        self.actuatorActionClient = actionlib.SimpleActionClient(
+                'actuator_action',
+                ActuatorOutscanAction
+                )
+        self.actuatorActionClient.wait_for_server()
+        
 
     @property
     def dt(self):
@@ -280,7 +289,7 @@ class Robot_Control(object):
             goal.coord_frame = 'absolute'
             goal.position_array = list(setptValues)
 
-            # Send gaol to action server
+            # Send goal to action server
             self.enableControllerMode()
             self.setptActionClient.send_goal(
                     goal,
@@ -295,11 +304,33 @@ class Robot_Control(object):
         self.setptActionClient.cancel_all_goals()
         self.disableControllerMode()
 
-    def startActuatorOutscan(self,actuatorArray,callback):
-        pass
+
+    def startActuatorOutscan(self,actuatorArray,feedback_cb,done_cb):
+        """
+        Starts an actuator outscan on the actuator action server
+        using the actuator action client.
+        """
+        done_cb_wrapped = wrapOutscanDone(done_cb)
+
+        # Setup goal
+        goal = ActuatorOutscanGoal()
+        goal.type = 'pwm'
+        goal.actuator_array = actuatorArray
+
+        # Send goal to action sever
+        self.enableControllerMode()
+        self.actuatorActionClient.send_goal(
+                goal,
+                feedback_cb=feedback_cb,
+                done_cb=done_cb_wrapped
+                )
 
     def stopActuatorOutscan(self):
-        pass
+        """
+        Stops the current actuator outscan on the action server.
+        """
+        self.actuatorActionClien.cancel_all_goals()
+        self.disableControllerMode()
     
 
 # Decorators

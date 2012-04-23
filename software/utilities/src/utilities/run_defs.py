@@ -1,13 +1,79 @@
 from __future__ import division
 import scipy
 
+def get_constant(value,T,dt,t_output=False):
+    """
+    Returns constant trajectory with given value, duration and time
+    step.
+    """
+    N = scipy.floor(T/dt)+1
+    t = scipy.arange(0,N)*dt
+    x = value*scipy.ones(t.shape)
+    if not t_output:
+        return x
+    else:
+        return t,x
+
+def get_trapezoidal(value_0, value_1, rate, T, dt, t_output=False):
+    """
+    Returns a trapezoidal trajectory.  
+    """
+    N = scipy.floor(T/dt)+1
+    t = scipy.arange(0,N)*dt
+    x = scipy.zeros(t.shape)
+
+    # Choose sign of rate based on whether or not value_0 is larger of smaller 
+    # than value_1
+    if value_0 <= value_1:
+        rate = abs(rate)
+    else:
+        rate = -abs(rate)
+    t_value_1 = (value_1 - value_0)/rate
+
+    if t_value_1 > T/2:
+        # Unable to go from value_0 to value_1 in time T at given rate - to the best 
+        # that you can.
+        ind = (t<=T/2)
+        a = rate
+        b = value_0
+        x[ind] = a*t[ind] +  b
+        value_end = a*T/2 + b
+
+        ind = (t>T/2)
+        a = 2*(value_0 -value_end)/T
+        b = value_end - a*T/2
+        x[ind] = a*t[ind] + b
+    else:
+        # We can go from value_0 to value_1 in the time T with the given rate.
+        ind = (t<t_value_1)
+        a = rate
+        b = value_0
+        x[ind] = a*t[ind] + b
+
+        ind = scipy.logical_and(t>=t_value_1, t<(T-t_value_1))
+        a = 0
+        b = value_1
+        x[ind] = a*t[ind] + b
+
+        ind = (t>=(T-t_value_1))
+        a = -rate
+        b = value_0 - a*T 
+        x[ind] = a*t[ind] + b 
+
+    if not t_output:
+        return x
+    else:
+        return t,x
+
+
+
 
 def get_constant_velo(v,T,dt,t_output=False):
     """
     Returns constant velocity trajectory starting at 0 with the
     given duration, T,  and time step, dt.
     """
-    N = scipy.floor(T/dt)
+    N = scipy.floor(T/dt)+1
     t = scipy.arange(0,N)*dt
     x = v*t
     if not t_output:
@@ -22,7 +88,7 @@ def get_cosine(amplitude,period,cycles,dt,t_output=False):
     and time step.
     """
     T = period*cycles
-    N = scipy.floor(T/dt)
+    N = scipy.floor(T/dt)+1
     t = scipy.arange(0,N)*dt
     x = amplitude*scipy.cos(2*scipy.pi*t/period)
     if not t_output:
@@ -131,13 +197,31 @@ def get_ramp(x0,x1,vmax,a,dt, output='ramp only'):
 if __name__ == '__main__':
     import pylab
 
+    if 0:
+        value = 10.0
+        T = 5.0
+        dt = 1/50.0
+        t,x = get_constant(value,T,dt,t_output=True)
+        pylab.plot(t,x)
+        pylab.show()
+
     if 1:
+        value_0 = 0.0
+        value_1 = 20.0
+        rate = 5.0
+        T = 5.0
+        dt = 1/50.0
+        t,x = get_trapezoidal(value_0, value_1, rate, T, dt, t_output=True)
+        pylab.plot(t,x)
+        pylab.show()
+
+    if 0:
         """
         Debugging constant velocity move.
         """
         v = 5.0
         T = 10.0
-        dt = 1/50
+        dt = 1/50.0
         t,x = get_constant_velo(v,T,dt,t_output=True)
         pylab.plot(t,x)
         pylab.show()

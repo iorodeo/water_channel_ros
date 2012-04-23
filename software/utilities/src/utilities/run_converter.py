@@ -15,7 +15,7 @@ class Run_Converter(object):
         if mode == 'position trajectory':
             self.get = self.getPositionRun
         elif mode == 'captive trajectory':
-            self.get = sel.getCaptiveRun
+            self.get = self.getCaptiveRun
         elif mode == 'inertial sled':
             self.get = self.getIntertialRun
         else:
@@ -35,38 +35,49 @@ class Run_Converter(object):
             v = runParams['velocity'][0]
             setptValues = run_defs.get_constant_velo(v,T,self.dt)
             setptValues = shift2StartPos(setptValues,startPos)
-            return setptValues
-
         elif runType == 'ramp profile':
             dist = runParams['distance'][0]
             velo = runParams['velocity'][0]
             accel = runParams['acceleration'][0]
             setptValues = run_defs.get_ramp(0,dist,velo,accel,self.dt)
             setptValues = shift2StartPos(setptValues,startPos)
-            return setptValues
-
         elif runType == 'cosine':
             amplitude = runParams['amplitude'][0]
             cycles = runParams['cycles'][0]
             period = runParams['period'][0] 
             setptValues = run_defs.get_cosine(amplitude,period,cycles,self.dt)
             setptValues = shift2StartPos(setptValues,startPos)
-            return setptValues
-
         elif runType == 'array':
             setptValues = scipy.array(runParams)
             setptValues = shift2StartPos(setptValues,startPos)
-            return setptValues
-
         else:
             raise ValueError, 'uknown run type %s for mode %s'%(runType,self.mode)
 
+        return setptValues
 
-    def getCapativeRun(self,run,startPos):
+    def getCaptiveRun(self,run,*arg):
         """
         Run converter for 'captive trajectory' mode
         """
-        pass
+        runType = run.attrs['type']
+        runType = runType.lower()
+        runParams = run['params']
+
+        if runType == 'constant':
+            value = runParams['value'][0]
+            T = runParams['T'][0]
+            valueArray = run_defs.get_constant(value,T,self.dt)
+        elif runType == 'trapezoidal':
+            T = runParams['T'][0]
+            rate = runParams['rate'][0]
+            value0 = runParams['value_0'][0]
+            value1 = runParams['value_1'][0]
+            valueArray = run_defs.get_trapezoidal(value0,value1,rate,T,self.dt)
+        elif runType ==  'array':
+            valueArray = scipy.array(runParams)
+        else:
+            raise ValueError, 'unknown run type %s for mode %s'%(runType,self.mode)
+        return valueArray
 
     def getInertialRun(self,run,startPos):
         """
@@ -85,12 +96,22 @@ if __name__ == '__main__':
     import pylab
     from hdf5_run_reader import HDF5_Run_Reader
 
-    filename = os.path.join(os.environ['HOME'], 'test_position_run_file.hdf5') 
-    reader = HDF5_Run_Reader(filename) 
-    run = reader.get_run(75)
-    converter = Run_Converter('position trajectory',1/50.0)
-    values = converter.get(run,4)
-    pylab.plot(values)
-    pylab.show()
+    if 0:
+        filename = os.path.join(os.environ['HOME'], 'test_position_run_file.hdf5') 
+        reader = HDF5_Run_Reader(filename) 
+        run = reader.get_run(75)
+        converter = Run_Converter('position trajectory',1/50.0)
+        values = converter.get(run,4)
+        pylab.plot(values)
+        pylab.show()
+
+    if 1:
+        filename = os.path.join(os.environ['HOME'], 'test_captive_run_file.hdf5')
+        reader = HDF5_Run_Reader(filename)
+        run = reader.get_run(5)
+        converter = Run_Converter('captive trajectory', 1/50.0)
+        values = converter.get(run)
+        pylab.plot(values)
+        pylab.show()
 
 
