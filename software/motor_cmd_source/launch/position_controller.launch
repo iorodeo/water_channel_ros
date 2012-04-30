@@ -1,9 +1,3 @@
 <launch>
-  <param name="controller_pgain" type="double" value="6.0"/>
-  <param name="controller_igain" type="double" value="0.0"/>
-  <param name="controller_dgain" type="double" value="1.0"/>
-  <param name="controller_max_output" type="double" value="4000.0"/>
-  <param name="controller_min_output" type="double" value="-4000.0"/>
-  <param name="feedforward_coeff" type="double" value="5.6"/>
   <node name="position_controller" pkg="motor_cmd_source" type="position_controller.py"/>
 </launch>

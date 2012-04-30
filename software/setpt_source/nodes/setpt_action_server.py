@@ -78,9 +78,17 @@ class SetptActionServer(object):
                     self.server.set_aborted(self.result)
                     return
 
+            # Calculate velocity
+            if i == 0:
+                velocity = 0
+            else:
+                velocity = (goal.position_array[i] - goal.position_array[i-1])/self.dt
+
+
             # Publish setpt message
             self.setptMsg.header.stamp = rospy.get_rostime()
             self.setptMsg.position = position
+            self.setptMsg.velocity = velocity
             self.pub.publish(self.setptMsg)
 
             # Publish feedback message

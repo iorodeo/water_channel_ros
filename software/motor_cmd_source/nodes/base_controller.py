@@ -44,10 +44,11 @@ class BaseController(object):
         self.controller.outputMin = rospy.get_param('controller_min_output', -4000)
         
         self.feedForward = velocity_feedforward.VelocityFeedForward()
-        self.feedForward.coeff = rospy.get_param('feedforward_coeff', 5.6)
+        self.feedForward.coeff = rospy.get_param('controller_ffcoeff', 5.6)
         self.controller.ffFunc = self.feedForward.func
 
-        self.pgainScheduler = GainScheduler(width_x=20.0, width_y=20.0, min_gain=0.5,max_gain=5.0) 
+        pgain = self.controller.pgain
+        self.pgainScheduler = GainScheduler(0.1*pgain,pgain,0.075) 
 
         # Setup subscriber setpt topic 
         self.setptSub = rospy.Subscriber('setpt', SetptMsg, self.setptCallback)
@@ -72,6 +73,9 @@ class BaseController(object):
                 self.enabled = True
             else:
                 self.enabled = False
+                self.motorCmd = 0
+                self.publishMotorCmd()
+
         message = ''
         return NodeEnableResponse(self.enabled,message)
 
@@ -97,17 +101,28 @@ class BaseController(object):
             if self.enabled and self.haveSetptData == True:
                 self.getMotorCmd()
                 stamp = rospy.get_rostime()
-                # Write motor command message
-                self.motorCmdMsg.header.stamp = stamp 
-                self.motorCmdMsg.motor_cmd = self.motorCmd
-                self.motorCmdPub.publish(self.motorCmdMsg)
-                # Write pid controller message
-                self.PIDMsg.header.stamp = stamp
-                self.PIDMsg.ffTerm = self.controller.ffTerm
-                self.PIDMsg.pTerm = self.controller.pTerm
-                self.PIDMsg.iTerm = self.controller.iTerm
-                self.PIDMsg.dTerm = self.controller.dTerm
-                self.PIDPub.publish(self.PIDMsg)
+                self.publishMotorCmd(stamp)
+                self.publishPIDInfo(stamp)
+
+    def publishMotorCmd(self,stamp=None):
+        if stamp is None:
+            stamp = rospy.get_rostime()
+        self.motorCmdMsg.header.stamp = stamp 
+        self.motorCmdMsg.motor_cmd = self.motorCmd
+        self.motorCmdPub.publish(self.motorCmdMsg)
+        
+
+    def publishPIDInfo(self,stamp):
+        if stamp is None:
+            stamp = rospy.get_rostime()
+        self.PIDMsg.header.stamp = stamp
+        self.PIDMsg.ffTerm = self.controller.ffTerm
+        self.PIDMsg.pTerm = self.controller.pTerm
+        self.PIDMsg.iTerm = self.controller.iTerm
+        self.PIDMsg.dTerm = self.controller.dTerm
+        self.PIDPub.publish(self.PIDMsg)
+
+
 
 
 # -----------------------------------------------------------------------------

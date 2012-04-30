@@ -253,7 +253,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
 
         # Start ros node and initialize robot control
         rospy.init_node('gui')
-        self.robotControl = Robot_Control()
+        self.robotControl = Robot_Control(self.startupMode)
 
         self.writeStatusMessage('initializing')
         self.checkStartupMode()
@@ -670,6 +670,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
                 # Value set successfully
                 self.lowerBound = lowerBoundNew
                 self.setBoundValidators()
+                self.setFeedbackPositionValidator()
                 if lowerBoundNew != lowerBoundOld:
                     msg = 'lower bound changed to %s m'%(self.lowerBoundStr,)
                     self.writeStatusMessage(msg)
@@ -693,6 +694,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
                 # Value set successfully
                 self.upperBound = upperBoundNew
                 self.setBoundValidators()
+                self.setFeedbackPositionValidator()
                 if upperBoundNew != upperBoundOld:
                     msg = 'upper bound changed to %s m'%(self.upperBoundStr,)
                     self.writeStatusMessage(msg)
@@ -849,7 +851,6 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             if self.logFileName is not None:
                 self.populateLogTree()
 
-
     def disableRobotControlMode(self):
         """
         Disable current control mode via robotControl
@@ -858,10 +859,12 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.robotControl.disableJoystickMode()
             self.writeStatusMessage('joystick positioning stopped')
         elif self.controlMode == 'feedback':
+            self.robotControl.disableControllerMode()
             self.writeStatusMessage('feedback positioning stopped')
             self.progressBar.setVisible(False)
         elif self.controlMode == 'startupMode':
             self.robotControl.stopSetptOutscan()
+            self.robotControl.disableControllerMode()
             self.progressBar.setVisible(False)
             self.writeStatusMessage('%s stopped'%(self.startupMode,))
 
@@ -898,7 +901,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
                 FEEDBACK_POSITIONING_ACCELERATION,
                 self.robotControl.dt,
                 )
-        #self.startSetptOutscan(setptValues)
+        #pylab.plot(setptValues)
         self.startOutscan(setptValues,'setpt')
 
     def updateTrialState(self):
@@ -1063,6 +1066,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.outscanPercentComplete = 100
             self.outscanInProgress = False
 
+        self.robotControl.disableControllerMode()
         self.robotControl.disableLogger()
 
     def enableDisable_Callback(self):

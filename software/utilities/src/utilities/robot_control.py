@@ -35,8 +35,9 @@ class Robot_Control(object):
     Interface for controlling the sled robot. 
     """
 
-    def __init__(self):
+    def __init__(self, mode):
 
+        self.mode = mode
         self.lock = threading.Lock()
         self.inPositionTol = DFLT_IN_POSITION_TOL
 
@@ -108,11 +109,12 @@ class Robot_Control(object):
                 )
         self.setptActionClient.wait_for_server()
 
-        self.actuatorActionClient = actionlib.SimpleActionClient(
-                'actuator_action',
-                ActuatorOutscanAction
-                )
-        self.actuatorActionClient.wait_for_server()
+        if not mode == 'position trajectory':
+            self.actuatorActionClient = actionlib.SimpleActionClient(
+                    'actuator_action',
+                    ActuatorOutscanAction
+                    )
+            self.actuatorActionClient.wait_for_server()
         
 
     @property
@@ -154,11 +156,13 @@ class Robot_Control(object):
         """
         resp = self.sledIOCmdProxy('set mode', 'motor_cmd')
 
+
     def disableSledIO(self):
         """
         Disable io to sled electronics
         """
         resp = self.sledIOCmdProxy('set mode', 'off')
+
 
     def getSledIOMode(self):
         """
@@ -262,12 +266,12 @@ class Robot_Control(object):
         return resp.status, resp.message
 
     def enableControllerMode(self):
-        #print 'enableControllerMode'
         resp = self.controllerEnableProxy(True)
+        return resp.status, resp.message
 
     def disableControllerMode(self):
-        #print 'disableControllerMode'
         resp = self.controllerEnableProxy(False)
+        return resp.status, resp.message
 
     def startSetptOutscan(self,setptValues,feedback_cb=None,done_cb=None):
         """
@@ -304,12 +308,15 @@ class Robot_Control(object):
         self.setptActionClient.cancel_all_goals()
         self.disableControllerMode()
 
-
     def startActuatorOutscan(self,actuatorArray,feedback_cb,done_cb):
         """
         Starts an actuator outscan on the actuator action server
         using the actuator action client.
         """
+        if self.mode == 'position trajectory':
+            # Note, this coud be changed - if we start the actuator action serverf
+            raise IOError, 'actuator ouscan not allowed in postiion trajectory mode'
+
         done_cb_wrapped = wrapOutscanDone(done_cb)
 
         # Setup goal
@@ -329,8 +336,11 @@ class Robot_Control(object):
         """
         Stops the current actuator outscan on the action server.
         """
-        self.actuatorActionClien.cancel_all_goals()
-        self.disableControllerMode()
+        if self.mode == 'position trajectory':
+            return
+        self.actuatorActionClient.cancel_all_goals()
+        # I don't think this is needed
+        #self.disableControllerMode()
     
 
 # Decorators

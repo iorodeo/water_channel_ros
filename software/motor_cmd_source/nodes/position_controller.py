@@ -10,7 +10,7 @@ class PositionController(BaseController):
         self.error = self.setptPosition - self.position
         self.ffValue = self.setptVelocity
 
-        self.controller.pgain = self.pgainScheduler.gain(self.error, self.ffValue)
+        self.controller.pgain = self.pgainScheduler.gain(self.setptVelocity)
 
         ## Use continuous gain schedule - to make motion smooth
         ##----------------------------------------------------------------------
