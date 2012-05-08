@@ -1,5 +1,6 @@
 <launch> 
     <!-- Load parameters -->
+    <include file="$(find water_channel_params)/params.xml" />
     <include file="$(find wc_config)/params/wc_params.xml" />
     
     <!-- Launch Nodes -->

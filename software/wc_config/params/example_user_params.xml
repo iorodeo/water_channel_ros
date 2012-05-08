@@ -1,0 +1,23 @@
+<launch>
+
+    <!-- Bounds Checker parameters -->
+    <param name="dist_lower_bound" type="double" value="0.8" />
+    <param name="dist_upper_bound" type="double" value="10.00"/>
+
+    <!-- Controller params -->
+    <param name="controller_pgain" type="double" value="6000.0"/>
+    <param name="controller_igain" type="double" value="10.0"/>
+    <param name="controller_dgain" type="double" value="0.0"/>
+    <param name="controller_ffcoeff" type="double" value="5600"/>
+
+    <!-- Force Sensor parameters -->
+    <param name="force_calibration" type="double" value="0.001"/>
+    <param name="force_zeroing_num" type="int" value="50"/>
+
+    <!-- Actuator pwm parameters -->
+    <param name="actuator_max_value" type="double" value="2000"/>
+    <param name="actuator_min_value" type="double" value="1000"/>
+    <param name="actuator_default_value" type="double" value="1500"/>
+
+</launch> 
+

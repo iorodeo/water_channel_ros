@@ -26,9 +26,6 @@ from utilities import run_defs
 from utilities import run_converter
 from gui_constants import *
 
-# DEBUG
-
-
 class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
     """
     Main control GUI for the water channel sled control software.
@@ -959,7 +956,6 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
                 FEEDBACK_POSITIONING_ACCELERATION,
                 self.robotControl.dt,
                 )
-        #self.startSetptOutscan(setptValues)
         self.startOutscan(setptValues, 'setpt')
 
     def startAutorunDelay(self):
@@ -989,14 +985,15 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         run = self.runFileReader.get_run(self.runNumber)
         runConverter = run_converter.Run_Converter(self.startupMode,self.robotControl.dt)
         # Start outscan - should I use actual position or start position?
-        #setptValues = runConverter.get(run,self.startPosition)
         values = runConverter.get(run,self.robotControl.position)
         self.robotControl.enableLogger()
-        #self.startSetptOutscan(values)
         if self.startupMode == 'position trajectory':
             self.startOutscan(values, 'setpt')
         elif self.startupMode == 'captive trajectory':
             # Need to set mass and dampling parameters 
+            mass = run['mass'][0]
+            damping = run['damping'][0]
+            self.robotControl.setDynamicsParams(mass,damping)
             self.startOutscan(values, 'actuator')
         else:
             raise ValueError, 'unknown startup mode'
@@ -1028,27 +1025,6 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.writeStatusMessage('error: %s'%(str(e),))
             with self.lock:
                 self.outscanStopSignal = True
-
-    #def startSetptOutscan(self,setptValues): 
-    #    """
-    #    Starts a set point outscan using the roboControl object.
-    #    """
-    #    # Start setpt outscan
-    #    self.writeStatusMessage('running outscan')
-    #    with self.lock:
-    #        self.outscanInProgress = True
-    #        self.outscanPercentComplete = 0
-
-    #    try:
-    #        self.robotControl.startSetptOutscan(
-    #                setptValues,
-    #                feedback_cb = self.outscanProgress_Callback,
-    #                done_cb = self.outscanDone_Callback,
-    #                )
-    #    except ValueError, e:
-    #        self.writeStatusMessage('error: %s'%(str(e),))
-    #        with self.lock:
-    #            self.outscanStopSignal = True
         
     def outscanProgress_Callback(self,data):
         """

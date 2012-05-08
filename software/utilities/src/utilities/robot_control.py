@@ -21,6 +21,7 @@ from msg_and_srv.srv import GetJoystickMax
 from msg_and_srv.srv import SetJoystickMax
 from msg_and_srv.srv import SetLogFile
 from msg_and_srv.srv import RelToAbsCmd
+from msg_and_srv.srv import SetDynamParams
 
 # Actions
 from actions.msg import SetptOutscanAction
@@ -108,6 +109,12 @@ class Robot_Control(object):
             self.dynamicsEnableProxy = rospy.ServiceProxy(
                     'dynamics_enable',
                     NodeEnable,
+                    )
+
+            rospy.wait_for_service('set_dynam_params')
+            self.setDynamParamsProxy = rospy.ServiceProxy(
+                    'set_dynam_params',
+                    SetDynamParams,
                     )
 
         # Setup action clients
@@ -321,6 +328,13 @@ class Robot_Control(object):
             return resp.status, resp.message
         else:
             return True, ''
+
+    def setDynamicsParams(self,mass,damping):
+        """
+        Sets the mass and damping for captive trajectory mode.
+        """
+        resp = self.setDynamParamsProxy(mass,damping)
+        return resp.status, resp.message
 
     def startSetptOutscan(self,setptValues,feedback_cb=None,done_cb=None):
         """
