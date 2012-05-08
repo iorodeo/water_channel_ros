@@ -244,7 +244,6 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         self.runInProgress = False
         self.autorunDelay = int(DEFAULT_AUTORUN_DELAY)
         self.autorunDelayCount = 0
-        self.startPosition = DEFAULT_START_POSITION
         self.runNumber = None
         self.updateAutorun(DEFAULT_AUTORUN_CHECK)
 
@@ -278,6 +277,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         # Get current upper and lower bound settings
         bounds = self.robotControl.getBounds()
         self.lowerBound, self.upperBound, self.lowerBoundMin, self.upperBoundMax = bounds
+        self.startPosition = 0.5*(self.lowerBound + self.upperBound) 
         
         # Create bound validators and set text values
         self.setBoundValidators()
@@ -1369,8 +1369,8 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
                 timeShape = timeValues.shape
             except AttributeError, e:
                 return
-            if not dataShape[0] == timeShape[0]:
-                return
+           # if not dataShape[0] == timeShape[0]:
+           #     return
             try:
                 dataUnits = dataValues.attrs['unit']
                 timeUnits = timeValues.attrs['unit']
@@ -1378,7 +1378,8 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
                 return
             pylab.clf()
             for i in range(dataShape[1]): 
-                pylab.plot(timeValues[:,0],dataValues[:,i]) 
+                n = min([timeValues.shape[0], dataValues.shape[0]])
+                pylab.plot(timeValues[:n,0],dataValues[:n,i]) 
                 pylab.xlabel(timeUnits)
                 pylab.ylabel(dataUnits)
                 pylab.title(fullName) 
