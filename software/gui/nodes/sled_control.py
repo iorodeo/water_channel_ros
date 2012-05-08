@@ -16,6 +16,8 @@ import sys
 import h5py
 import Queue
 import numpy
+import matplotlib
+matplotlib.use('Qt4Agg')
 import pylab
 from PyQt4 import QtCore
 from PyQt4 import QtGui
