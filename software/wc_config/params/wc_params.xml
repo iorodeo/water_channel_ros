@@ -4,12 +4,14 @@
     <param name="controller_igain" type="double" value="10.0"/>
     <param name="controller_dgain" type="double" value="0.0"/>
     <param name="controller_ffcoeff" type="double" value="5600"/>
+    
     <param name="controller_max_output" type="double" value="4000.0"/>
     <param name="controller_min_output" type="double" value="-4000.0"/>
 
     <!-- Bounds Checker parameters -->
     <param name="dist_lower_bound" type="double" value="0.8" />
     <param name="dist_upper_bound" type="double" value="5.00"/>
+
     <param name="dist_lower_bound_min" type="double" value="0.1" />
     <param name="dist_upper_bound_max" type="double" value="35.0" />
 
@@ -24,5 +26,16 @@
 
     <!-- System update rate -->
     <param name="update_rate" type="double" value="50.0"/>
+
+    <!-- Force Sensor parameters -->
+    <param name="force_calibration" type="double" value="0.001"/>
+    <param name="force_zeroing_num" type="int" value="50"/>
+    <param name="force_ain_channel" type="int" value="0" />
+
+    <!-- Actuator parameters -->
+    <param name="actuator_update_rate" type="double" value="50"/>
+    <param name="actuator_max_value" type="double" value="2000"/>
+    <param name="actuator_min_value" type="double" value="1000"/>
+    <param name="actuator_default_value" type="double" value="1500"/>
 
 </launch>

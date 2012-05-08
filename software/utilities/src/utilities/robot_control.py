@@ -20,6 +20,7 @@ from msg_and_srv.srv import SetBounds
 from msg_and_srv.srv import GetJoystickMax
 from msg_and_srv.srv import SetJoystickMax
 from msg_and_srv.srv import SetLogFile
+from msg_and_srv.srv import RelToAbsCmd
 
 # Actions
 from actions.msg import SetptOutscanAction
@@ -102,6 +103,13 @@ class Robot_Control(object):
                 NodeEnable,
                 )
 
+        if self.mode == 'captive trajectory':
+            rospy.wait_for_service('dynamics_enable')
+            self.dynamicsEnableProxy = rospy.ServiceProxy(
+                    'dynamics_enable',
+                    NodeEnable,
+                    )
+
         # Setup action clients
         self.setptActionClient = actionlib.SimpleActionClient(
                 'setpt_action', 
@@ -109,13 +117,19 @@ class Robot_Control(object):
                 )
         self.setptActionClient.wait_for_server()
 
-        if not mode == 'position trajectory':
+        if not self.mode == 'position trajectory':
             self.actuatorActionClient = actionlib.SimpleActionClient(
                     'actuator_action',
                     ActuatorOutscanAction
                     )
             self.actuatorActionClient.wait_for_server()
-        
+
+
+        # Set point relative to absolute position command proxy
+        self.setPointRelToAbsCmdProxy = rospy.ServiceProxy(
+                'setpt_rel_cmd',
+                RelToAbsCmd,
+                )
 
     @property
     def dt(self):
@@ -140,6 +154,14 @@ class Robot_Control(object):
         with self.lock:
             velocity = self._velocity
         return velocity
+
+    def setPointRelToAbsReset(self):
+        """
+        Resets the relative to absolute set point translator such that the 
+        current sled position is considered to be the zero position.
+        """
+        resp = self.setPointRelToAbsCmdProxy('reset')
+        return resp.flag
 
     def distMsgHandler(self,data):
         """
@@ -183,6 +205,12 @@ class Robot_Control(object):
             return False
         else:
             return True
+
+    def setPwmToDefault(self):
+        """
+        Sets the actuator pwm signals to their default values.
+        """
+        resp = self.sledIOCmdProxy('set default pwm','')
 
     def enableJoystickMode(self):
         """
@@ -273,6 +301,27 @@ class Robot_Control(object):
         resp = self.controllerEnableProxy(False)
         return resp.status, resp.message
 
+    def enableDynamics(self):
+        """
+        Enables the dynamics node output.
+        """
+        if not self.mode == 'captive trajectory':
+            raise IOError, 'can only enable dynamics in captive trajectory mode'
+        resp = self.dynamicsEnableProxy(True)
+        return resp.status, resp.message
+
+    def disableDynamics(self):
+        """
+        Disabled the dynamics node output. Note, disable dynamics can be called 
+        when not in 'captive trajectory' mode.  Basically, it does nothing in this
+        case.
+        """
+        if self.mode == 'captive trajectory':
+            resp = self.dynamicsEnableProxy(False)
+            return resp.status, resp.message
+        else:
+            return True, ''
+
     def startSetptOutscan(self,setptValues,feedback_cb=None,done_cb=None):
         """
         Starts a setpt outscan on the setpt action server using
@@ -321,11 +370,15 @@ class Robot_Control(object):
 
         # Setup goal
         goal = ActuatorOutscanGoal()
-        goal.type = 'pwm'
+        goal.type = 'pwm0'
         goal.actuator_array = actuatorArray
 
         # Send goal to action sever
         self.enableControllerMode()
+        if self.mode == 'captive trajectory':
+            self.setPointRelToAbsReset()
+            self.enableDynamics()
+
         self.actuatorActionClient.send_goal(
                 goal,
                 feedback_cb=feedback_cb,
@@ -340,7 +393,8 @@ class Robot_Control(object):
             return
         self.actuatorActionClient.cancel_all_goals()
         # I don't think this is needed
-        #self.disableControllerMode()
+        self.disableControllerMode()
+        self.disableDynamics()
     
 
 # Decorators

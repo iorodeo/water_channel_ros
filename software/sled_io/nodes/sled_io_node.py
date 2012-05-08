@@ -22,7 +22,6 @@ class SledIO(object):
 
     def __init__(self):
         self.lock =  threading.Lock()
-
         # Open serial device. Note, this is a bit of a kludge - sometimes the
         # device is opened, but no data appears on the serial stream. I'm not sure
         # why this is happen. In these case the device is closed and re-opened until it
@@ -42,6 +41,7 @@ class SledIO(object):
         self.sleep_dt = 0.01
         self.motor_cmd = None
         self.mode = 'off'
+        self.pwm_default_value = rospy.get_param('actuator_default_value', 1500)
 
         # Setup analog input publisher 
         self.ain_msg = AnalogInMsg()
@@ -94,6 +94,10 @@ class SledIO(object):
                     self.mode = mode.lower()
             else:
                 pass
+        elif req.cmd == 'set default pwm':
+            with self.lock: 
+                for n in (0,1):
+                    self.dev.sendActuatorPWM(n, self.pwm_default_value)
 
         return SledIOCmdResponse()
 

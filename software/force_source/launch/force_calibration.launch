@@ -1,6 +1,3 @@
 <launch>
-  <param name="force_calibration" type="double" value="1.0"/>
-  <param name="force_zeroing_num" type="int" value="50"/>
-  <param name="force_ain_channel" type="int" value="0" />
   <node name="force_calibration" pkg="force_source" type="force_calibration.py"/>
 </launch>

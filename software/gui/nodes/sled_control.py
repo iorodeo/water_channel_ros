@@ -254,6 +254,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         # Start ros node and initialize robot control
         rospy.init_node('gui')
         self.robotControl = Robot_Control(self.startupMode)
+        self.robotControl.setPwmToDefault()
 
         self.writeStatusMessage('initializing')
         self.checkStartupMode()
@@ -845,8 +846,13 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
                 self.pluginRunning = False
                 self.pluginStartPushButton.setEnabled(True)
                 self.pluginStopPushButton.setEnabled(False)
+
+            # Stop robot actions
             self.disableRobotControlMode()
             self.robotControl.disableLogger()
+            self.robotControl.disableDynamics()
+            self.robotControl.setPwmToDefault()
+
             self.statusbar.showMessage('System Enabled - Stopped')
             if self.logFileName is not None:
                 self.populateLogTree()
@@ -864,7 +870,9 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.progressBar.setVisible(False)
         elif self.controlMode == 'startupMode':
             self.robotControl.stopSetptOutscan()
+            self.robotControl.stopActuatorOutscan()
             self.robotControl.disableControllerMode()
+            self.robotControl.disableDynamics()
             self.progressBar.setVisible(False)
             self.writeStatusMessage('%s stopped'%(self.startupMode,))
 
@@ -988,6 +996,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         if self.startupMode == 'position trajectory':
             self.startOutscan(values, 'setpt')
         elif self.startupMode == 'captive trajectory':
+            # Need to set mass and dampling parameters 
             self.startOutscan(values, 'actuator')
         else:
             raise ValueError, 'unknown startup mode'

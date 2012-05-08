@@ -1,8 +1,4 @@
 <launch>
-  <param name="actuator_update_rate" type="double" value="50"/>
-  <param name="actuator_max_value" type="double" value="1900"/>
-  <param name="actuator_min_value" type="double" value="1380"/>
-  <param name="actuator_mid_value" type="double" value="1500"/>
   <param name="actuator_type" type="string" value="pwm0"/>
   <node name="joy_node" pkg="joy" type="joy_node"/>
   <node name="actuator_source" pkg="actuator_source" type="actuator_joystick_source.py"/>

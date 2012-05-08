@@ -30,7 +30,7 @@ LOG_UPDATE_TIMER_DT = 500
 FEEDBACK_POSITIONING_VELOCITY = 0.2
 FEEDBACK_POSITIONING_ACCELERATION = 0.05
 
-PLUGIN_DIRECTORY = os.path.join(os.environ['HOME'],'plugins')
+PLUGIN_DIRECTORY = os.path.join(os.environ['HOME'],'ros','water_channel_plugins')
 
 # Default log file
 DEFAULT_LOG_FILE = os.path.join(os.environ['HOME'],'default_log.hdf5')

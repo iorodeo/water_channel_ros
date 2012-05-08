@@ -49,7 +49,7 @@ for i in range(0,num_runs):
         prm_grp = run_grp.create_group('%s/params'%(run_str,))
 
         T_ds = prm_grp.create_dataset('T',(1,),'f',maxshape=(1,))
-        T_ds[:] = 30.0
+        T_ds[:] = 6.0
         T_ds.attrs['unit'] = 's'
 
         value_0_ds = prm_grp.create_dataset('value_0',(1,),'f',maxshape=(1,))
@@ -57,7 +57,7 @@ for i in range(0,num_runs):
         value_0_ds.attrs['unit'] = 'us'
 
         value_1_ds = prm_grp.create_dataset('value_1',(1,),'f',maxshape=(1,))
-        value_1_ds[:] = 1200.0
+        value_1_ds[:] = 1300.0
         value_1_ds.attrs['unit'] = 'us'
 
         rate_ds = prm_grp.create_dataset('rate',(1,), 'f', maxshape=(1,))
