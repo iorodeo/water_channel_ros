@@ -1,0 +1,3 @@
+<launch>
+  <node name="laser_setpt_source" pkg="setpt_source" type="setpt_laser_source.py"/>
+</launch>
