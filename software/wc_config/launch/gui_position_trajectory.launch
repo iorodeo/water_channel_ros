@@ -7,6 +7,7 @@
     <include file="$(find distance_118x)/launch/distance_sensor.launch" />
     <include file="$(find safety)/launch/bounds_checker.launch" />
     <include file="$(find safety)/launch/watchdog_pulse.launch" />
+    <include file="$(find safety)/launch/watchdog_distance.launch" />
     <include file="$(find force_source)/launch/force_calibration.launch" />
     <include file="$(find setpt_source)/launch/setpt_rel_to_abs.launch" />
     <include file="$(find motor_cmd_source)/launch/position_controller.launch"/>

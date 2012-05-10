@@ -134,6 +134,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.controlMode = None
             self.controlGroupBoxSetEnabled(False)       
             self.updateUIEnabledDisabled()
+            self.statusbar.showMessage('System Disabled')
 
     def setupStatusMessageTimer(self):
         """

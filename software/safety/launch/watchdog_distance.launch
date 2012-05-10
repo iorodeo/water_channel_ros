@@ -1,0 +1,3 @@
+<launch> 
+    <node name="watchdog_distance" pkg="safety" type="watchdog_distance_node.py" required="true"/>
+</launch>
