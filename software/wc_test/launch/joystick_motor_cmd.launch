@@ -5,5 +5,4 @@
     <include file="$(find safety)/launch/watchdog_pulse.launch" />
     <include file="$(find motor_cmd_source)/launch/joystick.launch"/>
     <include file="$(find sled_io)/launch/sled_io.launch" />
-    <include file="$(find sled_io)/launch/set_mode.launch" />
 </launch>

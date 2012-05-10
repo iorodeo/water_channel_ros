@@ -1,0 +1,15 @@
+<package>
+  <description brief="wc_test">
+
+     wc_test
+
+  </description>
+  <author></author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/wc_test</url>
+  <depend package="rospy"/>
+
+</package>
+
+

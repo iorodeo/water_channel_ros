@@ -502,6 +502,7 @@ class DistanceSensor(serial.Serial):
 
     def __readAndConvert(self,convert):
         value = self.__readValue()
+        #print 'raw', value
         if convert is None:
             return value
 
@@ -536,7 +537,7 @@ if __name__ == '__main__':
 
     # Some simple testing - for development
 
-    sensor = DistanceSensor('/dev/ttyUSB0')
+    sensor = DistanceSensor('/dev/USB_Distance')
     sensor.open()
     if 0:
         print

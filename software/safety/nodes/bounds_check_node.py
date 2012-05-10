@@ -15,8 +15,8 @@ from msg_and_srv.srv import GetBoundsResponse
 from msg_and_srv.srv import SetBounds
 from msg_and_srv.srv import SetBoundsResponse
 
-DEFAULT_LOWER_BOUND = 2.0
-DEFAULT_UPPER_BOUND = 4.0
+DEFAULT_LOWER_BOUND = 1.0
+DEFAULT_UPPER_BOUND = 15.0
 DEFAULT_LOWER_BOUND_MIN = 1.0
 DEFAULT_UPPER_BOUND_MAX = 30.0
 
