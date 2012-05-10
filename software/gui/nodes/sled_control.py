@@ -851,6 +851,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.robotControl.disableLogger()
             self.robotControl.disableDynamics()
             self.robotControl.setPwmToDefault()
+            self.robotControl.disableLaserSetpt()
 
             self.statusbar.showMessage('System Enabled - Stopped')
             if self.logFileName is not None:
@@ -872,6 +873,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.robotControl.stopActuatorOutscan()
             self.robotControl.disableControllerMode()
             self.robotControl.disableDynamics()
+            self.robotControl.disableLaserSetpt()
             self.progressBar.setVisible(False)
             self.writeStatusMessage('%s stopped'%(self.startupMode,))
 
@@ -997,6 +999,11 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             damping = run['damping'][0]
             self.robotControl.setDynamicsParams(mass,damping)
             self.startOutscan(values, 'actuator')
+        elif self.startupMode == 'inertial trajectory':
+            # ---------------------------------------------------
+            # Disabled to prevent the curious for breaking shit
+            #self.startOutscan(values, 'actuator')
+            # ----------------------------------------------------
         else:
             raise ValueError, 'unknown startup mode'
 
