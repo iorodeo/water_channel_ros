@@ -47,9 +47,7 @@ class Position_Logger(Base_Logger):
 
     def create_hdf5_logger(self):
         """
-        Creates hdf5 data logger, adds all groups, datasets and attributes 
-        except the analog input dataset which because of its possibly variable
-        size is created on the first callback of the analog input message.
+        Creates hdf5 data logger. 
         """
         super(Position_Logger,self).create_hdf5_logger()
 

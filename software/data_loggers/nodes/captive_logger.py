@@ -16,11 +16,11 @@ class Captive_Logger(Position_Logger):
 
     def create_hdf5_logger(self):
         """
-        Creates hdf5 data logger, adds all groups, datasets and attributes 
-        except the analog input dataset which because of its possibly variable
-        size is created on the first callback of the analog input message.
+        Creates hdf5 data logger. 
         """
         super(Captive_Logger,self).create_hdf5_logger()
+
+        self.logger.add_attribute(self.trial_info_path, 'mode', 'captive trajectory')
 
         # Set mass and damping parameters
         rospy.wait_for_service('get_dynam_params')

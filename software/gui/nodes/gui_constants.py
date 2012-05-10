@@ -14,7 +14,7 @@ STATUS_WINDOW_TEXT_COLOR = (255,140,0)
 ALLOWED_STARTUP_MODES = [
         'captive trajectory',
         'position trajectory',
-        'inertial sled',
+        'inertial trajectory',
         ]
 
 # Timer update rates (ms)
