@@ -1000,6 +1000,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.robotControl.setDynamicsParams(mass,damping)
             self.startOutscan(values, 'actuator')
         elif self.startupMode == 'inertial trajectory':
+            pass
             # ---------------------------------------------------
             # Disabled to prevent the curious for breaking shit
             #self.startOutscan(values, 'actuator')
