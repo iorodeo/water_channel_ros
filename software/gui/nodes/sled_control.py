@@ -402,16 +402,24 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
     def pluginStart_Callback(self):
         currentItem = self.pluginListWidget.currentItem()
         if currentItem is not None:
-            self.pluginStartPushButton.setEnabled(False)
-            self.pluginStopPushButton.setEnabled(True)
             pluginName = str(currentItem.text())
             pluginModule = self.pluginDict[pluginName]
-            self.pluginObj = pluginModule.SledControlPlugin(
-                    self.robotControl, 
-                    self.pluginSetOutscanInProgress,
-                    self.pluginSetRunStateDone,
-                    self.writeStatusMessage,
-                    )
+            try:
+                self.pluginObj = pluginModule.SledControlPlugin(
+                        self.robotControl, 
+                        self.startupMode,
+                        self.logFileName,
+                        self.pluginSetOutscanInProgress,
+                        self.pluginSetRunStateDone,
+                        self.pluginWriteStatusMessage,
+                        )
+            except Exception, e:
+                msg = 'unable to start plugin: %s'%(str(e),)
+                msgBoxTitle = 'Plugin Error'
+                QtGui.QMessageBox.critical(self,msgBoxTitle,msg)
+                return
+            self.pluginStartPushButton.setEnabled(False)
+            self.pluginStopPushButton.setEnabled(True)
             self.runInProgress = True
             self.pluginRunning = True
             self.runState = 'plugin running'
@@ -423,6 +431,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.statusbar.showMessage('System Enabled - Plugin Running')
 
     def pluginStop_Callback(self):
+        self.outscanStopActions()
         self.pluginStartPushButton.setEnabled(True)
         self.pluginStopPushButton.setEnabled(False)
 
@@ -440,8 +449,10 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.runState = 'done'
 
     def pluginWriteStatusMessage(self,msg):
-        self.writeStatusMessage(msg)
-        self.statusWindowTextEdit.repaint()
+        """
+        Thread safe status messages for plugins
+        """
+        self.statusMessageQueue.put(msg)
 
     def logTreeItemClicked_Callback(self):
         currentItem = self.logTreeWidget.currentItem()
@@ -869,7 +880,8 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             self.robotControl.disableControllerMode()
             self.writeStatusMessage('feedback positioning stopped')
             self.progressBar.setVisible(False)
-        elif self.controlMode == 'startupMode':
+        #elif self.controlMode == 'startupMode':
+        else:
             self.robotControl.stopSetptOutscan()
             self.robotControl.stopActuatorOutscan()
             self.robotControl.disableControllerMode()
@@ -1289,7 +1301,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
                 try:
                     f = h5py.File(self.logFileName)
                 except h5py.h5e.LowLevelIOError, e:
-                    msg = 'unable to delete log item: %s'%(str(e),)
+                    msg = 'unable to open log file: %s'%(str(e),)
                     QtGui.QMessageBox.critical(self,msgBoxtitle,msg)
                     return
                 itemName = str(currentItem.text(0))
@@ -1459,6 +1471,14 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
                 except Exception, e:
                     errorMsg = 'unable to import plugin {0}: {1}'.format(f,str(e))
                     QtGui.QMessageBox.critical(self,'Plugin Import Error', errorMsg) 
+
+            # Remove plugins whose specified modes is not the startup mode.
+            for name, module in pluginDict.items():
+                try: 
+                    if not (module.PLUGIN_MODE == self.startupMode or module.PLUGIN_MODE=='any'):
+                        del pluginDict[name]
+                except KeyError:
+                    pass
         return pluginDict
 
     def main(self):
