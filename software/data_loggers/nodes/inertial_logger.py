@@ -15,7 +15,7 @@ class Inertial_Logger(Position_Logger):
         """
         Creates hdf5 data logger. 
         """
-        super(Captive_Logger,self).create_hdf5_logger()
+        super(Inertial_Logger,self).create_hdf5_logger()
         self.logger.add_attribute(self.trial_info_path, 'mode', 'inertial trajectory')
 
 # -----------------------------------------------------------------------------

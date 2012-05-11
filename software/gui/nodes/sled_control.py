@@ -1016,7 +1016,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             pass
             # ---------------------------------------------------
             # Disabled to prevent the curious for breaking shit
-            #self.startOutscan(values, 'actuator')
+            self.startOutscan(values, 'actuator')
             # ----------------------------------------------------
         else:
             raise ValueError, 'unknown startup mode'

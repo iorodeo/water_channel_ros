@@ -40,6 +40,7 @@ class LaserSetptSource(object):
         self.setpt_sign = rospy.get_param('laser_setpt_sign', -1.0)
         self.setpt_msg = SetptMsg()
 
+        self.distance = None
         self.velocity = None
         self.ready = False
         self.enabled = False
@@ -86,20 +87,23 @@ class LaserSetptSource(object):
         Handles incoming analog input messages. Converts the analog inputs to a
         set point signal to be published on the setpt topic.
         """
-        if not self.ready or self.velocity is None:
+        if not self.ready or self.distance is None:
             return
         ain = data.values[self.ain_num] - self.laser_ain_offset
         pos = ain*self.laser_cal + self.laser_range_start
         setpt_pos = self.setpt_sign*(pos - self.setpt_offset)
 
         with self.lock:
+            distance = self.distance
             velocity = self.velocity
             enabled = self.enabled
+
+        setpt_pos = setpt_pos + distance
     
         if enabled:
             self.setpt_msg.header.stamp = rospy.get_rostime()
             self.setpt_msg.position = setpt_pos 
-            self.setpt_msg.velocity = velocity 
+            self.setpt_msg.velocity = 0.0 #velocity 
             self.setpt_pub.publish(self.setpt_msg)
 
     def handle_dist_msg(self,data):
@@ -110,7 +114,9 @@ class LaserSetptSource(object):
         if not self.ready:
             return
         with self.lock:
+            self.distance = data.distance
             self.velocity = data.velocity_kalman
+
 
     def run(self):
         rospy.spin()

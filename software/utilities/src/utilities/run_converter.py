@@ -15,9 +15,9 @@ class Run_Converter(object):
         if mode == 'position trajectory':
             self.get = self.getPositionRun
         elif mode == 'captive trajectory':
-            self.get = self.getCaptiveRun
-        elif mode == 'inertial sled':
-            self.get = self.getIntertialRun
+            self.get = self.getActuatorRun
+        elif mode == 'inertial trajectory':
+            self.get = self.getActuatorRun
         else:
             raise ValueError, 'unknown mode %s'%(mode,)
         self.dt = dt
@@ -55,7 +55,7 @@ class Run_Converter(object):
 
         return setptValues
 
-    def getCaptiveRun(self,run,*arg):
+    def getActuatorRun(self,run,*arg):
         """
         Run converter for 'captive trajectory' mode
         """
@@ -78,12 +78,6 @@ class Run_Converter(object):
         else:
             raise ValueError, 'unknown run type %s for mode %s'%(runType,self.mode)
         return valueArray
-
-    def getInertialRun(self,run,startPos):
-        """
-        Run convert for 'inertial sled' mode
-        """
-        pass
 
 
 def shift2StartPos(values,startPos):
