@@ -18,6 +18,11 @@ from setpt_source.msg import SetptMsg
 # Services
 from msg_and_srv.srv import NodeEnable
 from msg_and_srv.srv import NodeEnableResponse
+from msg_and_srv.srv import GetControllerGains
+from msg_and_srv.srv import GetControllerGainsResponse
+from msg_and_srv.srv import SetControllerGains
+from msg_and_srv.srv import SetControllerGainsResponse
+
 
 class BaseController(object):
 
@@ -36,19 +41,15 @@ class BaseController(object):
         self.rate = rospy.Rate(self.update_rate)
         self.enabled = False
 
-        self.controller = pid_controller.PIDController()
-        self.controller.pgain = rospy.get_param('controller_pgain', 0.5)
-        self.controller.igain = rospy.get_param('controller_igain', 0.0)
-        self.controller.dgain = rospy.get_param('controller_dgain', 0.0)
-        self.controller.outputMax = rospy.get_param('controller_max_output', 4000)
-        self.controller.outputMin = rospy.get_param('controller_min_output', -4000)
-        
-        self.feedForward = velocity_feedforward.VelocityFeedForward()
-        self.feedForward.coeff = rospy.get_param('controller_ffcoeff', 5.6)
-        self.controller.ffFunc = self.feedForward.func
-
-        pgain = self.controller.pgain
-        self.pgainScheduler = GainScheduler(0.1*pgain,pgain,0.075) 
+        self.pgain = rospy.get_param('controller_pgain', 0.5)
+        self.pgainSchedMin = rospy.get_param('controller_pgain_sched_min', 0.1)
+        self.pgainSchedWid = rospy.get_param('controller_pgain_sched_wid', 0.075)
+        self.igain = rospy.get_param('controller_igain', 0.0)
+        self.dgain = rospy.get_param('controller_dgain', 0.0)
+        self.outputMax = rospy.get_param('controller_max_output', 4000)
+        self.outputMin = rospy.get_param('controller_min_output', -4000)
+        self.ffcoeff = rospy.get_param('controller_ffcoeff', 5.6)
+        self.createController()
 
         # Setup subscriber setpt topic 
         self.setptSub = rospy.Subscriber('setpt', SetptMsg, self.setptCallback)
@@ -60,14 +61,95 @@ class BaseController(object):
         self.PIDMsg = PIDMsg()
         self.PIDPub = rospy.Publisher('pid_terms', PIDMsg)
 
+        # Set up gain setting service
+        self.setGainsSrv = rospy.Service(
+                'controller_set_gains',
+                SetControllerGains,
+                self.handleSetGains,
+                )
+
+        self.getGainsSrv = rospy.Service(
+                'controller_get_gains',
+                GetControllerGains,
+                self.handleGetGains,
+                )
+
         # Setup enable/disable service 
         self.nodeEnableSrv = rospy.Service(
                 'controller_enable', 
                 NodeEnable, 
-                self.handleNodeEnable
+                self.handleNodeEnable,
                 ) 
 
+    def createController(self):
+        """
+        Creates a new gain scheduling controller based on the current
+        gain settings.
+        """
+        self.feedForward = velocity_feedforward.VelocityFeedForward()
+        self.feedForward.coeff = self.ffcoeff 
+
+        self.controller = pid_controller.PIDController(
+                self.pgain,
+                self.igain,
+                self.dgain,
+                self.outputMin,
+                self.outputMax,
+                self.feedForward.func
+                )
+        
+        self.pgainScheduler = GainScheduler(
+                self.pgainSchedMin*self.pgain,
+                self.pgain,
+                self.pgainSchedWid,
+                ) 
+
+    def handleSetGains(self,req):
+        """
+        Handles reqeusts to set the current controller gains.
+        """
+        flag = True
+        message = ''
+
+        pgain = req.pgain
+        igain = req.igain
+        dgain = req.dgain
+
+        if pgain < 0:
+            flag = False
+            message = 'pgain must be >= 0,'
+
+        if igain < 0:
+            flag = False
+            message = '{0} igain must be >= 0,'
+
+        if dgain < 0:
+            flag = False
+            message = '{0} dgain must be >= 0'
+
+        with self.lock:
+            if flag:
+                self.pgain = pgain
+                self.igain = igain
+                self.dgain = dgain
+                self.createController()
+
+        return SetControllerGainsResponse(flag, message)
+
+    def handleGetGains(self,req):
+        """
+        Handles request for the current PID controller gains.
+        """
+        with self.lock:
+            pgain = self.pgain
+            igain = self.igain
+            dgain = self.dgain
+        return GetControllerGainsResponse(pgain,igain,dgain)
+
     def handleNodeEnable(self,req):
+        """
+        Handles request to enable and disable the controller
+        """
         with self.lock:
             if req.enable:
                 self.enabled = True

@@ -9,23 +9,7 @@ class PositionController(BaseController):
     def getMotorCmd(self):
         self.error = self.setptPosition - self.position
         self.ffValue = self.setptVelocity
-
         self.controller.pgain = self.pgainScheduler.gain(self.setptVelocity)
-
-        ## Use continuous gain schedule - to make motion smooth
-        ##----------------------------------------------------------------------
-        #if abs(self.error) < 5:
-        #    self.controller.pgain = 1.0
-        #elif abs(self.error) < 10:
-        #    self.controller.pgain = 2.0
-        #elif abs(self.error) < 15:
-        #    self.controller.pgain = 5.0
-        #elif abs(self.error) < 20:
-        #    self.controller.pgain = 8.0
-        #else:
-        #    self.controller.pgain = 12.0
-        ## ---------------------------------------------------------------------
-        
         self.motorCmd = self.controller.update(self.error,self.ffValue)
 
 # -----------------------------------------------------------------------------

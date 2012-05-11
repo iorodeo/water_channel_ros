@@ -2,6 +2,7 @@
     <!-- Position controller parameters -->
     <param name="controller_max_output" type="double" value="4000.0"/>
     <param name="controller_min_output" type="double" value="-4000.0"/>
+    <param name="controller_pgain_sched_min" type="double" value="0.1"/>
 
     <param name="dist_lower_bound_min" type="double" value="0.1" />
     <param name="dist_upper_bound_max" type="double" value="35.0" />

@@ -351,7 +351,7 @@ class Robot_Control(object):
         sensor.
         """
         if self.mode == 'inertial trajectory':
-            resp = self.laserSetptEnableProxy(True)
+            resp = self.laserSetptEnableProxy(False)
             return resp.status, resp.message
         else:
             return True, ''
@@ -440,6 +440,7 @@ class Robot_Control(object):
         # I don't think this is needed
         self.disableControllerMode()
         self.disableDynamics()
+        self.disableLaserSetpt()
     
 
 # Decorators

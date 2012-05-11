@@ -9,7 +9,7 @@ from msg_and_srv.msg import DistMsg
 from msg_and_srv.srv import DistSensorCtl
 from msg_and_srv.srv import DistSensorCtlResponse
 from distance_sensor_118x import DistanceSensor
-import filters
+from filters import kalman_filter
 
 MM2M = 1.0e-3
 
@@ -22,7 +22,7 @@ class DistSensorNode(object):
         self.lock =  threading.Lock()
         self.distMsg = DistMsg()
 
-        self.kalman = filters.KalmanFilter()
+        self.kalman = kalman_filter.KalmanFilter()
 
         # Setup distance sensor
         self.fakeit = rospy.get_param('fake_distance_sensor',False)

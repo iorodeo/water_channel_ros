@@ -13,6 +13,7 @@
   <depend package="joy"/>
   <depend package="msg_and_srv"/>
   <depend package="actions"/>
+  <depend package="filters"/>
 
 </package>
 
