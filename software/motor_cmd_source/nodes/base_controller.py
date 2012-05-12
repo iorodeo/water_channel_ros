@@ -115,6 +115,10 @@ class BaseController(object):
         igain = req.igain
         dgain = req.dgain
 
+        if self.enabled:
+            flag = False
+            message = 'controller must be disabled to set gains'
+
         if pgain < 0:
             flag = False
             message = 'pgain must be >= 0,'
@@ -202,10 +206,8 @@ class BaseController(object):
         self.PIDMsg.pTerm = self.controller.pTerm
         self.PIDMsg.iTerm = self.controller.iTerm
         self.PIDMsg.dTerm = self.controller.dTerm
+        self.PIDMsg.error = self.controller.lastError
         self.PIDPub.publish(self.PIDMsg)
-
-
-
 
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':

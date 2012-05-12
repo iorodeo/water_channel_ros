@@ -22,6 +22,8 @@ from msg_and_srv.srv import SetJoystickMax
 from msg_and_srv.srv import SetLogFile
 from msg_and_srv.srv import RelToAbsCmd
 from msg_and_srv.srv import SetDynamParams
+from msg_and_srv.srv import SetControllerGains
+from msg_and_srv.srv import GetControllerGains
 
 # Actions
 from actions.msg import SetptOutscanAction
@@ -102,6 +104,18 @@ class Robot_Control(object):
         self.controllerEnableProxy = rospy.ServiceProxy(
                 'controller_enable',
                 NodeEnable,
+                )
+
+        rospy.wait_for_service('controller_set_gains')
+        self.controllerSetGainsProxy = rospy.ServiceProxy(
+                'controller_set_gains',
+                SetControllerGains,
+                )
+
+        rospy.wait_for_service('controller_get_gains')
+        self.controllerGetGainsProxy = rospy.ServiceProxy(
+                'controller_get_gains',
+                GetControllerGains,
                 )
 
         if self.mode == 'captive trajectory':
@@ -307,12 +321,55 @@ class Robot_Control(object):
         return resp.status, resp.message
 
     def enableControllerMode(self):
+        """
+        Enables the position controller
+        """
         resp = self.controllerEnableProxy(True)
         return resp.status, resp.message
 
     def disableControllerMode(self):
+        """
+        Disabled the position controller
+        """
         resp = self.controllerEnableProxy(False)
         return resp.status, resp.message
+
+    def setControllerGains(self,pgain,igain,dgain):
+        """
+        Set the controller gains. Note, the position controller node must
+        be disabled in order for you to do this.
+        """
+        resp = self.controllerSetGainsProxy(pgain,igain,dgain)
+        return resp.flag, resp.message
+
+    def getControllerGains(self):
+        """
+        Get the current controller gains.
+        """
+        resp = self.controllerGetGainsProxy()
+        return resp.pgain, resp.igain, resp.dgain
+
+    def setPositionControlGains(self):
+        """
+        Set controller gains to values appropriate to position control mode.
+        """
+        pgain = rospy.get_param('controller_pgain')
+        igain = rospy.get_param('controller_igain')
+        dgain = rospy.get_param('controller_dgain')
+        flag, message = self.setControllerGains(pgain,igain,dgain)
+        #print 'setting position control gains', flag, message
+        return flag, message
+
+    def setInertialControlGains(self):
+        """
+        Set controller gains to values appropriate for inertial trajectory mode.
+        """
+        pgain = rospy.get_param('inertial_pgain')
+        igain = rospy.get_param('inertial_igain')
+        dgain = rospy.get_param('inertial_dgain')
+        flag, message = self.setControllerGains(pgain,igain,dgain)
+        #print 'setting inertial control gains', flag, message
+        return flag, message
 
     def enableDynamics(self):
         """
@@ -384,6 +441,7 @@ class Robot_Control(object):
             goal.position_array = list(setptValues)
 
             # Send goal to action server
+            self.setPositionControlGains()
             self.enableControllerMode()
             self.setptActionClient.send_goal(
                     goal,
@@ -415,14 +473,16 @@ class Robot_Control(object):
         goal.actuator_array = actuatorArray
 
         # Send goal to action sever
-        self.enableControllerMode()
         if self.mode == 'captive trajectory':
+            self.setPositionControlGains()
             self.setPointRelToAbsReset()
             self.enableDynamics()
         elif self.mode == 'inertial trajectory':
+            self.setInertialControlGains()
             self.enableLaserSetpt()
         else:
             raise ValueError, 'unknown mode {0}'.format(self.mode)
+        self.enableControllerMode()
 
         self.actuatorActionClient.send_goal(
                 goal,
