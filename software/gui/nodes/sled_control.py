@@ -1127,7 +1127,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             filename = str(filename)
             try:
                 self.runFileReader = HDF5_Run_Reader(filename)
-            except h5py.h5e.LowLevelIOError, e:
+            except IOError, e:
                 self.cleanUpRunFile()
                 self.writeStatusMessage('run file load failed: %s'%(str(e),))
                 QtGui.QMessageBox.critical(self,'Error', 'run file load failed: %s'%(str(e),))
@@ -1278,7 +1278,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
             if os.path.isfile(filename):
                 try:
                     f = h5py.File(filename,'r')
-                except h5py.h5e.LowLevelIOError, e:
+                except IOError, e:
                     self.logFileName = None
                     QtGui.QMessageBox.critical(self,'Error', '%s'%(str(e),))
                     self.writeStatusMessage('unable to set log file: IO error')
@@ -1300,7 +1300,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
                 # Top level item - Ok to delete
                 try:
                     f = h5py.File(self.logFileName)
-                except h5py.h5e.LowLevelIOError, e:
+                except IOError, e:
                     msg = 'unable to open log file: %s'%(str(e),)
                     QtGui.QMessageBox.critical(self,msgBoxtitle,msg)
                     return
@@ -1331,7 +1331,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
         if os.path.isfile(self.logFileName):
             try:
                 f = h5py.File(self.logFileName,'r')
-            except h5py.h5e.LowLevelIOError, e:
+            except IOError, e:
                 return
             logTopLevelList = list(f)
             logTopLevelList.sort(cmp=logFileCmpFunc)
@@ -1377,7 +1377,7 @@ class SledControl_MainWindow(QtGui.QMainWindow,Ui_SledControl_MainWindow):
                 return
             try:
                 f = h5py.File(self.logFileName,'r')
-            except h5py.h5e.LowLevelIOError, e:
+            except IOError, e:
                 return
             try:
                 dataValues = f[fullName]
