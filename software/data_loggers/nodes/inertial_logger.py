@@ -7,9 +7,9 @@ roslib.load_manifest('data_loggers')
 import rospy
 import os
 import os.path
-from position_logger import Position_Logger
+from base_logger import Base_Logger
 
-class Inertial_Logger(Position_Logger):
+class Inertial_Logger(Base_Logger):
 
     def create_hdf5_logger(self):
         """
