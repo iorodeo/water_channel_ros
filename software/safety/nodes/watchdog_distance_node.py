@@ -21,6 +21,7 @@ class WatchDogDistance(object):
         self.lock = threading.Lock()
         self.ready = False
         self.sleep_dt = 1.0/50.0 # Max sensor update rate in 50Hz.
+        #self.sleep_dt = 1.0/5.0 # Max sensor update rate to 5Hz -- RWW 10/05/2012
         self.last_stamp = None
         self.timeout= rospy.get_param('distance_timeout', 1.0)
         rospy.init_node('watchdog_distance')

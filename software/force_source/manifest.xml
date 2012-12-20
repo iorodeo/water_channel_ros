@@ -14,6 +14,7 @@
   <depend package="joy"/>
   <depend package="roscpp"/>
   <depend package="msg_and_srv"/>
+  <depend package="filters"/>
 
 </package>
 
